@@ -46,19 +46,19 @@ Container names may still include the old directory-derived Compose project pref
 
 Install/update workspace links:
 
-```powershell
+```bash
 npm install
 ```
 
 Run the full local dev pair:
 
-```powershell
+```bash
 npm run dev
 ```
 
 Run individual services:
 
-```powershell
+```bash
 npm run dev:api
 npm run dev:web
 npm run mcp
@@ -66,7 +66,7 @@ npm run mcp
 
 Build and verify:
 
-```powershell
+```bash
 npm run lint
 npm run test
 npm run build
@@ -77,13 +77,13 @@ npm run test:e2e
 
 Run the Docker stack:
 
-```powershell
+```bash
 docker compose up --build
 ```
 
 If ports are occupied by an old app stack, stop it first:
 
-```powershell
+```bash
 docker compose down
 ```
 
@@ -105,6 +105,11 @@ For Docker, LM Studio may need a LAN-reachable host URL rather than `host.docker
 
 Do not commit local `.env`, `apps/web/.env.local`, SQLite data, build output, test output, `node_modules`, or other ignored local artifacts.
 
+## Security
+
+- Never commit `.env`, `apps/web/.env.local`, API keys, or credentials.
+- Copy from `.env.example` for Docker/local env defaults.
+
 ## Database Notes
 
 Postgres is the default runtime database. The API calls `ensureDatabase()` at startup.
@@ -113,7 +118,7 @@ The default Compose DB is `mealmind` with user/password `mealmind`. If an old pe
 
 SQLite migration support remains in:
 
-```powershell
+```bash
 npm run db:migrate:sqlite
 ```
 
@@ -123,7 +128,7 @@ The default legacy SQLite path is `data/mealmind.sqlite`.
 
 MCP is available both as stdio and HTTP:
 
-```powershell
+```bash
 npm run mcp
 npm run mcp:http-smoke
 ```
@@ -199,7 +204,7 @@ If you cannot run a relevant check, state why in the final response.
 
 After the MealMind rename, these checks passed:
 
-```powershell
+```bash
 npm run lint
 npm run test
 npm run build
