@@ -4,11 +4,11 @@ import * as schema from "./schema.js";
 
 const { Pool } = pg;
 
-const DEFAULT_DATABASE_URL = "postgres://helloqwen:***@127.0.0.1:5432/helloqwen";
+const DEFAULT_DATABASE_URL = "postgres://mealmind:***@127.0.0.1:5432/mealmind";
 
 const globalForDb = globalThis as unknown as {
-  helloQwenPool?: pg.Pool;
-  helloQwenPoolUrl?: string;
+  mealMindPool?: pg.Pool;
+  mealMindPoolUrl?: string;
 };
 
 export function getDatabaseUrl() {
@@ -17,11 +17,11 @@ export function getDatabaseUrl() {
 
 export function getPool() {
   const connectionString = getDatabaseUrl();
-  if (!globalForDb.helloQwenPool || globalForDb.helloQwenPoolUrl !== connectionString) {
-    globalForDb.helloQwenPool = new Pool({ connectionString });
-    globalForDb.helloQwenPoolUrl = connectionString;
+  if (!globalForDb.mealMindPool || globalForDb.mealMindPoolUrl !== connectionString) {
+    globalForDb.mealMindPool = new Pool({ connectionString });
+    globalForDb.mealMindPoolUrl = connectionString;
   }
-  return globalForDb.helloQwenPool;
+  return globalForDb.mealMindPool;
 }
 
 export function getDb() {
@@ -29,9 +29,9 @@ export function getDb() {
 }
 
 export async function closeDb() {
-  await globalForDb.helloQwenPool?.end();
-  globalForDb.helloQwenPool = undefined;
-  globalForDb.helloQwenPoolUrl = undefined;
+  await globalForDb.mealMindPool?.end();
+  globalForDb.mealMindPool = undefined;
+  globalForDb.mealMindPoolUrl = undefined;
 }
 
 export async function ensureDatabase() {
@@ -153,7 +153,7 @@ export async function ensureDatabase() {
     )
     ON CONFLICT (id) DO NOTHING
     `,
-    [process.env.HELLOQWEN_AI_BASE_URL || "http://ai-gateway:8080/v1", now],
+    [process.env.MEALMIND_AI_BASE_URL || "http://ai-gateway:8080/v1", now],
   );
 
   const pantrySeeds = ["salt", "black pepper", "water", "olive oil", "vegetable oil", "sugar"];

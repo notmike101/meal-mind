@@ -1,8 +1,8 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createHelloQwenMcpServer } from "./app.js";
+import { createMealMindMcpServer } from "./app.js";
 
 async function main() {
-  const server = createHelloQwenMcpServer();
+  const server = createMealMindMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@helloqwen/web",
+  "name": "@mealmind/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,8 +9,8 @@
     "start": "next start -p 3000"
   },
   "dependencies": {
-    "@helloqwen/contracts": "0.1.0",
-    "@helloqwen/domain": "0.1.0",
+    "@mealmind/contracts": "0.1.0",
+    "@mealmind/domain": "0.1.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.21.0",
     "next": "^16.2.9",

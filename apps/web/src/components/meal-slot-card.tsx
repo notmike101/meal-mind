@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Minus, Plus, RefreshCw, Shuffle } from "lucide-react";
-import type { MealSlotDto, RecipeSummaryDto } from "@helloqwen/contracts";
+import type { MealSlotDto, RecipeSummaryDto } from "@mealmind/contracts";
 import { formatDisplayDate } from "@/lib/utils";
 
 type MealSlotCardProps = {

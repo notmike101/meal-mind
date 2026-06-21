@@ -5,7 +5,7 @@ COPY package.json package-lock.json ./
 COPY services/ai-gateway ./services/ai-gateway
 COPY tsconfig.base.json ./
 RUN npm ci
-RUN npm run build -w @helloqwen/ai-gateway
+RUN npm run build -w @mealmind/ai-gateway
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app

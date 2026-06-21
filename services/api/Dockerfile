@@ -7,11 +7,11 @@ COPY packages ./packages
 COPY services ./services
 COPY tsconfig.base.json ./
 RUN npm ci
-RUN npm run build -w @helloqwen/contracts
-RUN npm run build -w @helloqwen/domain
-RUN npm run build -w @helloqwen/db
-RUN npm run build -w @helloqwen/ai
-RUN npm run build -w @helloqwen/api
+RUN npm run build -w @mealmind/contracts
+RUN npm run build -w @mealmind/domain
+RUN npm run build -w @mealmind/db
+RUN npm run build -w @mealmind/ai
+RUN npm run build -w @mealmind/api
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app

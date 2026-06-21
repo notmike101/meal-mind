@@ -1,10 +1,10 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const endpoint = process.env.HELLOQWEN_MCP_HTTP_URL ?? "http://127.0.0.1:3102/api/mcp";
+const endpoint = process.env.MEALMIND_MCP_HTTP_URL ?? "http://127.0.0.1:3102/api/mcp";
 
 const client = new Client({
-  name: "helloqwen-mcp-http-smoke",
+  name: "mealmind-mcp-http-smoke",
   version: "0.1.0",
 });
 

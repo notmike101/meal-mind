@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { RefreshCw, ShoppingBasket } from "lucide-react";
-import type { ShoppingItemDto } from "@helloqwen/contracts";
+import type { ShoppingItemDto } from "@mealmind/contracts";
 
 type ShoppingListClientProps = {
   planId: string;

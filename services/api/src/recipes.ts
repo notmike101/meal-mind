@@ -3,8 +3,8 @@ import {
   getRecipeDescription,
   loadRecipes,
   type Recipe,
-} from "@helloqwen/domain";
-import type { RecipeFilterRequest } from "@helloqwen/contracts";
+} from "@mealmind/domain";
+import type { RecipeFilterRequest } from "@mealmind/contracts";
 
 export function summarizeRecipe(recipe: Recipe) {
   return {
@@ -19,7 +19,7 @@ export function summarizeRecipe(recipe: Recipe) {
     totalTimeMinutes: (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
     ingredientCount: recipe.ingredients.length,
     filePath: recipe.filePath,
-    detailResource: `helloqwen://recipes/${recipe.id}`,
+    detailResource: `mealmind://recipes/${recipe.id}`,
     appUrl: `/recipes/${recipe.id}`,
   };
 }

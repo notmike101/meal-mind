@@ -1,5 +1,5 @@
 {
-  "name": "helloqwen",
+  "name": "mealmind",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,20 +9,20 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c cyan,green \"npm run dev -w @helloqwen/api\" \"npm run dev -w @helloqwen/web\"",
-    "dev:web": "npm run dev -w @helloqwen/web",
-    "dev:api": "npm run dev -w @helloqwen/api",
-    "build": "npm run build -w @helloqwen/contracts && npm run build -w @helloqwen/domain && npm run build -w @helloqwen/db && npm run build -w @helloqwen/ai && npm run build -w @helloqwen/api && npm run build -w @helloqwen/mcp && npm run build -w @helloqwen/ai-gateway && npm run build -w @helloqwen/web",
-    "start": "npm run start -w @helloqwen/web",
+    "dev": "concurrently -n api,web -c cyan,green \"npm run dev -w @mealmind/api\" \"npm run dev -w @mealmind/web\"",
+    "dev:web": "npm run dev -w @mealmind/web",
+    "dev:api": "npm run dev -w @mealmind/api",
+    "build": "npm run build -w @mealmind/contracts && npm run build -w @mealmind/domain && npm run build -w @mealmind/db && npm run build -w @mealmind/ai && npm run build -w @mealmind/api && npm run build -w @mealmind/mcp && npm run build -w @mealmind/ai-gateway && npm run build -w @mealmind/web",
+    "start": "npm run start -w @mealmind/web",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "mcp": "npm run mcp -w @helloqwen/mcp",
+    "mcp": "npm run mcp -w @mealmind/mcp",
     "mcp:smoke": "tsx tests/mcp/smoke.ts",
     "mcp:http-smoke": "tsx tests/mcp/http-smoke.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "npm run db:migrate -w @helloqwen/db",
+    "db:migrate": "npm run db:migrate -w @mealmind/db",
     "db:migrate:sqlite": "tsx scripts/migrate-sqlite-to-postgres.ts"
   },
   "dependencies": {

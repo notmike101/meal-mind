@@ -2,7 +2,7 @@ import { Lock, Unlock } from "lucide-react";
 import { CommitPlanButton } from "@/components/commit-plan-button";
 import { GeneratePlanButton } from "@/components/generate-plan-button";
 import { MealSlotCard } from "@/components/meal-slot-card";
-import { getDatesInWeek, isPlanLocked } from "@helloqwen/domain";
+import { getDatesInWeek, isPlanLocked } from "@mealmind/domain";
 import { getPlanningState, getRecipes } from "@/lib/api-client";
 import { formatDisplayDate } from "@/lib/utils";
 

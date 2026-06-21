@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { shoppingListDraftSchema, slotSwapSchema, weeklyPlanDraftSchema } from "./schemas";
-import { addDays } from "@helloqwen/domain";
+import { addDays } from "@mealmind/domain";
 
 describe("AI schemas", () => {
   it("accepts a complete weekly plan response", () => {

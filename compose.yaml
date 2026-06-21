@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:17
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-helloqwen}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-helloqwen}
-      POSTGRES_DB: ${POSTGRES_DB:-helloqwen}
+      POSTGRES_USER: ${POSTGRES_USER:-mealmind}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mealmind}
+      POSTGRES_DB: ${POSTGRES_DB:-mealmind}
     ports:
       - "54320:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-helloqwen} -d ${POSTGRES_DB:-helloqwen}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mealmind} -d ${POSTGRES_DB:-mealmind}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -38,10 +38,10 @@ services:
       dockerfile: services/api/Dockerfile
     environment:
       PORT: 3001
-      DATABASE_URL: postgres://helloqwen:helloqwen@postgres:5432/helloqwen
-      HELLOQWEN_RECIPE_ROOT: /app/recipes
-      HELLOQWEN_DOCS_ROOT: /app/docs
-      HELLOQWEN_AI_BASE_URL: ${HELLOQWEN_AI_BASE_URL:-http://ai-gateway:8080/v1}
+      DATABASE_URL: postgres://mealmind:mealmind@postgres:5432/mealmind
+      MEALMIND_RECIPE_ROOT: /app/recipes
+      MEALMIND_DOCS_ROOT: /app/docs
+      MEALMIND_AI_BASE_URL: ${MEALMIND_AI_BASE_URL:-http://ai-gateway:8080/v1}
     ports:
       - "3101:3001"
     volumes:
@@ -64,8 +64,8 @@ services:
       dockerfile: services/mcp/Dockerfile
     environment:
       PORT: 3002
-      HELLOQWEN_API_BASE_URL: http://api:3001
-      HELLOQWEN_DOCS_ROOT: /app/docs
+      MEALMIND_API_BASE_URL: http://api:3001
+      MEALMIND_DOCS_ROOT: /app/docs
     ports:
       - "3102:3002"
     volumes:
@@ -85,8 +85,8 @@ services:
       dockerfile: apps/web/Dockerfile
     environment:
       PORT: 3000
-      HELLOQWEN_API_BASE_URL: http://api:3001
-      HELLOQWEN_MCP_BASE_URL: http://mcp:3002
+      MEALMIND_API_BASE_URL: http://api:3001
+      MEALMIND_MCP_BASE_URL: http://mcp:3002
     ports:
       - "3100:3000"
     depends_on:

@@ -1,4 +1,4 @@
-# HelloQwen Handoff
+# MealMind Handoff
 
 ## Current Active Work - 2026-06-21 Microservices Refactor (VERIFIED)
 
@@ -22,7 +22,7 @@ docker compose config
 docker compose build
 docker compose up -d
 npm run mcp:http-smoke
-$env:HELLOQWEN_API_BASE_URL='http://127.0.0.1:3101'; npm run mcp:smoke
+$env:MEALMIND_API_BASE_URL='http://127.0.0.1:3101'; npm run mcp:smoke
 npm run test:e2e
 Invoke-RestMethod -Uri http://127.0.0.1:3103/readyz -Method Get
 Invoke-RestMethod -Uri http://127.0.0.1:3101/api/settings/test-ai -Method Post -ContentType 'application/json' -Body '{}'
@@ -46,7 +46,7 @@ LM Studio is running outside Docker. On this machine the containers can reach it
 
 ### Resume by running:
 ```powershell
-cd D:\projects\HelloQwen && docker compose up --build
+docker compose up --build
 ```
 See `docs/WORK_LOG.md` for the detailed final state.
 
@@ -55,8 +55,8 @@ See `docs/WORK_LOG.md` for the detailed final state.
 - Root scripts were changed toward the new architecture:
   - `dev` runs API and web with `concurrently`.
   - `build` targets all packages/services/apps.
-  - `mcp` delegates to `@helloqwen/mcp`.
-  - `db:migrate` delegates to `@helloqwen/db`.
+  - `mcp` delegates to `@mealmind/mcp`.
+  - `db:migrate` delegates to `@mealmind/db`.
 - Dependencies were shifted toward the target stack:
   - Removed `better-sqlite3`.
   - Added `fastify`, `pg`, `@types/pg`, `concurrently`, and `zod`.
@@ -79,13 +79,13 @@ See `docs/WORK_LOG.md` for the detailed final state.
   - MCP files are under `services/mcp/src`.
 - Workspace `package.json` / `tsconfig.json` files have been added for web, packages, and services.
 - `packages/contracts` now contains API envelope types/helpers, `AppError`, route request schemas, and shared DTO types.
-- `packages/domain` now has an index export, uses `HELLOQWEN_RECIPE_ROOT`, and no longer imports DB schema types.
+- `packages/domain` now has an index export, uses `MEALMIND_RECIPE_ROOT`, and no longer imports DB schema types.
 - `packages/db` has been converted in code from SQLite to Postgres using `pg` and `drizzle-orm/node-postgres`.
 - DB repositories are now async.
 - `packages/ai/src/client.ts` now requires a `logEvent` callback instead of importing DB repositories directly.
 - `services/api/src/services/planning.ts` and `shopping.ts` have been patched for package imports and async repositories.
 - `services/api/src/server.ts`, `routes.ts`, and `recipes.ts` implement the Fastify API route surface.
-- **MCP service rewritten** (`services/mcp/src/app.ts`): all 10 tools and resources now call `HELLOQWEN_API_BASE_URL` instead of importing domain/repositories/services directly. All tool schemas converted to Zod (SDK v1.29 compliant).
+- **MCP service rewritten** (`services/mcp/src/app.ts`): all 10 tools and resources now call `MEALMIND_API_BASE_URL` instead of importing domain/repositories/services directly. All tool schemas converted to Zod (SDK v1.29 compliant).
 - **MCP HTTP server** (`services/mcp/src/http.ts`): Fastify on port 3102 using `StreamableHTTPServerTransport`, exposes `/api/mcp`, `/healthz`, `/readyz`.
 - **AI-Gateway proxy** (`services/ai-gateway/src/server.ts`): LM Studio router with JSON body forwarding, filtered hop-by-hop headers, and health endpoints on port 8080.
 - **Docker infrastructure**: `Dockerfile.api`, `Dockerfile.mcp`, `Dockerfile.ai-gateway`, `Dockerfile.web`, `compose.yaml`, `.env.example`, `scripts/migrate-sqlite-to-postgres.ts`.
@@ -103,11 +103,11 @@ The refactor is complete. Next steps are:
 - `npm install` reports 8 moderate vulnerabilities; no audit fix was applied.
 
 ## Current State (Post-Refactor)
-HelloQwen is now a Dockerized microservices architecture:
+MealMind is now a Dockerized microservices architecture:
 - **`apps/web`**: Next.js UI only (standalone output), fetches from Fastify API at `/api/*`.
-- **`services/api`** (`@helloqwen/api`): Fastify REST API owning domain workflows and writes, backed by Postgres.
-- **`services/mcp`** (`@helloqwen/mcp`): Standalone MCP HTTP service (port 3102) with Zod schemas, calls the API via `HELLOQWEN_API_BASE_URL`.
-- **`services/ai-gateway`** (`@helloqwen/ai-gateway`): LM Studio proxy on port 8080.
+- **`services/api`** (`@mealmind/api`): Fastify REST API owning domain workflows and writes, backed by Postgres.
+- **`services/mcp`** (`@mealmind/mcp`): Standalone MCP HTTP service (port 3102) with Zod schemas, calls the API via `MEALMIND_API_BASE_URL`.
+- **`services/ai-gateway`** (`@mealmind/ai-gateway`): LM Studio proxy on port 8080.
 - **`packages/contracts`**: Shared DTO types, API envelope helpers, Zod request schemas.
 - **`packages/domain`**: Pure domain logic (recipes, weeks, pantry, meal plans).
 - **`packages/db`**: Async Postgres repositories via Drizzle + `pg`.
@@ -186,14 +186,14 @@ Stages 1-9 complete: repository docs, scaffold, database, recipes, AI services, 
 ## How To Run (Post-Refactor)
 ### Local Development
 - Install dependencies: `npm install --loglevel=warn`
-- Start API dev server: `npm run dev -w @helloqwen/api` (port 3001)
-- Start web dev server: `npm run dev -w @helloqwen/web` (port 3000)
-- Run MCP service: `npm run start -w @helloqwen/mcp` (port 3102)
-- Run AI-Gateway: `npm run start -w @helloqwen/ai-gateway` (port 8080)
+- Start API dev server: `npm run dev -w @mealmind/api` (port 3001)
+- Start web dev server: `npm run dev -w @mealmind/web` (port 3000)
+- Run MCP service: `npm run start -w @mealmind/mcp` (port 3102)
+- Run AI-Gateway: `npm run start -w @mealmind/ai-gateway` (port 8080)
 
 ### Docker Compose
 ```powershell
-cd D:\projects\HelloQwen && docker compose up --build
+docker compose up --build
 ```
 This starts all services: api (3001), mcp (3102), ai-gateway (8080), web (3000), and postgres.
 
@@ -202,7 +202,7 @@ After starting Postgres via Docker, run:
 ```powershell
 npx tsx scripts/migrate-sqlite-to-postgres.ts
 ```
-This migrates existing data from `data/helloqwen.sqlite` to the new Postgres database.
+This migrates existing data from `data/mealmind.sqlite` to the new Postgres database.
 
 ### Tests & Verification
 - Run unit tests: `npm run test` (via vitest)
@@ -230,7 +230,7 @@ This migrates existing data from `data/helloqwen.sqlite` to the new Postgres dat
 - Shopping-list generation and meal-plan generation require LM Studio to be running at the configured endpoint (proxied via AI-Gateway port 8080).
 - MCP workflow tools can mutate Postgres state and some call LM Studio/Qwen. Read resources first unless explicitly intending to modify state.
 - `services/mcp` HTTP endpoint is on port **3102** (not the old `localhost:3100`).
-- Database has been migrated from SQLite to Postgres; the old `data/helloqwen.sqlite` file still exists for backup but is no longer used by default.
+- Database has been migrated from SQLite to Postgres; the old `data/mealmind.sqlite` file still exists for backup but is no longer used by default.
 - Quantity normalization is AI-generated and currently allows readable fractional quantities such as `0.33 zucchini`; improve later if desired.
 - Recipe listing cards are intentionally compact. Full ingredients and instructions live at `/recipes/[recipeId]`.
 

@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
 const client = new Client({
-  name: "helloqwen-mcp-smoke",
+  name: "mealmind-mcp-smoke",
   version: "0.1.0",
 });
 
@@ -47,7 +47,7 @@ try {
 
   const resources = await client.listResources();
   const resourceUris = resources.resources.map((resource) => resource.uri);
-  for (const expectedResource of ["helloqwen://app/summary", "helloqwen://recipes"]) {
+  for (const expectedResource of ["mealmind://app/summary", "mealmind://recipes"]) {
     if (!resourceUris.includes(expectedResource)) {
       throw new Error(`Missing MCP resource: ${expectedResource}`);
     }
@@ -63,7 +63,7 @@ try {
   }
 
   const recipeDetail = await client.readResource({
-    uri: "helloqwen://recipes/chicken-rice-bowl",
+    uri: "mealmind://recipes/chicken-rice-bowl",
   });
   const detailText = textFromContent(recipeDetail.contents);
   if (!detailText?.includes("Cook rice according to package instructions.")) {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Tags, Utensils } from "lucide-react";
-import { getInstructionSteps } from "@helloqwen/domain";
+import { getInstructionSteps } from "@mealmind/domain";
 import { getRecipe } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";

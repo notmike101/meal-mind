@@ -1,4 +1,4 @@
-import type { MealPlanDto as MealPlan } from "@helloqwen/contracts";
+import type { MealPlanDto as MealPlan } from "@mealmind/contracts";
 import { formatDateInTimeZone } from "./weeks.js";
 
 export function isPlanLocked(plan: Pick<MealPlan, "status">) {

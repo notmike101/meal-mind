@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
-import { closeDb, ensureDatabase, getPool } from "@helloqwen/db";
+import { closeDb, ensureDatabase, getPool } from "@mealmind/db";
 
-const sqlitePath = process.env.HELLOQWEN_SQLITE_PATH ?? "data/helloqwen.sqlite";
+const sqlitePath = process.env.MEALMIND_SQLITE_PATH ?? "data/mealmind.sqlite";
 
 const tableOrder = [
   "settings",

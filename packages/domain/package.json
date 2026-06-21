@@ -1,5 +1,5 @@
 {
-  "name": "@helloqwen/domain",
+  "name": "@mealmind/domain",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "dev": "tsc -p tsconfig.json --watch"
   },
   "dependencies": {
-    "@helloqwen/contracts": "0.1.0",
+    "@mealmind/contracts": "0.1.0",
     "glob": "^13.0.6",
     "gray-matter": "^4.0.3",
     "zod": "^4.4.3"

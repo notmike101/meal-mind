@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { createHelloQwenMcpServer } from "./app.js";
+import { createMealMindMcpServer } from "./app.js";
 
 const port = Number(process.env.PORT ?? 3002);
 const host = process.env.HOST ?? "0.0.0.0";
@@ -11,7 +11,7 @@ async function handleMcpRequest(request: {
   headers: Record<string, unknown>;
   body?: unknown;
 }) {
-  const server = createHelloQwenMcpServer();
+  const server = createMealMindMcpServer();
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,

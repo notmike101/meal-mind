@@ -1,5 +1,5 @@
 import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
-import { isPlanLocked, shouldAutoLockPlan, sortMealSlots, type WeekRange } from "@helloqwen/domain";
+import { isPlanLocked, shouldAutoLockPlan, sortMealSlots, type WeekRange } from "@mealmind/domain";
 import { getDb } from "../client.js";
 import {
   mealPlans,

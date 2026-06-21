@@ -56,7 +56,7 @@ export function getRecipeDescription(recipe: Pick<Recipe, "description" | "tags"
 }
 
 function getRecipeRoot() {
-  return process.env.HELLOQWEN_RECIPE_ROOT || path.join(process.cwd(), "recipes");
+  return process.env.MEALMIND_RECIPE_ROOT || path.join(process.cwd(), "recipes");
 }
 
 function normalizeFilePath(filePath: string) {

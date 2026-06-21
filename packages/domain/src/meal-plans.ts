@@ -1,4 +1,4 @@
-import type { MealSlotDto as MealSlot } from "@helloqwen/contracts";
+import type { MealSlotDto as MealSlot } from "@mealmind/contracts";
 import type { MealType, WeekRange } from "./weeks.js";
 import { getWeekSlots, isDateWithinRange } from "./weeks.js";
 

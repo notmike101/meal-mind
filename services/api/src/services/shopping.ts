@@ -1,10 +1,10 @@
-import { runJsonPrompt, shoppingListDraftSchema, shoppingListMessages, type ShoppingListDraft } from "@helloqwen/ai";
-import { AppError } from "@helloqwen/contracts";
-import { buildMealIngredients, loadRecipes, normalizeShoppingItemName } from "@helloqwen/domain";
-import { createAiEvent } from "@helloqwen/db/repositories/ai-events";
-import { getPlanWithSlots } from "@helloqwen/db/repositories/plans";
-import { getSettingsWithPantry } from "@helloqwen/db/repositories/settings";
-import { getShoppingListForPlan, replaceShoppingList } from "@helloqwen/db/repositories/shopping";
+import { runJsonPrompt, shoppingListDraftSchema, shoppingListMessages, type ShoppingListDraft } from "@mealmind/ai";
+import { AppError } from "@mealmind/contracts";
+import { buildMealIngredients, loadRecipes, normalizeShoppingItemName } from "@mealmind/domain";
+import { createAiEvent } from "@mealmind/db/repositories/ai-events";
+import { getPlanWithSlots } from "@mealmind/db/repositories/plans";
+import { getSettingsWithPantry } from "@mealmind/db/repositories/settings";
+import { getShoppingListForPlan, replaceShoppingList } from "@mealmind/db/repositories/shopping";
 
 function validateShoppingListAgainstRecipes(draft: ShoppingListDraft, recipeIds: Set<string>) {
   const errors: string[] = [];

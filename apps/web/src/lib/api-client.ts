@@ -6,9 +6,9 @@ import type {
   RecipeListDto,
   SettingsWithPantryDto,
   ShoppingListDto,
-} from "@helloqwen/contracts";
+} from "@mealmind/contracts";
 
-const INTERNAL_API_BASE_URL = process.env.HELLOQWEN_API_BASE_URL ?? "http://127.0.0.1:3101";
+const INTERNAL_API_BASE_URL = process.env.MEALMIND_API_BASE_URL ?? "http://127.0.0.1:3101";
 
 async function readApi<T>(path: string): Promise<T> {
   const response = await fetch(`${INTERNAL_API_BASE_URL}${path}`, {

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("renders core HelloQwen pages", async ({ page }) => {
+test("renders core MealMind pages", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Plan/ })).toBeVisible();

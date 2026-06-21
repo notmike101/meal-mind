@@ -1,4 +1,4 @@
-import type { MealSlotDto as MealSlot } from "@helloqwen/contracts";
+import type { MealSlotDto as MealSlot } from "@mealmind/contracts";
 import type { Recipe } from "./recipes.js";
 import { isPantryStaple, normalizePantryName } from "./pantry.js";
 import { scaleServings } from "./portions.js";

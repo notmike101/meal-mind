@@ -10,10 +10,10 @@ import type {
   RecipeListDto,
   ShoppingListDto,
   SettingsWithPantryDto,
-} from "@helloqwen/contracts";
+} from "@mealmind/contracts";
 
-const API_BASE_URL = process.env.HELLOQWEN_API_BASE_URL ?? "http://127.0.0.1:3101";
-const DOCS_ROOT = process.env.HELLOQWEN_DOCS_ROOT ?? path.join(process.cwd(), "docs");
+const API_BASE_URL = process.env.MEALMIND_API_BASE_URL ?? "http://127.0.0.1:3101";
+const DOCS_ROOT = process.env.MEALMIND_DOCS_ROOT ?? path.join(process.cwd(), "docs");
 
 /* ------------------------------------------------------------------ */
 /*  HTTP helpers                                                      */
@@ -116,7 +116,7 @@ function summarizeRecipe(recipe: RecipeDto) {
     totalTimeMinutes: (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
     ingredientCount: recipe.ingredients.length,
     filePath: recipe.filePath,
-    detailResource: `helloqwen://recipes/${recipe.id}`,
+    detailResource: `mealmind://recipes/${recipe.id}`,
     appUrl: `/recipes/${recipe.id}`,
   };
 }
@@ -213,15 +213,15 @@ const CommitPlanInputSchema = z.object({
 /*  MCP server factory                                                */
 /* ------------------------------------------------------------------ */
 
-export function createHelloQwenMcpServer() {
+export function createMealMindMcpServer() {
   const server = new McpServer(
     {
-      name: "helloqwen",
+      name: "mealmind",
       version: "0.1.0",
     },
     {
       instructions:
-        "Explore and operate the local HelloQwen meal-planning app. Read resources first; mutating tools create or modify state via the API service.",
+        "Explore and operate the local MealMind meal-planning app. Read resources first; mutating tools create or modify state via the API service.",
     },
   );
 
@@ -230,9 +230,9 @@ export function createHelloQwenMcpServer() {
   // App summary
   server.registerResource(
     "app-summary",
-    "helloqwen://app/summary",
+    "mealmind://app/summary",
     {
-      title: "HelloQwen App Summary",
+      title: "MealMind App Summary",
       description: "High-level app state, settings, recipe count, and planning state.",
       mimeType: "application/json",
     },
@@ -253,7 +253,7 @@ export function createHelloQwenMcpServer() {
   // Recipe catalog
   server.registerResource(
     "recipes",
-    "helloqwen://recipes",
+    "mealmind://recipes",
     {
       title: "Recipe Catalog",
       description: "Compact summaries of all valid Markdown recipes.",
@@ -267,10 +267,10 @@ export function createHelloQwenMcpServer() {
   // Recipe detail
   server.registerResource(
     "recipe-detail",
-    new ResourceTemplate("helloqwen://recipes/{recipeId}", {
+    new ResourceTemplate("mealmind://recipes/{recipeId}", {
       list: async () => ({
         resources: (await getJson<RecipeListDto>("/api/recipes")).recipes.map((recipe) => ({
-          uri: `helloqwen://recipes/${recipe.id}`,
+          uri: `mealmind://recipes/${recipe.id}`,
           name: recipe.id,
           title: recipe.title,
           description: recipe.description,
@@ -301,7 +301,7 @@ export function createHelloQwenMcpServer() {
   // Planning state
   server.registerResource(
     "planning-state",
-    "helloqwen://plans/current",
+    "mealmind://plans/current",
     {
       title: "Current Planning State",
       description: "Active plan, next draft, and next-week range.",
@@ -313,7 +313,7 @@ export function createHelloQwenMcpServer() {
   // Shopping current
   server.registerResource(
     "shopping-current",
-    "helloqwen://shopping/current",
+    "mealmind://shopping/current",
     {
       title: "Current Shopping List",
       description: "Shopping list for the active plan or upcoming draft plan.",
@@ -325,10 +325,10 @@ export function createHelloQwenMcpServer() {
   // Docs resources
   server.registerResource(
     "implementation-plan",
-    "helloqwen://docs/implementation-plan",
+    "mealmind://docs/implementation-plan",
     {
       title: "Implementation Plan",
-      description: "Repository implementation plan for HelloQwen.",
+      description: "Repository implementation plan for MealMind.",
       mimeType: "text/markdown",
     },
     (uri) => markdownResource(uri, docPaths.implementationPlan),
@@ -336,7 +336,7 @@ export function createHelloQwenMcpServer() {
 
   server.registerResource(
     "handoff",
-    "helloqwen://docs/handoff",
+    "mealmind://docs/handoff",
     {
       title: "Handoff",
       description: "Latest handoff notes for agents continuing work.",
@@ -347,7 +347,7 @@ export function createHelloQwenMcpServer() {
 
   server.registerResource(
     "work-log",
-    "helloqwen://docs/work-log",
+    "mealmind://docs/work-log",
     {
       title: "Work Log",
       description: "Append-only implementation work log.",
@@ -520,9 +520,9 @@ export function createHelloQwenMcpServer() {
   /* ---- Prompt ---- */
 
   server.registerPrompt(
-    "explore_helloqwen",
+    "explore_mealmind",
     {
-      title: "Explore HelloQwen",
+      title: "Explore MealMind",
       description: "Guide an agent through the useful read-only resources before taking actions.",
     },
     () => ({
@@ -532,8 +532,8 @@ export function createHelloQwenMcpServer() {
           content: {
             type: "text" as const,
             text: [
-              "Explore HelloQwen before making changes.",
-              "Start with helloqwen://app/summary, helloqwen://recipes, helloqwen://plans/current, and helloqwen://docs/handoff.",
+              "Explore MealMind before making changes.",
+              "Start with mealmind://app/summary, mealmind://recipes, mealmind://plans/current, and mealmind://docs/handoff.",
               "Use read-only tools first: list_recipes, get_recipe, validate_recipe_library, get_planning_state, and get_shopping_list.",
               "Only call mutating tools when explicitly asked.",
             ].join("\n"),

@@ -1,5 +1,5 @@
-import type { SettingsDto as Settings } from "@helloqwen/contracts";
-import type { Recipe, WeekRange } from "@helloqwen/domain";
+import type { SettingsDto as Settings } from "@mealmind/contracts";
+import type { Recipe, WeekRange } from "@mealmind/domain";
 
 export function buildRecipeCatalog(recipes: Recipe[]) {
   return recipes.map((recipe) => ({
@@ -20,7 +20,7 @@ export function weeklyPlanMessages(input: {
   validationErrors?: string[];
 }) {
   const system = [
-    "You are HelloQwen, a local meal-planning assistant.",
+    "You are MealMind, a local meal-planning assistant.",
     "Return strict JSON only. Do not use Markdown.",
     "You must choose only recipe IDs from the provided recipeCatalog.",
     "Plan exactly one lunch and one dinner for every date in the requested week.",
@@ -58,7 +58,7 @@ export function slotSwapMessages(input: {
   validationErrors?: string[];
 }) {
   const system = [
-    "You are HelloQwen, a local meal-planning assistant.",
+    "You are MealMind, a local meal-planning assistant.",
     "Return strict JSON only. Do not use Markdown.",
     "Choose exactly one replacement recipe ID from recipeCatalog.",
   ].join(" ");
@@ -99,7 +99,7 @@ export function shoppingListMessages(input: {
   validationErrors?: string[];
 }) {
   const system = [
-    "You are HelloQwen, a grocery-list consolidation assistant.",
+    "You are MealMind, a grocery-list consolidation assistant.",
     "Return strict JSON only. Do not use Markdown.",
     "Combine similar ingredients, preserve quantities as readable text, and categorize items.",
     "Do not include pantry staples.",

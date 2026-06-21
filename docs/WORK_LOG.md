@@ -1,4 +1,4 @@
-# HelloQwen Work Log
+# MealMind Work Log
 
 ## 2026-06-21 - Docker microservices split in progress
 
@@ -40,7 +40,7 @@ docker compose config
 docker compose build
 docker compose up -d
 npm run mcp:http-smoke
-$env:HELLOQWEN_API_BASE_URL='http://127.0.0.1:3101'; npm run mcp:smoke
+$env:MEALMIND_API_BASE_URL='http://127.0.0.1:3101'; npm run mcp:smoke
 npm run test:e2e
 curl.exe -s http://127.0.0.1:3101/healthz
 curl.exe -s http://127.0.0.1:3101/api/recipes
@@ -87,8 +87,8 @@ Latest completed changes since the prior checkpoint:
   - `apps/web/postcss.config.js`
 - Patched `apps/web/next.config.ts`:
   - `output: "standalone"`
-  - `/api/mcp` rewrite to `HELLOQWEN_MCP_BASE_URL` default `http://127.0.0.1:3102`
-  - `/api/:path*` rewrite to `HELLOQWEN_API_BASE_URL` default `http://127.0.0.1:3101`
+  - `/api/mcp` rewrite to `MEALMIND_MCP_BASE_URL` default `http://127.0.0.1:3102`
+  - `/api/:path*` rewrite to `MEALMIND_API_BASE_URL` default `http://127.0.0.1:3101`
 - Deleted the old Next API route tree:
   - `apps/web/src/app/api/**`
 - Added `apps/web/src/lib/api-client.ts` for server-side API fetches.
@@ -99,7 +99,7 @@ Latest completed changes since the prior checkpoint:
   - `apps/web/src/app/recipes/page.tsx`
   - `apps/web/src/app/recipes/[recipeId]/page.tsx`
   - `apps/web/src/app/settings/page.tsx`
-- Patched these component type imports to use `@helloqwen/contracts` DTOs:
+- Patched these component type imports to use `@mealmind/contracts` DTOs:
   - `apps/web/src/components/daily-reminder.tsx`
   - `apps/web/src/components/meal-slot-card.tsx`
   - `apps/web/src/components/settings-form.tsx`
@@ -113,23 +113,23 @@ rg "@/lib|@/db|@/mcp|src/db|src/mcp|better-sqlite3" apps packages services tests
 
 Immediate next implementation steps:
 
-1. Rewrite `services/mcp/src/app.ts` to call `HELLOQWEN_API_BASE_URL` instead of importing domain/repositories/services directly.
+1. Rewrite `services/mcp/src/app.ts` to call `MEALMIND_API_BASE_URL` instead of importing domain/repositories/services directly.
 2. Add `services/mcp/src/http.ts` with Fastify `/api/mcp`, `/healthz`, `/readyz`.
 3. Add `services/ai-gateway/src/server.ts`.
 4. Add Dockerfiles, `compose.yaml`, `.env.example`, and `scripts/migrate-sqlite-to-postgres.ts`.
 5. Run `npm install` to refresh `package-lock.json` for workspaces and new deps.
 6. Run package builds in order and fix compile errors:
-   - `npm run build -w @helloqwen/contracts`
-   - `npm run build -w @helloqwen/domain`
-   - `npm run build -w @helloqwen/db`
-   - `npm run build -w @helloqwen/ai`
-   - `npm run build -w @helloqwen/api`
-   - `npm run build -w @helloqwen/web`
+   - `npm run build -w @mealmind/contracts`
+   - `npm run build -w @mealmind/domain`
+   - `npm run build -w @mealmind/db`
+   - `npm run build -w @mealmind/ai`
+   - `npm run build -w @mealmind/api`
+   - `npm run build -w @mealmind/web`
 
 Likely compile issues to fix first:
 
 - `services/api/src/services/planning.ts` and `shopping.ts` may still have missing awaits or Drizzle insert type mismatches.
-- `packages/db/src/repositories/plans.ts` imports `sortMealSlots` from `@helloqwen/domain`; confirm it is exported through `packages/domain/src/index.ts`.
+- `packages/db/src/repositories/plans.ts` imports `sortMealSlots` from `@mealmind/domain`; confirm it is exported through `packages/domain/src/index.ts`.
 - `apps/web/src/app/recipes/[recipeId]/page.tsx` removed `generateStaticParams`; this is intentional for API-backed dynamic data.
 - Root `drizzle.config.ts`, `vitest.config.ts`, `playwright.config.ts`, and `eslint.config.mjs` still need workspace-aware updates.
 
@@ -171,8 +171,8 @@ Implement the requested Dockerized microservices architecture:
 - Updated root `package.json` to introduce npm workspaces and new scripts:
   - `dev` starts API and web concurrently.
   - `build` builds contracts/domain/db/ai/api/mcp/ai-gateway/web.
-  - `mcp` delegates to `@helloqwen/mcp`.
-  - `db:migrate` delegates to `@helloqwen/db`.
+  - `mcp` delegates to `@mealmind/mcp`.
+  - `db:migrate` delegates to `@mealmind/db`.
 - Root `package.json` now removes `better-sqlite3`, adds `fastify`, `pg`, `@types/pg`, and `concurrently`.
 - Added workspace metadata:
   - `tsconfig.base.json`
@@ -203,23 +203,23 @@ Implement the requested Dockerized microservices architecture:
   - `packages/ai/src/index.ts`
   - `packages/db/src/index.ts`
 - Patched `packages/domain/src/recipes.ts`:
-  - Recipe root now respects `HELLOQWEN_RECIPE_ROOT`.
+  - Recipe root now respects `MEALMIND_RECIPE_ROOT`.
   - Normalized recipe file paths are relative to the recipe root.
 - Patched domain package backedges:
   - `locks.ts`, `meal-plans.ts`, and `shopping.ts` now use contract DTO types instead of importing DB schema types.
-  - `packages/domain/package.json` now depends on `@helloqwen/contracts`.
+  - `packages/domain/package.json` now depends on `@mealmind/contracts`.
 - Converted DB package toward Postgres:
   - Replaced SQLite schema with `drizzle-orm/pg-core` schema in `packages/db/src/schema.ts`.
   - Replaced SQLite client with `pg` pool + `drizzle-orm/node-postgres` in `packages/db/src/client.ts`.
   - `ensureDatabase()` now creates the Postgres tables/indexes and seeds settings/pantry.
-  - Default container AI URL is `http://ai-gateway:8080/v1`; `HELLOQWEN_AI_BASE_URL` overrides seeded settings.
+  - Default container AI URL is `http://ai-gateway:8080/v1`; `MEALMIND_AI_BASE_URL` overrides seeded settings.
   - `packages/db/src/migrate.ts` now initializes Postgres and closes the pool.
   - Repositories under `packages/db/src/repositories/*` are now async and use Postgres Drizzle calls.
 - Patched AI package:
   - `prompts.ts` now imports `SettingsDto` from contracts and recipe/week types from domain.
   - `client.ts` no longer imports DB repositories directly; `runJsonPrompt()` and `testAiConnectivity()` now require a `logEvent` callback.
 - Patched API service internals partially:
-  - `services/api/src/services/planning.ts` now imports from `@helloqwen/ai`, `@helloqwen/contracts`, `@helloqwen/domain`, and `@helloqwen/db`.
+  - `services/api/src/services/planning.ts` now imports from `@mealmind/ai`, `@mealmind/contracts`, `@mealmind/domain`, and `@mealmind/db`.
   - Planning service functions are now async where they touch repositories.
   - `runJsonPrompt()` calls now pass `createAiEvent` as `logEvent`.
   - `services/api/src/services/shopping.ts` now imports package APIs, awaits repositories, and passes `createAiEvent`.
@@ -235,7 +235,7 @@ Implement the requested Dockerized microservices architecture:
 - `packages/db` has been converted to Postgres in code, but has not yet been compiled or tested.
 - `services/api/src/services/planning.ts` and `shopping.ts` have been patched, but likely need TypeScript cleanup after the first build.
 - `services/api/src/server.ts` and `routes.ts` now exist, but have not been compiled or tested yet.
-- `services/mcp/src/app.ts` still directly imports domain/repositories/services and must be rewritten to call `HELLOQWEN_API_BASE_URL`.
+- `services/mcp/src/app.ts` still directly imports domain/repositories/services and must be rewritten to call `MEALMIND_API_BASE_URL`.
 - `apps/web` still imports old server-side repositories/services/domain paths and must be converted to API client calls.
 - `apps/web/src/app/api/**` old Next API routes should be deleted after rewrites/proxy config are in place.
 - Dockerfiles, `compose.yaml`, `.env.example`, AI gateway, and SQLite-to-Postgres migration script are not implemented yet.
@@ -252,7 +252,7 @@ Implement the requested Dockerized microservices architecture:
    - `shopping/page.tsx`: fetch planning state + shopping list.
    - `recipes/page.tsx` and `recipes/[recipeId]/page.tsx`: fetch recipe data from API.
    - `settings/page.tsx`: fetch settings from API.
-4. Patch component type imports from `@/db/schema` / `@/lib/domain/recipes` to `@helloqwen/contracts`.
+4. Patch component type imports from `@/db/schema` / `@/lib/domain/recipes` to `@mealmind/contracts`.
 5. Rewrite MCP to API-backed implementation and add HTTP Fastify server.
 6. Add AI gateway, Dockerfiles, Compose, env example, migration script, docs, and verification.
 
@@ -351,7 +351,7 @@ Complete the core application implementation before final verification.
 - `package.json`
 
 ### Work Completed
-- Implemented Drizzle schema and auto-initializing SQLite database at `data/helloqwen.sqlite`.
+- Implemented Drizzle schema and auto-initializing SQLite database at `data/mealmind.sqlite`.
 - Seeded default settings and pantry staples.
 - Added repository helpers for settings, AI events, meal plans, meal slots, and shopping lists.
 - Implemented week calculation, lazy lock checks, serving validation, pantry normalization, recipe parsing, plan validation, and shopping ingredient preparation.
@@ -424,7 +424,7 @@ Complete Stage 9 verification and leave a handoff-ready project state.
 - Consider improving quantity normalization for fractional ingredient outputs after real-world use.
 
 ### Blockers Or Assumptions
-- A live draft plan and shopping list now exist in `data/helloqwen.sqlite` from verification.
+- A live draft plan and shopping list now exist in `data/mealmind.sqlite` from verification.
 - Dev server process was started for visual inspection on port `3100`.
 - No OS notifications, auth, or hosted deployment were added by design.
 
@@ -498,7 +498,7 @@ Move full recipe details into individual recipe sub-pages and simplify the recip
 ## 2026-06-20T23:21:17.0153864-05:00
 
 ### Current Objective
-Add a local MCP server so AI agents can explore and operate HelloQwen through MCP.
+Add a local MCP server so AI agents can explore and operate MealMind through MCP.
 
 ### Files Changed
 - `package.json`
@@ -515,7 +515,7 @@ Add a local MCP server so AI agents can explore and operate HelloQwen through MC
 - Added `npm run mcp:smoke` to verify server/client interoperability.
 - Implemented MCP resources for app summary, recipe catalog, recipe details, current planning state, current shopping list, implementation plan, handoff, and work log.
 - Implemented MCP tools for listing recipes, getting recipe details, validating recipe library, reading planning state, reading shopping lists, generating next-week plans, regenerating shopping lists, updating slot servings, swapping recipes, and committing plans.
-- Added an `explore_helloqwen` prompt that tells agents to inspect read-only resources before using mutating tools.
+- Added an `explore_mealmind` prompt that tells agents to inspect read-only resources before using mutating tools.
 - Added `docs/MCP.md` with run/config instructions and tool/resource inventory.
 
 ### Verification Performed
@@ -526,7 +526,7 @@ Add a local MCP server so AI agents can explore and operate HelloQwen through MC
 - `npm run test:e2e` passed: 2 Playwright tests.
 
 ### Next Steps
-- Configure any external MCP-capable agent with the `npm run mcp` command from `D:\projects\HelloQwen`.
+- Configure any external MCP-capable agent with the `npm run mcp` command from the repository root.
 - Consider adding authorization or a read-only mode if the server is ever exposed beyond local stdio.
 
 ### Blockers Or Assumptions
@@ -536,7 +536,7 @@ Add a local MCP server so AI agents can explore and operate HelloQwen through MC
 ## 2026-06-20T23:21:17.0153864-05:00 Follow-up
 
 ### Current Objective
-Make MCP part of the running HelloQwen app and document external harness usage.
+Make MCP part of the running MealMind app and document external harness usage.
 
 ### Files Changed
 - `src/mcp/app.ts`
@@ -549,7 +549,7 @@ Make MCP part of the running HelloQwen app and document external harness usage.
 - `docs/HANDOFF.md`
 
 ### Work Completed
-- Refactored MCP registration into `createHelloQwenMcpServer()` so stdio and HTTP share the same resource/tool definitions.
+- Refactored MCP registration into `createMealMindMcpServer()` so stdio and HTTP share the same resource/tool definitions.
 - Added the in-app Streamable HTTP MCP endpoint at `/api/mcp`.
 - Added CORS and local DNS rebinding restrictions for the endpoint.
 - Added `npm run mcp:http-smoke` using the SDK Streamable HTTP client against `http://127.0.0.1:3100/api/mcp`.
@@ -560,7 +560,7 @@ Make MCP part of the running HelloQwen app and document external harness usage.
 - `npm run mcp:http-smoke` passed and reported 10 tools and 15 resources from the running app endpoint.
 
 ### Next Steps
-- Prefer `/api/mcp` for external harnesses when the HelloQwen app is running.
+- Prefer `/api/mcp` for external harnesses when the MealMind app is running.
 - Keep `npm run mcp` as the direct stdio option for MCP hosts that spawn local tools.
 
 ### Blockers Or Assumptions
@@ -573,14 +573,14 @@ Make MCP part of the running HelloQwen app and document external harness usage.
 Complete the Dockerized microservices refactor: fix all compile errors across workspace packages, services, and web. All steps from the initial checklist are now complete.
 
 ### Files Changed
-- `services/mcp/src/app.ts` — Complete rewrite: converted all tool input schemas from plain JSON objects to Zod schemas (`z.object`, `z.enum`, `z.string().min()`, etc.). Removed all direct imports of domain/repositories/services; every MCP tool/resource now calls `HELLOQWEN_API_BASE_URL`.
+- `services/mcp/src/app.ts` — Complete rewrite: converted all tool input schemas from plain JSON objects to Zod schemas (`z.object`, `z.enum`, `z.string().min()`, etc.). Removed all direct imports of domain/repositories/services; every MCP tool/resource now calls `MEALMIND_API_BASE_URL`.
 - `services/mcp/src/http.ts` — Rewritten to use SDK v1.29 transport pattern: `StreamableHTTPServerTransport` + `server.connect(transport)` instead of removed `handleMessage()` method. Exposes `/api/mcp`, `/healthz`, `/readyz` on port 3102.
 - `services/mcp/package.json` — Added `zod` dependency (SDK v1.29 requires Zod schemas).
 - `services/ai-gateway/src/server.ts` — Fixed two TS errors: (1) converted `IncomingHttpHeaders` to plain string record for `Object.fromEntries()` compatibility; (2) used `TextDecoder().decode(body)` instead of raw `Buffer` for `fetch` body.
 - All workspace package.json/tsconfig files already created in prior sessions.
 
 ### Work Completed
-1. Rewrote `services/mcp/src/app.ts` to call `HELLOQWEN_API_BASE_URL` — all 10 MCP tools and 8 resources are now API-backed (561 lines → 472 lines, clean Zod schemas).
+1. Rewrote `services/mcp/src/app.ts` to call `MEALMIND_API_BASE_URL` — all 10 MCP tools and 8 resources are now API-backed (561 lines → 472 lines, clean Zod schemas).
 2. Created `services/mcp/src/http.ts` with Fastify server on port 3102 using `StreamableHTTPServerTransport`.
 3. Created `services/ai-gateway/src/server.ts` as LM Studio proxy with health endpoints on port 8080.
 4. Added Docker infrastructure:
@@ -593,25 +593,25 @@ Complete the Dockerized microservices refactor: fix all compile errors across wo
    - `scripts/migrate-sqlite-to-postgres.ts` (migration script)
 5. Ran `npm install` — workspace dependencies synced with new deps (zod, fastify, pg).
 6. Built all packages in order successfully:
-   - ✅ `@helloqwen/contracts` — built OK
-   - ✅ `@helloqwen/domain` — built OK
-   - ✅ `@helloqwen/db` — built OK
-   - ✅ `@helloqwen/ai` — built OK
-   - ✅ `@helloqwen/api` — built OK
-   - ✅ `@helloqwen/web` — built OK (Next.js standalone output)
-   - ✅ `@helloqwen/mcp` — built OK
-   - ✅ `@helloqwen/ai-gateway` — built OK
+   - ✅ `@mealmind/contracts` — built OK
+   - ✅ `@mealmind/domain` — built OK
+   - ✅ `@mealmind/db` — built OK
+   - ✅ `@mealmind/ai` — built OK
+   - ✅ `@mealmind/api` — built OK
+   - ✅ `@mealmind/web` — built OK (Next.js standalone output)
+   - ✅ `@mealmind/mcp` — built OK
+   - ✅ `@mealmind/ai-gateway` — built OK
 7. Updated kanban board: all 5 tasks completed, pipeline fully unblocked.
 
 ### Verification Performed
 - Full workspace build pipeline ran end-to-end with zero compile errors across all 8 packages/services/apps.
 - `npm install --loglevel=warn` exited 0.
 - All 4 infrastructure files (Dockerfiles + compose.yaml) created and syntactically valid.
-- `.env.example` documents all required env vars: `HELLOQWEN_API_BASE_URL`, `LM_STUDIO_URL`, `PORT`, `HOST`, `DATABASE_URL`, `NEXT_PUBLIC_API_BASE_URL`.
+- `.env.example` documents all required env vars: `MEALMIND_API_BASE_URL`, `LM_STUDIO_URL`, `PORT`, `HOST`, `DATABASE_URL`, `NEXT_PUBLIC_API_BASE_URL`.
 
 ### Blockers Or Assumptions
 - Postgres is not yet running; `compose up` requires a Postgres instance. The migration script (`scripts/migrate-sqlite-to-postgres.ts`) handles data transfer from existing SQLite to Postgres.
-- Docker/Compose are optional for local dev — packages build and can run individually with `npm run dev -w @helloqwen/api`, etc.
+- Docker/Compose are optional for local dev — packages build and can run individually with `npm run dev -w @mealmind/api`, etc.
 - `.git` still has the same issue (not a real repository); left untouched per prior convention.
 
 ### Next Steps

@@ -4,7 +4,7 @@ import { CalendarDays, ChefHat, ListChecks, Settings, ShoppingBasket } from "luc
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HelloQwen",
+  title: "MealMind",
   description: "Local AI meal planning with Markdown recipes.",
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <ChefHat size={22} aria-hidden="true" />
                 </span>
                 <span>
-                  <span className="block text-lg font-semibold leading-tight">HelloQwen</span>
+                  <span className="block text-lg font-semibold leading-tight">MealMind</span>
                   <span className="block text-sm text-ink/60">Local weekly meal planning</span>
                 </span>
               </Link>

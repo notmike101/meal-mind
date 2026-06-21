@@ -1,7 +1,7 @@
-# HelloQwen Implementation Plan
+# MealMind Implementation Plan
 
 ## Summary
-HelloQwen is a local-only web application that replaces a meal-kit planning workflow for one user. It reads trusted Markdown recipes from disk, asks a local Qwen model running through LM Studio to curate the following Monday-Sunday lunch/dinner plan, lets the user adjust servings and swap meals before commitment, locks the plan when the week begins or when manually committed, generates a consolidated shopping list, and shows in-app daily accountability prompts.
+MealMind is a local-only web application that replaces a meal-kit planning workflow for one user. It reads trusted Markdown recipes from disk, asks a local Qwen model running through LM Studio to curate the following Monday-Sunday lunch/dinner plan, lets the user adjust servings and swap meals before commitment, locks the plan when the week begins or when manually committed, generates a consolidated shopping list, and shows in-app daily accountability prompts.
 
 Fixed decisions:
 
@@ -22,16 +22,16 @@ Use a layered monolith inside one Next.js project.
 - UI layer: React Server Components for initial page data; client components for serving controls, swap dialogs, checklists, settings forms, and reminder actions.
 - API layer: Next.js route handlers under `src/app/api/**`; all inputs and outputs validated with Zod.
 - Domain layer: pure TypeScript services for planning, week calculation, recipe parsing, portion scaling, shopping-list generation, lock enforcement, and adherence.
-- Persistence layer: SQLite database at `data/helloqwen.sqlite`, accessed through Drizzle repositories.
+- Persistence layer: SQLite database at `data/mealmind.sqlite`, accessed through Drizzle repositories.
 - AI layer: OpenAI-compatible client wrapper with strict JSON prompts, Zod response validation, one retry on invalid output, and persisted AI event logs.
 - Filesystem layer: Markdown recipes under `recipes/**/*.md`, parsed on demand and cached by file mtime.
 
 Target structure:
 
 ```text
-D:\projects\HelloQwen
+repo-root
   data/
-    helloqwen.sqlite
+    mealmind.sqlite
   docs/
     HANDOFF.md
     IMPLEMENTATION_PLAN.md
@@ -352,7 +352,7 @@ Manual:
 - The repo contains `docs/IMPLEMENTATION_PLAN.md`, `docs/WORK_LOG.md`, and `docs/HANDOFF.md` before app code changes.
 - Work log is updated throughout implementation.
 - A fresh agent can read `docs/HANDOFF.md` and continue.
-- HelloQwen can generate, edit, commit, and track a weekly meal plan from Markdown recipes and local Qwen.
+- MealMind can generate, edit, commit, and track a weekly meal plan from Markdown recipes and local Qwen.
 - AI never persists recipes outside the Markdown catalog.
 - Locked plans reject recipe and serving changes.
 - Shopping list generation and pantry exclusions work.

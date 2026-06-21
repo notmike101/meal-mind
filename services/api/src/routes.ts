@@ -10,11 +10,11 @@ import {
   toAppError,
   updateShoppingItemRequestSchema,
   updateSlotRequestSchema,
-} from "@helloqwen/contracts";
-import { testAiConnectivity } from "@helloqwen/ai";
-import { createAiEvent } from "@helloqwen/db/repositories/ai-events";
-import { getSettings, getSettingsWithPantry, updateSettings } from "@helloqwen/db/repositories/settings";
-import { updateShoppingItemChecked } from "@helloqwen/db/repositories/shopping";
+} from "@mealmind/contracts";
+import { testAiConnectivity } from "@mealmind/ai";
+import { createAiEvent } from "@mealmind/db/repositories/ai-events";
+import { getSettings, getSettingsWithPantry, updateSettings } from "@mealmind/db/repositories/settings";
+import { updateShoppingItemChecked } from "@mealmind/db/repositories/shopping";
 import {
   commitPlan,
   generateWeeklyPlan,

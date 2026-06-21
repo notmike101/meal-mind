@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { normalizePantryName, validateServingCount } from "@helloqwen/domain";
+import { normalizePantryName, validateServingCount } from "@mealmind/domain";
 import { getDb } from "../client.js";
 import { pantryStaples, settings } from "../schema.js";
 

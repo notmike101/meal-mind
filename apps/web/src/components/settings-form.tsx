@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PlugZap, Save } from "lucide-react";
-import type { PantryStapleDto, SettingsDto } from "@helloqwen/contracts";
+import type { PantryStapleDto, SettingsDto } from "@mealmind/contracts";
 
 type SettingsFormProps = {
   settings: SettingsDto;

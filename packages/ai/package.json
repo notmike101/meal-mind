@@ -1,5 +1,5 @@
 {
-  "name": "@helloqwen/ai",
+  "name": "@mealmind/ai",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,8 +15,8 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@helloqwen/contracts": "0.1.0",
-    "@helloqwen/domain": "0.1.0",
+    "@mealmind/contracts": "0.1.0",
+    "@mealmind/domain": "0.1.0",
     "openai": "^6.44.0",
     "zod": "^4.4.3"
   }

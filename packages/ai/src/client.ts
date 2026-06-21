@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { AppError, type SettingsDto as Settings } from "@helloqwen/contracts";
+import { AppError, type SettingsDto as Settings } from "@mealmind/contracts";
 
 export type AiEventType = "plan_generate" | "slot_swap" | "shopping_list" | "connectivity_test";
 

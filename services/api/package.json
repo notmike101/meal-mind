@@ -1,5 +1,5 @@
 {
-  "name": "@helloqwen/api",
+  "name": "@mealmind/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,10 +10,10 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@helloqwen/ai": "0.1.0",
-    "@helloqwen/contracts": "0.1.0",
-    "@helloqwen/db": "0.1.0",
-    "@helloqwen/domain": "0.1.0",
+    "@mealmind/ai": "0.1.0",
+    "@mealmind/contracts": "0.1.0",
+    "@mealmind/db": "0.1.0",
+    "@mealmind/domain": "0.1.0",
     "fastify": "^5.6.2",
     "zod": "^4.4.3"
   }

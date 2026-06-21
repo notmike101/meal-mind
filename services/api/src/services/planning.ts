@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { runJsonPrompt, slotSwapMessages, slotSwapSchema, weeklyPlanDraftSchema, weeklyPlanMessages } from "@helloqwen/ai";
-import { AppError } from "@helloqwen/contracts";
+import { runJsonPrompt, slotSwapMessages, slotSwapSchema, weeklyPlanDraftSchema, weeklyPlanMessages } from "@mealmind/ai";
+import { AppError } from "@mealmind/contracts";
 import {
   addDays,
   formatDateInTimeZone,
@@ -12,7 +12,7 @@ import {
   type MealType,
   type Recipe,
   type WeekRange,
-} from "@helloqwen/domain";
+} from "@mealmind/domain";
 import {
   applyLazyLocks,
   createPlanWithSlots,
@@ -26,9 +26,9 @@ import {
   updateSlotStatus,
   updatePlanStatus,
   updateSlotServing,
-} from "@helloqwen/db/repositories/plans";
-import { getSettings, getSettingsWithPantry } from "@helloqwen/db/repositories/settings";
-import { createAiEvent } from "@helloqwen/db/repositories/ai-events";
+} from "@mealmind/db/repositories/plans";
+import { getSettings, getSettingsWithPantry } from "@mealmind/db/repositories/settings";
+import { createAiEvent } from "@mealmind/db/repositories/ai-events";
 import { generateShoppingList } from "./shopping.js";
 
 function hashPrompt(value: unknown) {

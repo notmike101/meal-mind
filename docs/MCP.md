@@ -1,17 +1,17 @@
-# HelloQwen MCP Server
+# MealMind MCP Server
 
-HelloQwen includes MCP access so AI agents can explore the app state, recipe library, docs, meal plans, and shopping lists without using the web UI.
+MealMind includes MCP access so AI agents can explore the app state, recipe library, docs, meal plans, and shopping lists without using the web UI.
 
 There are two transports:
 
 - In-app Streamable HTTP endpoint: `http://127.0.0.1:3100/api/mcp`
 - Local stdio command: `npm run mcp`
 
-Prefer the HTTP endpoint when the HelloQwen web app is already running. Use stdio for agent harnesses that spawn MCP servers directly.
+Prefer the HTTP endpoint when the MealMind web app is already running. Use stdio for agent harnesses that spawn MCP servers directly.
 
 ## In-App HTTP Endpoint
 
-Start HelloQwen:
+Start MealMind:
 
 ```powershell
 npm run dev -- --port 3100
@@ -54,7 +54,7 @@ npm run mcp:http-smoke
 
 ## Stdio Server
 
-From `D:\projects\HelloQwen`:
+From the repository root:
 
 ```powershell
 npm run mcp
@@ -65,10 +65,10 @@ For an MCP client config, use:
 ```json
 {
   "mcpServers": {
-    "helloqwen": {
+    "mealmind": {
       "command": "npm",
       "args": ["run", "mcp"],
-      "cwd": "D:\\projects\\HelloQwen"
+      "cwd": "<repo-root>"
     }
   }
 }
@@ -76,14 +76,14 @@ For an MCP client config, use:
 
 ## Resources
 
-- `helloqwen://app/summary`
-- `helloqwen://recipes`
-- `helloqwen://recipes/{recipeId}`
-- `helloqwen://plans/current`
-- `helloqwen://shopping/current`
-- `helloqwen://docs/implementation-plan`
-- `helloqwen://docs/handoff`
-- `helloqwen://docs/work-log`
+- `mealmind://app/summary`
+- `mealmind://recipes`
+- `mealmind://recipes/{recipeId}`
+- `mealmind://plans/current`
+- `mealmind://shopping/current`
+- `mealmind://docs/implementation-plan`
+- `mealmind://docs/handoff`
+- `mealmind://docs/work-log`
 
 ## Tools
 
@@ -114,6 +114,6 @@ npm run mcp:smoke
 npm run mcp:http-smoke
 ```
 
-The stdio smoke test starts the MCP server over stdio, lists tools/resources, calls `list_recipes`, and reads `helloqwen://recipes/chicken-rice-bowl`.
+The stdio smoke test starts the MCP server over stdio, lists tools/resources, calls `list_recipes`, and reads `mealmind://recipes/chicken-rice-bowl`.
 
 The HTTP smoke test connects to the running app at `/api/mcp`, lists tools/resources, and calls `get_recipe`.

@@ -1,5 +1,5 @@
 import { ShoppingListClient } from "@/components/shopping-list-client";
-import { isPlanLocked } from "@helloqwen/domain";
+import { isPlanLocked } from "@mealmind/domain";
 import { getCurrentShopping, getPlanningState } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";

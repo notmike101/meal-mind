@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Check, X } from "lucide-react";
-import type { MealSlotDto } from "@helloqwen/contracts";
+import type { MealSlotDto } from "@mealmind/contracts";
 
 export function DailyReminder({ slots }: { slots: MealSlotDto[] }) {
   const router = useRouter();

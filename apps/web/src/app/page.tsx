@@ -1,7 +1,7 @@
 import { CalendarCheck, CalendarClock } from "lucide-react";
 import { DailyReminder } from "@/components/daily-reminder";
 import { GeneratePlanButton } from "@/components/generate-plan-button";
-import { formatDateInTimeZone } from "@helloqwen/domain";
+import { formatDateInTimeZone } from "@mealmind/domain";
 import { getPlanningState, getSettingsWithPantry } from "@/lib/api-client";
 import { formatDisplayDate } from "@/lib/utils";
 
