@@ -1,0 +1,15 @@
+node_modules
+dist
+**/dist
+.next
+out
+coverage
+playwright-report
+test-results
+data/*.sqlite
+data/*.sqlite-*
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+nul

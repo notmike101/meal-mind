@@ -1,0 +1,90 @@
+import { runJsonPrompt, shoppingListDraftSchema, shoppingListMessages, type ShoppingListDraft } from "@helloqwen/ai";
+import { AppError } from "@helloqwen/contracts";
+import { buildMealIngredients, loadRecipes, normalizeShoppingItemName } from "@helloqwen/domain";
+import { createAiEvent } from "@helloqwen/db/repositories/ai-events";
+import { getPlanWithSlots } from "@helloqwen/db/repositories/plans";
+import { getSettingsWithPantry } from "@helloqwen/db/repositories/settings";
+import { getShoppingListForPlan, replaceShoppingList } from "@helloqwen/db/repositories/shopping";
+
+function validateShoppingListAgainstRecipes(draft: ShoppingListDraft, recipeIds: Set<string>) {
+  const errors: string[] = [];
+  for (const item of draft.items) {
+    for (const sourceRecipeId of item.sourceRecipeIds) {
+      if (!recipeIds.has(sourceRecipeId)) {
+        errors.push(`Shopping item "${item.name}" references unknown recipe "${sourceRecipeId}".`);
+      }
+    }
+  }
+  return errors;
+}
+
+export async function generateShoppingList(planId: string) {
+  const plan = await getPlanWithSlots(planId);
+  if (!plan) {
+    throw new AppError("NOT_FOUND", "Meal plan not found.", 404);
+  }
+
+  const { settings, pantryStaples } = await getSettingsWithPantry();
+  const { recipes } = loadRecipes();
+  const pantryNames = pantryStaples.map((staple) => staple.name);
+  const mealIngredients = buildMealIngredients({
+    slots: plan.slots,
+    recipes,
+    pantryStaples: pantryNames,
+  });
+  const recipeIds = new Set(recipes.map((recipe) => recipe.id));
+
+  let validationErrors: string[] = [];
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const messages = shoppingListMessages({
+      settings,
+      pantryStaples: pantryNames,
+      mealIngredients,
+      validationErrors,
+    });
+    const draft = await runJsonPrompt({
+      eventType: "shopping_list",
+      settings,
+      system: messages.system,
+      user: messages.user,
+      schema: shoppingListDraftSchema,
+      logEvent: createAiEvent,
+    }).catch((error: unknown) => {
+      if (error instanceof AppError && error.code === "AI_VALIDATION_FAILED" && attempt === 0) {
+        validationErrors = ["The prior response did not match the required JSON schema."];
+        return null;
+      }
+      throw error;
+    });
+
+    if (!draft) {
+      continue;
+    }
+
+    validationErrors = validateShoppingListAgainstRecipes(draft, recipeIds);
+    if (validationErrors.length === 0) {
+      return replaceShoppingList(
+        plan.id,
+        settings.aiModel,
+        draft.items.map((item, index) => ({
+          id: crypto.randomUUID(),
+          category: item.category,
+          name: item.name,
+          quantityText: item.quantityText,
+          normalizedName: normalizeShoppingItemName(item.name),
+          checked: false,
+          sourceRecipeIds: JSON.stringify(item.sourceRecipeIds),
+          sortOrder: index,
+        })),
+      );
+    }
+  }
+
+  throw new AppError("AI_VALIDATION_FAILED", "AI shopping list referenced invalid recipe IDs.", 502, {
+    validationErrors,
+  });
+}
+
+export async function getShoppingList(planId: string) {
+  return getShoppingListForPlan(planId);
+}

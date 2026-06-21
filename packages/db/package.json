@@ -1,0 +1,48 @@
+{
+  "name": "@helloqwen/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js"
+    },
+    "./repositories/plans": {
+      "types": "./dist/repositories/plans.d.ts",
+      "import": "./dist/repositories/plans.js"
+    },
+    "./repositories/settings": {
+      "types": "./dist/repositories/settings.d.ts",
+      "import": "./dist/repositories/settings.js"
+    },
+    "./repositories/shopping": {
+      "types": "./dist/repositories/shopping.d.ts",
+      "import": "./dist/repositories/shopping.js"
+    },
+    "./repositories/ai-events": {
+      "types": "./dist/repositories/ai-events.d.ts",
+      "import": "./dist/repositories/ai-events.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "db:migrate": "tsx src/migrate.ts"
+  },
+  "dependencies": {
+    "@helloqwen/domain": "0.1.0",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.6",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}

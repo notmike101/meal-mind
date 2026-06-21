@@ -1,0 +1,29 @@
+import { expect, test } from "@playwright/test";
+
+test("renders core HelloQwen pages", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Plan/ })).toBeVisible();
+
+  await page.goto("/recipes");
+  await expect(page.getByRole("heading", { name: "Markdown recipe library" })).toBeVisible();
+  await expect(page.getByText("Chicken Rice Bowl")).toBeVisible();
+  await expect(page.getByText("A balanced bowl with chicken, rice, broccoli, and soy sauce.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Instructions" })).toHaveCount(0);
+
+  await page.getByRole("link", { name: "Details" }).first().click();
+  await expect(page.getByRole("heading", { name: "Beef Tacos" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ingredients" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Instructions" })).toBeVisible();
+  await expect(page.getByText("Brown ground beef in a skillet.")).toBeVisible();
+
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
+  await expect(page.getByLabel("AI base URL")).toHaveValue(/http:\/\/(127\.0\.0\.1:1234|ai-gateway:8080)\/v1/);
+});
+
+test("plan page exposes generation controls", async ({ page }) => {
+  await page.goto("/plan");
+  await expect(page.getByRole("heading", { name: "Weekly meal grid" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Generate next week|Replace draft/ })).toBeVisible();
+});
