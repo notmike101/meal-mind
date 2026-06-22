@@ -32,31 +32,32 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --canvas: 12 17 15;
-  --surface: 20 27 23;
-  --field: 30 39 34;
-  --ink: 231 238 232;
-  --line: 159 176 164;
-  --strong: 231 238 232;
-  --strong-foreground: 12 17 15;
-  --moss: 145 184 153;
-  --tomato: 239 128 108;
-  --steel: 149 165 181;
+  /* Dracula Classic palette — draculatheme.com/spec */
+  --canvas: 40 42 54;       /* Background #282A36 */
+  --surface: 66 68 80;      /* Background Lighter #424450 */
+  --field: 52 55 70;        /* Floating interactive elements #343746 */
+  --ink: 248 248 242;       /* Foreground #F8F8F2 */
+  --line: 98 114 164;       /* Comment/Current Line #6272A4 */
+  --strong: 248 248 242;    /* Foreground (same as ink) */
+  --strong-foreground: 40 42 54; /* Background (for text on strong bg) */
+  --moss: 8 145 8;          /* Functional Green #089108 — success states */
+  --tomato: 222 87 53;      /* Functional Red #DE5735 — critical/alerts */
+  --steel: 139 233 253;     /* Cyan #8BE9FD — secondary/accent */
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --canvas: 12 17 15;
-    --surface: 20 27 23;
-    --field: 30 39 34;
-    --ink: 231 238 232;
-    --line: 159 176 164;
-    --strong: 231 238 232;
-    --strong-foreground: 12 17 15;
-    --moss: 145 184 153;
-    --tomato: 239 128 108;
-    --steel: 149 165 181;
+    --canvas: 40 42 54;       /* Background #282A36 */
+    --surface: 66 68 80;      /* Background Lighter #424450 */
+    --field: 52 55 70;        /* Floating interactive elements #343746 */
+    --ink: 248 248 242;       /* Foreground #F8F8F2 */
+    --line: 98 114 164;       /* Comment/Current Line #6272A4 */
+    --strong: 248 248 242;    /* Foreground (same as ink) */
+    --strong-foreground: 40 42 54; /* Background (for text on strong bg) */
+    --moss: 8 145 8;          /* Functional Green #089108 — success states */
+    --tomato: 222 87 53;      /* Functional Red #DE5735 — critical/alerts */
+    --steel: 139 233 253;     /* Cyan #8BE9FD — secondary/accent */
   }
 }
 
