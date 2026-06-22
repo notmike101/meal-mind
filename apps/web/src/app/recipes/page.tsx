@@ -23,7 +23,7 @@ export default async function RecipesPage() {
           </div>
           <div className="mt-3 space-y-3">
             {invalidRecipes.map((invalid) => (
-              <div key={invalid.filePath} className="rounded-md bg-white p-3 shadow-line">
+              <div key={invalid.filePath} className="rounded-md bg-surface p-3 shadow-line">
                 <p className="font-medium">{invalid.filePath}</p>
                 <ul className="mt-2 list-disc pl-5 text-sm text-ink/70">
                   {invalid.errors.map((error) => (
@@ -38,7 +38,7 @@ export default async function RecipesPage() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {recipes.map((recipe) => (
-          <article key={recipe.id} className="rounded-md bg-white p-5 shadow-line">
+          <article key={recipe.id} className="rounded-md bg-surface p-5 shadow-line">
             <div className="flex min-h-full flex-col">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -87,7 +87,7 @@ export default async function RecipesPage() {
       </section>
 
       {recipes.length === 0 ? (
-        <div className="rounded-md border border-dashed border-ink/20 bg-white p-6 text-ink/70">
+        <div className="rounded-md border border-dashed border-ink/20 bg-surface p-6 text-ink/70">
           No valid recipes found.
         </div>
       ) : null}

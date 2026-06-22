@@ -25,7 +25,7 @@ export function DailyReminder({ slots }: { slots: MealSlotDto[] }) {
   }
 
   return (
-    <section className="rounded-md bg-white p-5 shadow-line">
+    <section className="rounded-md bg-surface p-5 shadow-line">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-moss">Today</p>

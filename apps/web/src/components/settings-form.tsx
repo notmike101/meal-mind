@@ -74,14 +74,14 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
   }
 
   return (
-    <div className="space-y-5 rounded-md bg-white p-5 shadow-line">
+    <div className="space-y-5 rounded-md bg-surface p-5 shadow-line">
       <div className="grid gap-4 md:grid-cols-2">
         <label className="space-y-2">
           <span className="text-sm font-medium">AI base URL</span>
           <input
             value={form.aiBaseUrl}
             onChange={(event) => update("aiBaseUrl", event.target.value)}
-            className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+            className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
           />
         </label>
         <label className="space-y-2">
@@ -89,7 +89,7 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
           <input
             value={form.aiModel}
             onChange={(event) => update("aiModel", event.target.value)}
-            className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+            className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
           />
         </label>
         <label className="space-y-2">
@@ -97,7 +97,7 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
           <input
             value={form.timezone}
             onChange={(event) => update("timezone", event.target.value)}
-            className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+            className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
           />
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -109,7 +109,7 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
               max={12}
               value={form.defaultLunchServings}
               onChange={(event) => update("defaultLunchServings", Number(event.target.value))}
-              className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+              className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
             />
           </label>
           <label className="space-y-2">
@@ -120,7 +120,7 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
               max={12}
               value={form.defaultDinnerServings}
               onChange={(event) => update("defaultDinnerServings", Number(event.target.value))}
-              className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+              className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
             />
           </label>
         </div>
@@ -132,7 +132,7 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
           value={form.planningPreferences}
           onChange={(event) => update("planningPreferences", event.target.value)}
           rows={4}
-          className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+          className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
         />
       </label>
 
@@ -142,7 +142,7 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
           value={form.planningVarietyRules}
           onChange={(event) => update("planningVarietyRules", event.target.value)}
           rows={3}
-          className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+          className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
         />
       </label>
 
@@ -152,7 +152,7 @@ export function SettingsForm({ settings, pantryStaples }: SettingsFormProps) {
           value={form.pantryStaples}
           onChange={(event) => update("pantryStaples", event.target.value)}
           rows={7}
-          className="focus-ring w-full rounded-md border border-ink/15 px-3 py-2"
+          className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-ink"
         />
       </label>
 

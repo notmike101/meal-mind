@@ -83,7 +83,7 @@ export function ShoppingListClient({ planId, items, canRegenerate }: ShoppingLis
       </div>
 
       {grouped.map(([category, categoryItems]) => (
-        <section key={category} className="rounded-md bg-white p-4 shadow-line">
+        <section key={category} className="rounded-md bg-surface p-4 shadow-line">
           <h3 className="font-semibold">{category}</h3>
           <div className="mt-3 divide-y divide-ink/10">
             {categoryItems.map((item) => {
@@ -111,7 +111,7 @@ export function ShoppingListClient({ planId, items, canRegenerate }: ShoppingLis
       ))}
 
       {items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-ink/20 bg-white p-6 text-ink/70">
+        <div className="rounded-md border border-dashed border-ink/20 bg-surface p-6 text-ink/70">
           No shopping items have been generated yet.
         </div>
       ) : null}
