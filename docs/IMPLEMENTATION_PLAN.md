@@ -1,14 +1,14 @@
 # MealMind Implementation Plan
 
 ## Summary
-MealMind is a local-only web application that replaces a meal-kit planning workflow for one user. It reads trusted Markdown recipes from disk, asks a local Qwen model running through LM Studio to curate the following Monday-Sunday lunch/dinner plan, lets the user adjust servings and swap meals before commitment, locks the plan when the week begins or when manually committed, generates a consolidated shopping list, and shows in-app daily accountability prompts.
+MealMind is a local-only web application that replaces a meal-kit planning workflow for one user. It reads trusted CookLang recipes from disk, asks a local Qwen model running through LM Studio to curate the following Monday-Sunday lunch/dinner plan, lets the user adjust servings and swap meals before commitment, locks the plan when the week begins or when manually committed, generates a consolidated shopping list, and shows in-app daily accountability prompts.
 
 Fixed decisions:
 
 - Runtime: Next.js App Router, TypeScript, SQLite, Drizzle ORM, Tailwind CSS, lucide-react icons.
 - AI endpoint: OpenAI-compatible LM Studio endpoint, default `http://127.0.0.1:1234/v1`.
 - AI model: default `qwen3.6-35b-a3b`.
-- Recipes: Markdown files under `recipes/`; no in-app recipe editor in v1.
+- Recipes: CookLang `.cook` files under `recipes/`; no in-app recipe editor in v1.
 - Week model: Monday-Sunday, lunch and dinner.
 - Lock model: editable until manual commit or local Monday 00:00, then locked.
 - Notifications: in-app reminders only.
@@ -24,7 +24,7 @@ Use a layered monolith inside one Next.js project.
 - Domain layer: pure TypeScript services for planning, week calculation, recipe parsing, portion scaling, shopping-list generation, lock enforcement, and adherence.
 - Persistence layer: SQLite database at `data/mealmind.sqlite`, accessed through Drizzle repositories.
 - AI layer: OpenAI-compatible client wrapper with strict JSON prompts, Zod response validation, one retry on invalid output, and persisted AI event logs.
-- Filesystem layer: Markdown recipes under `recipes/**/*.md`, parsed on demand and cached by file mtime.
+- Filesystem layer: CookLang recipes under `recipes/**/*.cook`, parsed on demand.
 
 Target structure:
 
@@ -37,7 +37,7 @@ repo-root
     IMPLEMENTATION_PLAN.md
     WORK_LOG.md
   recipes/
-    example-*.md
+    example-*.cook
   src/
     app/
       api/
@@ -131,40 +131,38 @@ SQLite schema managed by Drizzle migrations.
 - `status text not null`: `success`, `validation_failed`, `request_failed`
 - `error_message text`
 
-## Recipe Markdown Contract
-Recipe files must use YAML front matter and these body sections:
+## Recipe CookLang Contract
+Recipe files must use YAML front matter and CookLang body instructions:
 
 ```yaml
 ---
 id: chicken-rice-bowl
 title: Chicken Rice Bowl
-defaultServings: 2
+description: A balanced bowl with chicken, rice, broccoli, and soy sauce.
+servings: 2
 mealTypes: [lunch, dinner]
 tags: [high-protein, easy]
-prepTimeMinutes: 15
-cookTimeMinutes: 25
+prep time: 15 minutes
+cook time: 25 minutes
 ---
 ```
 
-```markdown
-## Ingredients
-- 1 lb chicken breast
-- 1 cup rice
-- 2 tbsp soy sauce
+```cooklang
+Cook @white rice{1%cup} in a #pot{} according to package instructions.
 
-## Instructions
-1. Cook rice.
-2. Cook chicken.
-3. Combine and serve.
+Season @chicken breast{1%lb} with @garlic powder{1%tsp} and cook in @olive oil{1%tbsp} in a #skillet{} until done, about ~chicken{12%minutes}.
+
+Serve chicken over rice with @soy sauce{2%tbsp}.
 ```
 
 Rules:
 
 - `id` must be lowercase kebab-case and unique.
-- `defaultServings` must be `1-12`.
+- `servings` must be `1-12`.
 - `mealTypes` must contain `lunch`, `dinner`, or both.
-- Ingredients and instructions remain as authored for display.
-- Shopping-list consolidation is AI-assisted from ingredient lines.
+- Ingredients, cookware, timers, sections, steps, and tokens are parsed into stable API DTOs.
+- Flat ingredients and instruction text remain available for compatibility.
+- Shopping-list consolidation is AI-assisted from parsed ingredient display text.
 - Invalid recipes are excluded from planning and shown with file-level errors.
 
 ## AI Contracts
@@ -225,7 +223,7 @@ First launch:
 
 - Create database and run migrations automatically.
 - Seed default settings and pantry staples.
-- Show dashboard empty state until Markdown recipes exist.
+- Show dashboard empty state until CookLang recipes exist.
 
 Generate plan:
 
@@ -312,7 +310,7 @@ Shopping page:
 Recipes page:
 
 - Read-only catalog.
-- Invalid Markdown files show exact validation errors.
+- Invalid CookLang files show exact validation errors.
 - Recipe details show ingredients and instructions.
 
 Settings page:
@@ -327,7 +325,7 @@ Settings page:
 1. Create repository documentation and logging files.
 2. Scaffold Next.js, dependencies, styling, and scripts.
 3. Implement SQLite schema, migrations, repositories, and domain services.
-4. Implement Markdown recipe parsing, sample recipes, and recipe page.
+4. Implement CookLang recipe parsing, sample recipes, and recipe page.
 5. Implement AI client, prompts, schemas, and event logging.
 6. Implement plan APIs and weekly planning UI.
 7. Implement shopping-list generation and checklist UI.
@@ -352,8 +350,8 @@ Manual:
 - The repo contains `docs/IMPLEMENTATION_PLAN.md`, `docs/WORK_LOG.md`, and `docs/HANDOFF.md` before app code changes.
 - Work log is updated throughout implementation.
 - A fresh agent can read `docs/HANDOFF.md` and continue.
-- MealMind can generate, edit, commit, and track a weekly meal plan from Markdown recipes and local Qwen.
-- AI never persists recipes outside the Markdown catalog.
+- MealMind can generate, edit, commit, and track a weekly meal plan from CookLang recipes and local Qwen.
+- AI never persists recipes outside the CookLang catalog.
 - Locked plans reject recipe and serving changes.
 - Shopping list generation and pantry exclusions work.
 - Dashboard shows daily accountability state.

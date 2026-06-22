@@ -1,5 +1,9 @@
 # MealMind Handoff
 
+## Current Active Work - 2026-06-21 CookLang Tokenized Recipes
+
+MealMind now stores recipes as CookLang `.cook` files and parses them with `@cooklang/cooklang` inside `packages/domain`. Recipe detail responses keep the existing flat `ingredients` and `instructions` fields, and also expose stable `cooklang` DTOs for metadata, ingredients, cookware, timers, sections, steps, and tokens. The web recipe detail page renders instructions from those tokens. MCP recipe detail tools/resources include the same tokenized detail object.
+
 ## Current Active Work - 2026-06-21 Microservices Refactor (VERIFIED)
 
 The Dockerized microservices refactor is implemented and verified. The repo compiles clean across all workspace packages/services/apps, unit tests pass, lint passes, Docker images build, Compose starts successfully, MCP stdio/HTTP smoke tests pass, Playwright smoke tests pass against the running Compose stack, and the LM Studio/Qwen path works through Docker.
@@ -113,7 +117,7 @@ MealMind is now a Dockerized microservices architecture:
 - **`packages/db`**: Async Postgres repositories via Drizzle + `pg`.
 - **`packages/ai`**: AI client with JSON prompts, Zod validation, retry handling.
 
-The app reads Markdown recipes, stores state in Postgres, generates weekly plans and shopping lists, supports draft edits/swaps/serving changes, commits plans, tracks active meal adherence, and exposes MCP for agents via HTTP on port 3102.
+The app reads CookLang recipes, stores state in Postgres, generates weekly plans and shopping lists, supports draft edits/swaps/serving changes, commits plans, tracks active meal adherence, and exposes MCP for agents via HTTP on port 3102.
 
 ## Completed Stage
 Stages 1-9 complete: repository docs, scaffold, database, recipes, AI services, APIs, primary UI pages, shopping, settings, accountability controls, tests, live AI verification, and browser visual inspection.
@@ -181,7 +185,7 @@ Stages 1-9 complete: repository docs, scaffold, database, recipes, AI services, 
 - `src/components/*` → now `apps/web/src/components/`
 - `src/mcp/server.ts` — merged into `services/mcp/src/app.ts` + `http.ts`
 - `tests/mcp/smoke.ts` — updated for new service paths
-- `recipes/*.md` — unchanged (sample recipes)
+- `recipes/*.cook` — CookLang sample recipes
 
 ## How To Run (Post-Refactor)
 ### Local Development
@@ -232,13 +236,13 @@ This migrates existing data from `data/mealmind.sqlite` to the new Postgres data
 - `services/mcp` HTTP endpoint is on port **3102** (not the old `localhost:3100`).
 - Database has been migrated from SQLite to Postgres; the old `data/mealmind.sqlite` file still exists for backup but is no longer used by default.
 - Quantity normalization is AI-generated and currently allows readable fractional quantities such as `0.33 zucchini`; improve later if desired.
-- Recipe listing cards are intentionally compact. Full ingredients and instructions live at `/recipes/[recipeId]`.
+- Recipe listing cards are intentionally compact. Full ingredients, tokenized CookLang steps, cookware, and timers are available from `/recipes/[recipeId]` and the recipe detail API/MCP responses.
 
 ## Next Recommended Tasks (Post-Refactor)
 1. **Run Docker Compose**: `docker compose up --build` to start all services with Postgres.
 2. **Migrate data**: `npx tsx scripts/migrate-sqlite-to-postgres.ts` to transfer existing recipes/plans from SQLite.
 3. **Update web rewrites**: Adjust `apps/web/next.config.ts` rewrite targets for production container URLs (service names instead of localhost).
 4. **Add integration tests**: Test the compose stack with Playwright against all service endpoints.
-5. **Add personal recipes** under `recipes/`, then use the UI or MCP tools to create a plan.
+5. **Add personal `.cook` recipes** under `recipes/`, then use the UI or MCP tools to create a plan.
 
 For implementation follow-up, the most useful next improvement is tighter deterministic quantity normalization before shopping-list prompting.

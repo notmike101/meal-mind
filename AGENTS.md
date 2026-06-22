@@ -4,7 +4,7 @@ Guidance for agents contributing to MealMind.
 
 ## Project Overview
 
-MealMind is a local meal-planning app for trusted Markdown recipes. It generates weekly lunch/dinner plans with a local OpenAI-compatible model, lets the user adjust or commit the plan, creates shopping lists, and exposes both web and MCP interfaces.
+MealMind is a local meal-planning app for trusted CookLang recipes. It generates weekly lunch/dinner plans with a local OpenAI-compatible model, lets the user adjust or commit the plan, creates shopping lists, and exposes both web and MCP interfaces.
 
 The repo is an npm workspace monorepo:
 
@@ -16,7 +16,7 @@ The repo is an npm workspace monorepo:
 - `packages/domain`: Pure domain logic: recipes, weeks, locks, pantry, portions, shopping helpers.
 - `packages/db`: Drizzle/Postgres schema, DB client, and repositories.
 - `packages/ai`: OpenAI-compatible client, prompts, and response schemas.
-- `recipes`: Trusted Markdown recipe fixtures/data.
+- `recipes`: Trusted CookLang `.cook` recipe fixtures/data.
 - `docs`: Implementation, handoff, MCP, and work-log notes.
 - `tests`: Playwright e2e and MCP smoke tests.
 
