@@ -76,7 +76,7 @@ export function MealSlotCard({ planId, slot, recipes, locked }: MealSlotCardProp
   }
 
   return (
-    <article className="min-h-[210px] rounded-md bg-white p-4 shadow-line">
+    <article className="min-h-[210px] rounded-md bg-surface p-4 shadow-line">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase text-moss">{slot.mealType}</p>
@@ -122,7 +122,7 @@ export function MealSlotCard({ planId, slot, recipes, locked }: MealSlotCardProp
           value={selectedRecipeId}
           disabled={locked || busy}
           onChange={(event) => setSelectedRecipeId(event.target.value)}
-          className="focus-ring w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm"
+          className="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2 text-sm text-ink"
         >
           {compatibleRecipes.map((recipe) => (
             <option key={recipe.id} value={recipe.id}>

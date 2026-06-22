@@ -55,7 +55,7 @@ export default async function RecipeDetailPage({
         Recipes
       </Link>
 
-      <section className="rounded-md bg-white p-6 shadow-line">
+      <section className="rounded-md bg-surface p-6 shadow-line">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-sm font-medium uppercase tracking-wide text-moss">Recipe</p>
@@ -86,7 +86,7 @@ export default async function RecipeDetailPage({
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-        <section className="rounded-md bg-white p-5 shadow-line">
+        <section className="rounded-md bg-surface p-5 shadow-line">
           <h2 className="text-xl font-semibold">Ingredients</h2>
           <ul className="mt-4 list-disc space-y-2 pl-5 text-ink/75">
             {recipe.ingredients.map((ingredient) => (
@@ -95,7 +95,7 @@ export default async function RecipeDetailPage({
           </ul>
         </section>
 
-        <section className="rounded-md bg-white p-5 shadow-line">
+        <section className="rounded-md bg-surface p-5 shadow-line">
           <h2 className="text-xl font-semibold">Instructions</h2>
           <ol className="mt-4 list-decimal space-y-3 pl-5 text-ink/75">
             {cooklangSteps.map(({ step }) => (

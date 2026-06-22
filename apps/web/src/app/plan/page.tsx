@@ -45,7 +45,7 @@ export default async function PlanPage() {
 
       {plan ? (
         <section className="space-y-4">
-          <div className="flex flex-col gap-2 rounded-md bg-white p-4 shadow-line sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 rounded-md bg-surface p-4 shadow-line sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-semibold">
                 {plan.weekStart} through {plan.weekEnd}
@@ -65,7 +65,7 @@ export default async function PlanPage() {
               const daySlots = plan.slots.filter((slot) => slot.date === date);
               return (
                 <div key={date} className="space-y-3">
-                  <h3 className="rounded-md bg-ink px-3 py-2 text-sm font-semibold text-white">
+                  <h3 className="rounded-md bg-strong px-3 py-2 text-sm font-semibold text-strong-foreground">
                     {formatDisplayDate(date)}
                   </h3>
                   {daySlots.map((slot) => (
@@ -83,7 +83,7 @@ export default async function PlanPage() {
           </div>
         </section>
       ) : (
-        <section className="rounded-md border border-dashed border-ink/20 bg-white p-6">
+        <section className="rounded-md border border-dashed border-ink/20 bg-surface p-6">
           <h2 className="text-lg font-semibold">No plan yet</h2>
           <p className="mt-2 text-ink/70">{nextWeek.weekStart} through {nextWeek.weekEnd}</p>
         </section>

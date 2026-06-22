@@ -32,7 +32,7 @@ export function CommitPlanButton({ planId }: { planId: string }) {
         type="button"
         onClick={commit}
         disabled={busy}
-        className="focus-ring inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-ink/90"
+        className="focus-ring inline-flex items-center gap-2 rounded-md bg-strong px-4 py-2 text-sm font-semibold text-strong-foreground hover:bg-strong/90"
       >
         {busy ? <RefreshCw size={16} className="animate-spin" aria-hidden="true" /> : <Lock size={16} aria-hidden="true" />}
         {busy ? "Committing" : "Commit plan"}

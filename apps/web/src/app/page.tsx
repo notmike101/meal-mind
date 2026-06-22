@@ -28,7 +28,7 @@ export default async function DashboardPage() {
       {activePlan ? (
         <DailyReminder slots={todaySlots} />
       ) : (
-        <section className="rounded-md bg-white p-5 shadow-line">
+        <section className="rounded-md bg-surface p-5 shadow-line">
           <div className="flex items-center gap-2 text-ink">
             <CalendarClock size={20} aria-hidden="true" />
             <h2 className="text-xl font-semibold">No active plan today</h2>
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
       )}
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-md bg-white p-5 shadow-line">
+        <div className="rounded-md bg-surface p-5 shadow-line">
           <div className="flex items-center gap-2">
             <CalendarCheck size={19} aria-hidden="true" />
             <h2 className="font-semibold">Next week</h2>
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
             <GeneratePlanButton replaceExisting={nextDraft?.status === "draft"} />
           </div>
         </div>
-        <div className="rounded-md bg-white p-5 shadow-line">
+        <div className="rounded-md bg-surface p-5 shadow-line">
           <h2 className="font-semibold">Draft status</h2>
           {nextDraft ? (
             <p className="mt-2 text-sm text-ink/65">

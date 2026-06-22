@@ -27,7 +27,7 @@ export default async function ShoppingPage() {
           canRegenerate={!isPlanLocked(plan)}
         />
       ) : (
-        <div className="rounded-md border border-dashed border-ink/20 bg-white p-6 text-ink/70">
+        <div className="rounded-md border border-dashed border-ink/20 bg-surface p-6 text-ink/70">
           No meal plan selected.
         </div>
       )}
