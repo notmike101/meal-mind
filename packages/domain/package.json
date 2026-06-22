@@ -16,9 +16,9 @@
     "dev": "tsc -p tsconfig.json --watch"
   },
   "dependencies": {
+    "@cooklang/cooklang": "^0.18.7",
     "@mealmind/contracts": "0.1.0",
     "glob": "^13.0.6",
-    "gray-matter": "^4.0.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {

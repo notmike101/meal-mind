@@ -66,7 +66,7 @@ try {
     uri: "mealmind://recipes/chicken-rice-bowl",
   });
   const detailText = textFromContent(recipeDetail.contents);
-  if (!detailText?.includes("Cook rice according to package instructions.")) {
+  if (!detailText?.includes("cooklang") || !detailText.includes("Cook 1 cup white rice in a pot according to package instructions.")) {
     throw new Error("recipe detail resource did not include instructions.");
   }
 

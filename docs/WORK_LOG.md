@@ -258,6 +258,39 @@ Implement the requested Dockerized microservices architecture:
 
 This file is append-only during implementation. Each entry records current objective, changed files, verification, and next steps so another agent can resume safely.
 
+## 2026-06-21TCookLang - Tokenized Recipe API
+
+### Current Objective
+Introduce CookLang as the source recipe format, convert sample recipes to `.cook`, and expose stable tokenized CookLang recipe detail data through REST, MCP, and the web recipe detail view.
+
+### Files Changed
+- `packages/contracts/src/types.ts` — added stable CookLang DTOs and recipe summary counts.
+- `packages/domain/src/recipes.ts` — replaced Markdown parsing with an `@cooklang/cooklang` adapter.
+- `recipes/*.cook` — converted the eight sample recipes from Markdown to CookLang.
+- `services/api/src/recipes.ts` and `services/mcp/src/app.ts` — include CookLang details in recipe detail responses.
+- `apps/web/src/app/recipes/*` — updated recipe wording and token-based detail rendering.
+- `tests/e2e/smoke.spec.ts`, `tests/mcp/smoke.ts`, and `tests/mcp/http-smoke.ts` — updated expectations.
+
+### Work Completed
+- Added `@cooklang/cooklang` to `@mealmind/domain`.
+- Removed `gray-matter` after Markdown parsing was retired.
+- Preserved flat `ingredients` and `instructions` compatibility fields.
+- Added `format: "cooklang"` and `cooklang` detail data with metadata, ingredients, cookware, timers, sections, steps, and tokens.
+- Converted all existing sample recipes to `.cook` files with inline ingredients, obvious cookware, and obvious timers.
+
+### Verification Performed
+- `npm run build -w @mealmind/contracts` passed.
+- `npm run build -w @mealmind/domain` passed.
+- `npm run test -- packages/domain/src/recipes.test.ts` passed.
+- `npm run build -w @mealmind/api` passed.
+- `npm run build -w @mealmind/mcp` passed.
+- `npm run build -w @mealmind/web` passed.
+- Direct `loadRecipes()` smoke check returned 8 valid recipes and 0 invalid recipes.
+
+### Next Steps
+- Run the full verification suite: `npm run lint`, `npm run test`, `npm run build`, MCP smoke tests, and Playwright e2e.
+- Start the local stack before `npm run mcp:http-smoke` and `npm run test:e2e` if it is not already running.
+
 ## 2026-06-20T22:02:03.6255063-05:00
 
 ### Current Objective

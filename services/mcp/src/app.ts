@@ -108,6 +108,7 @@ function summarizeRecipe(recipe: RecipeDto) {
     id: recipe.id,
     title: recipe.title,
     description: recipe.description,
+    format: recipe.format,
     mealTypes: recipe.mealTypes,
     tags: recipe.tags,
     defaultServings: recipe.defaultServings,
@@ -115,6 +116,8 @@ function summarizeRecipe(recipe: RecipeDto) {
     cookTimeMinutes: recipe.cookTimeMinutes ?? null,
     totalTimeMinutes: (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
     ingredientCount: recipe.ingredients.length,
+    cookwareCount: recipe.cooklang.cookware.length,
+    timerCount: recipe.cooklang.timers.length,
     filePath: recipe.filePath,
     detailResource: `mealmind://recipes/${recipe.id}`,
     appUrl: `/recipes/${recipe.id}`,
@@ -126,6 +129,7 @@ function detailedRecipe(recipe: RecipeDto) {
     ...summarizeRecipe(recipe),
     ingredients: recipe.ingredients,
     instructions: recipe.instructions,
+    cooklang: recipe.cooklang,
   };
 }
 
@@ -256,7 +260,7 @@ export function createMealMindMcpServer() {
     "mealmind://recipes",
     {
       title: "Recipe Catalog",
-      description: "Compact summaries of all valid Markdown recipes.",
+      description: "Compact summaries of all valid CookLang recipes.",
       mimeType: "application/json",
     },
     async (uri) => {
@@ -409,7 +413,7 @@ export function createMealMindMcpServer() {
     "validate_recipe_library",
     {
       title: "Validate Recipe Library",
-      description: "Return valid recipe summaries and invalid Markdown recipe errors.",
+      description: "Return valid recipe summaries and invalid CookLang recipe errors.",
     },
     async () => {
       const recipeList = await getJson<RecipeListDto>("/api/recipes");

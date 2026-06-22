@@ -11,6 +11,7 @@ export function summarizeRecipe(recipe: Recipe) {
     id: recipe.id,
     title: recipe.title,
     description: getRecipeDescription(recipe),
+    format: recipe.format,
     mealTypes: recipe.mealTypes,
     tags: recipe.tags,
     defaultServings: recipe.defaultServings,
@@ -18,6 +19,8 @@ export function summarizeRecipe(recipe: Recipe) {
     cookTimeMinutes: recipe.cookTimeMinutes ?? undefined,
     totalTimeMinutes: (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0),
     ingredientCount: recipe.ingredients.length,
+    cookwareCount: recipe.cooklang.cookware.length,
+    timerCount: recipe.cooklang.timers.length,
     filePath: recipe.filePath,
     detailResource: `mealmind://recipes/${recipe.id}`,
     appUrl: `/recipes/${recipe.id}`,
@@ -29,6 +32,7 @@ export function detailedRecipe(recipe: Recipe) {
     ...summarizeRecipe(recipe),
     ingredients: recipe.ingredients,
     instructions: recipe.instructions,
+    cooklang: recipe.cooklang,
   };
 }
 

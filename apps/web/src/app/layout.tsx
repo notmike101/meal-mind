@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "MealMind",
-  description: "Local AI meal planning with Markdown recipes.",
+  description: "Local AI meal planning with CookLang recipes.",
 };
 
 const navItems = [

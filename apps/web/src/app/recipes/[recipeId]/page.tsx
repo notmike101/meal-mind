@@ -2,9 +2,25 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, Tags, Utensils } from "lucide-react";
 import { getInstructionSteps } from "@mealmind/domain";
+import type { CooklangTokenDto } from "@mealmind/contracts";
 import { getRecipe } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
+
+function RecipeToken({ token }: { token: CooklangTokenDto }) {
+  if (token.type === "text") {
+    return token.text;
+  }
+
+  const className =
+    token.type === "ingredient"
+      ? "font-medium text-moss"
+      : token.type === "cookware"
+        ? "font-medium text-ink"
+        : "font-medium text-tomato";
+
+  return <span className={className}>{token.text}</span>;
+}
 
 export default async function RecipeDetailPage({
   params,
@@ -19,7 +35,15 @@ export default async function RecipeDetailPage({
   }
 
   const totalTime = (recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0);
-  const instructionSteps = getInstructionSteps(recipe.instructions);
+  const cooklangSteps = recipe.cooklang.sections.flatMap((section) =>
+    section.content
+      .filter((content) => content.type === "step")
+      .map((content) => ({
+        sectionName: section.name,
+        step: content.step,
+      })),
+  );
+  const fallbackInstructionSteps = cooklangSteps.length === 0 ? getInstructionSteps(recipe.instructions) : [];
 
   return (
     <div className="space-y-6">
@@ -74,7 +98,14 @@ export default async function RecipeDetailPage({
         <section className="rounded-md bg-white p-5 shadow-line">
           <h2 className="text-xl font-semibold">Instructions</h2>
           <ol className="mt-4 list-decimal space-y-3 pl-5 text-ink/75">
-            {instructionSteps.map((step, index) => (
+            {cooklangSteps.map(({ step }) => (
+              <li key={`${recipe.id}-step-${step.number}`}>
+                {step.tokens.map((token, index) => (
+                  <RecipeToken key={`${recipe.id}-step-${step.number}-token-${index}`} token={token} />
+                ))}
+              </li>
+            ))}
+            {fallbackInstructionSteps.map((step, index) => (
               <li key={`${recipe.id}-step-${index}`}>{step}</li>
             ))}
           </ol>

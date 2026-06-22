@@ -6,7 +6,7 @@ test("renders core MealMind pages", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Plan/ })).toBeVisible();
 
   await page.goto("/recipes");
-  await expect(page.getByRole("heading", { name: "Markdown recipe library" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CookLang recipe library" })).toBeVisible();
   await expect(page.getByText("Chicken Rice Bowl")).toBeVisible();
   await expect(page.getByText("A balanced bowl with chicken, rice, broccoli, and soy sauce.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Instructions" })).toHaveCount(0);
@@ -15,7 +15,7 @@ test("renders core MealMind pages", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Beef Tacos" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Ingredients" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Instructions" })).toBeVisible();
-  await expect(page.getByText("Brown ground beef in a skillet.")).toBeVisible();
+  await expect(page.getByText("Brown 1 lb ground beef in a skillet for 8 minutes.")).toBeVisible();
 
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();

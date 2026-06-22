@@ -41,7 +41,7 @@ try {
   });
   const recipeText = textFromContent(recipe.content);
 
-  if (!recipeText.includes("Cook rice according to package instructions.")) {
+  if (!recipeText.includes("cooklang") || !recipeText.includes("Cook 1 cup white rice in a pot according to package instructions.")) {
     throw new Error("HTTP MCP get_recipe did not return recipe instructions.");
   }
 
