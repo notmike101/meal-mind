@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDays, ChefHat, ListChecks, Settings, ShoppingBasket } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -49,24 +48,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <span className="block text-sm text-ink/60">Local weekly meal planning</span>
                 </span>
               </Link>
-              <div className="flex flex-wrap items-center gap-2">
-                <nav className="flex flex-wrap gap-2" aria-label="Primary navigation">
-                  {navItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="focus-ring inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-ink/75 hover:bg-ink/5 hover:text-ink"
-                      >
-                        <Icon size={16} aria-hidden="true" />
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </nav>
-                <ThemeToggle />
-              </div>
+              <nav className="flex flex-wrap gap-2" aria-label="Primary navigation">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="focus-ring inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-ink/75 hover:bg-ink/5 hover:text-ink"
+                    >
+                      <Icon size={16} aria-hidden="true" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
             </div>
           </header>
           <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
