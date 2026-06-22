@@ -33,7 +33,10 @@ test("theme preference defaults to system and can be overridden", async ({ page 
   await page.goto("/");
 
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("dark");
+  await expect(page.getByRole("button", { name: "Use light theme" })).toHaveCount(0);
 
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: "Appearance" })).toBeVisible();
   await page.getByRole("button", { name: "Use light theme" }).click();
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mealmind-theme"))).toBe("light");
@@ -41,6 +44,10 @@ test("theme preference defaults to system and can be overridden", async ({ page 
   await page.reload();
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
 
+  await page.goto("/");
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
+
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Use system theme" }).click();
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("dark");
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mealmind-theme"))).toBe("system");
