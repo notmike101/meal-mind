@@ -64,10 +64,113 @@ export type InvalidRecipeDto = {
   errors: string[];
 };
 
+export type CooklangValueDto =
+  | {
+      type: "number";
+      value: number;
+    }
+  | {
+      type: "range";
+      start: number;
+      end: number;
+    }
+  | {
+      type: "text";
+      value: string;
+    };
+
+export type CooklangQuantityDto = {
+  value: CooklangValueDto | null;
+  unit: string | null;
+  scalable: boolean;
+  displayText: string | null;
+};
+
+export type CooklangIngredientDto = {
+  name: string;
+  alias: string | null;
+  note: string | null;
+  quantity: CooklangQuantityDto | null;
+  displayText: string;
+  stepNumbers: number[];
+};
+
+export type CooklangCookwareDto = {
+  name: string;
+  alias: string | null;
+  note: string | null;
+  quantity: CooklangQuantityDto | null;
+  displayText: string;
+  stepNumbers: number[];
+};
+
+export type CooklangTimerDto = {
+  name: string | null;
+  quantity: CooklangQuantityDto | null;
+  displayText: string;
+  stepNumbers: number[];
+};
+
+export type CooklangTokenDto =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "ingredient";
+      ingredient: CooklangIngredientDto;
+      text: string;
+    }
+  | {
+      type: "cookware";
+      cookware: CooklangCookwareDto;
+      text: string;
+    }
+  | {
+      type: "timer";
+      timer: CooklangTimerDto;
+      text: string;
+    }
+  | {
+      type: "quantity";
+      quantity: CooklangQuantityDto;
+      text: string;
+    };
+
+export type CooklangStepDto = {
+  number: number;
+  text: string;
+  tokens: CooklangTokenDto[];
+};
+
+export type CooklangSectionContentDto =
+  | {
+      type: "step";
+      step: CooklangStepDto;
+    }
+  | {
+      type: "text";
+      text: string;
+    };
+
+export type CooklangSectionDto = {
+  name: string | null;
+  content: CooklangSectionContentDto[];
+};
+
+export type CooklangRecipeDto = {
+  metadata: Record<string, unknown>;
+  ingredients: CooklangIngredientDto[];
+  cookware: CooklangCookwareDto[];
+  timers: CooklangTimerDto[];
+  sections: CooklangSectionDto[];
+};
+
 export type RecipeDto = {
   id: string;
   title: string;
   description: string;
+  format: "cooklang";
   defaultServings: number;
   mealTypes: MealType[];
   tags: string[];
@@ -76,11 +179,14 @@ export type RecipeDto = {
   filePath: string;
   ingredients: string[];
   instructions: string;
+  cooklang: CooklangRecipeDto;
 };
 
-export type RecipeSummaryDto = Omit<RecipeDto, "ingredients" | "instructions"> & {
+export type RecipeSummaryDto = Omit<RecipeDto, "ingredients" | "instructions" | "cooklang"> & {
   totalTimeMinutes: number;
   ingredientCount: number;
+  cookwareCount: number;
+  timerCount: number;
   detailResource: string;
   appUrl: string;
 };
