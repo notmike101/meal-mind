@@ -1,54 +1,66 @@
 import { describe, expect, it } from "vitest";
-import { parseRecipeMarkdown } from "./recipes";
+import { parseRecipeCooklang } from "./recipes";
 
 const validRecipe = `---
 id: test-recipe
 title: Test Recipe
 description: A short test recipe.
-defaultServings: 2
+servings: 2
 mealTypes: [lunch, dinner]
 tags: [easy]
-prepTimeMinutes: 5
-cookTimeMinutes: 10
+prep time: 5 minutes
+cook time: 10 minutes
 ---
 
-## Ingredients
-- 1 cup rice
-- 2 eggs
+Cook @rice{1%cup} in a #pot{} for ~rice{10%minutes}.
 
-## Instructions
-1. Cook rice.
-2. Add eggs.
+Add @eggs{2} and season with @salt{}.
 `;
 
-describe("parseRecipeMarkdown", () => {
-  it("parses valid recipe front matter and sections", () => {
-    const recipe = parseRecipeMarkdown(validRecipe, "recipes/test-recipe.md");
+describe("parseRecipeCooklang", () => {
+  it("parses valid metadata, flat fields, and CookLang tokens", () => {
+    const recipe = parseRecipeCooklang(validRecipe, "recipes/test-recipe.cook");
 
     expect(recipe.id).toBe("test-recipe");
     expect(recipe.title).toBe("Test Recipe");
     expect(recipe.description).toBe("A short test recipe.");
+    expect(recipe.format).toBe("cooklang");
     expect(recipe.defaultServings).toBe(2);
     expect(recipe.mealTypes).toEqual(["lunch", "dinner"]);
-    expect(recipe.ingredients).toEqual(["1 cup rice", "2 eggs"]);
-    expect(recipe.instructions).toContain("Cook rice");
+    expect(recipe.prepTimeMinutes).toBe(5);
+    expect(recipe.cookTimeMinutes).toBe(10);
+    expect(recipe.ingredients).toEqual(["1 cup rice", "2 eggs", "salt"]);
+    expect(recipe.instructions).toContain("Cook 1 cup rice in a pot for 10 minutes.");
+    expect(recipe.cooklang.ingredients).toHaveLength(3);
+    expect(recipe.cooklang.cookware[0]).toMatchObject({ name: "pot", displayText: "pot", stepNumbers: [1] });
+    expect(recipe.cooklang.timers[0]).toMatchObject({ name: "rice", displayText: "10 minutes", stepNumbers: [1] });
+    expect(recipe.cooklang.sections[0]?.content[0]).toMatchObject({
+      type: "step",
+      step: {
+        number: 1,
+        tokens: expect.arrayContaining([
+          expect.objectContaining({ type: "ingredient", text: "1 cup rice" }),
+          expect.objectContaining({ type: "cookware", text: "pot" }),
+          expect.objectContaining({ type: "timer", text: "10 minutes" }),
+        ]),
+      },
+    });
   });
 
-  it("rejects recipes without ingredients", () => {
+  it("rejects recipes without CookLang ingredients", () => {
     expect(() =>
-      parseRecipeMarkdown(
+      parseRecipeCooklang(
         `---
 id: bad-recipe
 title: Bad Recipe
-defaultServings: 1
+servings: 1
 mealTypes: [lunch]
 ---
 
-## Instructions
-1. Nothing.
+Nothing to do.
 `,
-        "recipes/bad-recipe.md",
+        "recipes/bad-recipe.cook",
       ),
-    ).toThrow("Ingredients");
+    ).toThrow("ingredient");
   });
 });
