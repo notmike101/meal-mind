@@ -11,7 +11,7 @@ export default async function RecipesPage() {
     <div className="space-y-6">
       <section>
         <p className="text-sm font-medium uppercase tracking-wide text-moss">Recipes</p>
-        <h1 className="mt-2 text-3xl font-semibold text-ink">Markdown recipe library</h1>
+        <h1 className="mt-2 text-3xl font-semibold text-ink">CookLang recipe library</h1>
         <p className="mt-2 max-w-3xl text-ink/70">Valid local recipes available for planning.</p>
       </section>
 
@@ -70,7 +70,9 @@ export default async function RecipesPage() {
               </div>
             ) : null}
             <div className="mt-5 flex items-center justify-between border-t border-ink/10 pt-4 text-sm text-ink/60">
-              <span>{recipe.ingredientCount} ingredients</span>
+              <span>
+                {recipe.ingredientCount} ingredients · {recipe.cookwareCount} tools · {recipe.timerCount} timers
+              </span>
               <Link
                 href={`/recipes/${recipe.id}`}
                 className="focus-ring inline-flex items-center gap-2 rounded-md px-2 py-1 font-semibold text-moss hover:bg-moss/10"
