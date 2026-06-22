@@ -194,10 +194,58 @@ If you cannot run a relevant check, state why in the final response.
 
 ## Git Practices
 
-- Check `git status --short --branch` before editing and before committing.
+### Branching
+
+All development must branch off `main`. Never commit directly to `main`:
+
+```bash
+# From main, create a new feature or fix branch
+git checkout main
+git pull origin main
+git checkout -b <type>/<short-description>
+```
+
+Branch naming convention:
+
+| Type | Examples |
+|------|----------|
+| `feature/` | `feature/dark-mode`, `feature/shopping-list` |
+| `bugfix/` | `bugfix/theme-setting-location` |
+| `docs/` | `docs/git-practices` |
+| `chore/` | `chore/update-deps` |
+
+### Committing
+
+- Commit regularly at natural milestones — after a passing test, a working feature, or a logical unit of work. Do not let changes accumulate for hours without a commit.
+- Keep commits focused: one concern per commit.
+- Use direct, descriptive commit messages (imperative mood, no trailing period).
+- Before committing, always check `git status --short --branch` to confirm what will be included.
+
+### Pushing and Merging
+
+Push branches frequently so work is backed up and reviewable:
+
+```bash
+git push -u origin <branch-name>
+```
+
+When the work on a branch is complete and verified:
+
+1. Rebase onto latest `main` if needed: `git rebase main`.
+2. Push: `git push origin <branch-name> --force-with-lease` (after rebase).
+3. Merge back into `main` via a PR or, for local-only work:
+
+```bash
+git checkout main
+git pull origin main
+git merge --no-ff <branch-name> -m "Merge branch '<branch-name>' into main"
+git push origin main
+```
+
+### Safety Rules
+
+- Do not use destructive git commands (`git reset --hard`, `git checkout --`, `git rebase --force`) without explicit instruction.
 - Do not revert user changes unless explicitly asked.
-- Keep commits focused and use direct commit messages.
-- Do not use destructive git commands such as `git reset --hard` or `git checkout --` without explicit instruction.
 - If committing, include only intended files and verify the worktree afterward.
 
 ## Current Known Good Verification Set
