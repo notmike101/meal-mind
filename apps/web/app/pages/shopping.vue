@@ -12,7 +12,7 @@ const canRegenerate = computed(() => shopping.plan ? !isPlanLocked(shopping.plan
 <template>
   <div class="space-y-6">
     <PageHeading eyebrow="Shopping" title="Consolidated grocery list" description="Groceries for the selected meal plan." />
-    <ShoppingShoppingList
+    <ShoppingList
       v-if="shopping.plan"
       :items="shopping.shoppingList?.items ?? []"
       :can-regenerate="canRegenerate"

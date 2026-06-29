@@ -13,7 +13,7 @@ function update(itemId: string, checked: boolean) {
   <section class="rounded-md bg-surface p-4 shadow-line">
     <h3 class="font-semibold">{{ category }}</h3>
     <div class="mt-3 divide-y divide-ink/10">
-      <ShoppingShoppingItem
+      <ShoppingItem
         v-for="item in items"
         :key="item.id"
         :item="item"

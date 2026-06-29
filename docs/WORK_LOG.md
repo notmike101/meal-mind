@@ -654,6 +654,7 @@ Complete the Dockerized microservices refactor: fix all compile errors across wo
 4. Add integration tests against the compose stack.
 
 This file is append-only during implementation. Each entry records current objective, changed files, verification, and next steps so another agent can resume safely.
+
 # 2026-06-29 - Vue/Nuxt Interface Migration
 
 - Replaced the Next.js/React web workspace with Nuxt 4.4.8, Vue 3.5.39, Pinia 3.0.4, and `@pinia/nuxt` 0.11.3 after checking exact-version documentation through the Context MCP server.
@@ -663,3 +664,6 @@ This file is append-only during implementation. Each entry records current objec
 - Migrated the production container to Nuxt's Node server output and retained port 3100.
 - Replaced deprecated `lucide-vue-next` with the maintained `@lucide/vue` package as directed by the package's deprecation notice.
 - Added Vue/Pinia unit coverage and expanded Playwright route coverage.
+- Verified `npm run lint`, 19 Vitest tests, the complete monorepo production build, 4 Playwright tests, MCP stdio, direct MCP HTTP, and MCP HTTP through the Nuxt `/api/mcp` proxy.
+- Rebuilt the Compose stack from a stopped state; Postgres, API, MCP, and AI gateway reported healthy and the Nuxt web container served all six routes from port 3100.
+- Browser inspection confirmed the settings form, recipe catalog/detail rendering, theme controls, desktop layout, and a 375px mobile viewport without horizontal overflow or console errors.

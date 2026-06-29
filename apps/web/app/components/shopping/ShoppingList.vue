@@ -57,7 +57,7 @@ async function regenerate() {
         <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
       </button>
     </div>
-    <ShoppingShoppingCategory
+    <ShoppingCategory
       v-for="([category, categoryItems]) in grouped"
       :key="category"
       :category="category"

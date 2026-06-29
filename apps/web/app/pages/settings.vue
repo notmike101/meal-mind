@@ -16,7 +16,7 @@ await callOnce("settings-data", () => settings.fetchSettings(), { mode: "navigat
       </div>
       <SettingsThemeToggle />
     </section>
-    <SettingsSettingsForm
+    <SettingsForm
       v-if="settings.data"
       :settings="settings.data.settings"
       :pantry-staples="settings.data.pantryStaples"

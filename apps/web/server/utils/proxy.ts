@@ -1,4 +1,4 @@
-import { getRequestURL, proxyRequest, type H3Event } from "h3";
+import { getRequestHeader, getRequestURL, proxyRequest, type H3Event } from "h3";
 import { useRuntimeConfig } from "#imports";
 
 type ProxyTarget = "api" | "mcp";
@@ -20,5 +20,10 @@ export function proxyMealMindRequest(event: H3Event, target: ProxyTarget) {
   const destination = configuredBaseUrl(event, target);
   destination.pathname = incoming.pathname;
   destination.search = incoming.search;
-  return proxyRequest(event, destination.toString());
+  return proxyRequest(event, destination.toString(), {
+    headers: {
+      accept: getRequestHeader(event, "accept") ?? "*/*",
+    },
+    streamRequest: target === "mcp",
+  });
 }

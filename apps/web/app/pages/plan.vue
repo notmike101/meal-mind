@@ -34,7 +34,7 @@ const recipeOptions = computed(() => (recipes.catalog?.recipes ?? []).map((recip
       {{ recipes.catalog?.invalidRecipes.length }} invalid recipe file{{ recipes.catalog?.invalidRecipes.length === 1 ? "" : "s" }} excluded from planning.
     </div>
     <section v-if="plan" class="space-y-4">
-      <PlanPlanSummary :plan="plan" :locked="locked" />
+      <PlanSummary :plan="plan" :locked="locked" />
       <PlanWeekGrid :plan="plan" :recipes="recipeOptions" :locked="locked" />
     </section>
     <section v-else class="rounded-md border border-dashed border-ink/20 bg-surface p-6">
