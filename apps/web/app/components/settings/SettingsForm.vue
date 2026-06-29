@@ -3,6 +3,7 @@ import type { PantryStapleDto, SettingsDto, SettingsUpdateRequest } from "@mealm
 import { reactive, ref } from "vue";
 import { errorMessage } from "~/composables/use-api";
 import { useSettingsStore } from "~/stores/settings";
+import { parsePantryStaples } from "~/utils/settings";
 
 const props = defineProps<{ settings: SettingsDto; pantryStaples: PantryStapleDto[] }>();
 const store = useSettingsStore();
@@ -22,7 +23,7 @@ const busy = ref(false);
 function payload(): SettingsUpdateRequest {
   return {
     ...form,
-    pantryStaples: form.pantryStaples.split(/\r?\n/).map((line) => line.trim()).filter(Boolean),
+    pantryStaples: parsePantryStaples(form.pantryStaples),
   };
 }
 

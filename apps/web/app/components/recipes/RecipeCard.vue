@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RecipeSummaryDto } from "@mealmind/contracts";
-import { ArrowRight } from "@lucide/vue";
+import { ArrowRight, Tags } from "@lucide/vue";
 
 defineProps<{ recipe: RecipeSummaryDto }>();
 </script>
@@ -22,7 +22,13 @@ defineProps<{ recipe: RecipeSummaryDto }>();
           :meal-types="recipe.mealTypes"
           :total-time="recipe.totalTimeMinutes"
           :tags="recipe.tags"
+          :show-tags="false"
         />
+      </div>
+      <div v-if="recipe.tags.length" class="mt-3 flex flex-wrap gap-2 text-xs text-ink/65">
+        <span v-for="tag in recipe.tags" :key="tag" class="inline-flex items-center gap-1 rounded-md bg-field px-2 py-1">
+          <Tags :size="13" aria-hidden="true" /> {{ tag }}
+        </span>
       </div>
       <div class="mt-5 flex items-center justify-between border-t border-ink/10 pt-4 text-sm text-ink/60">
         <span>{{ recipe.ingredientCount }} ingredients · {{ recipe.cookwareCount }} tools · {{ recipe.timerCount }} timers</span>

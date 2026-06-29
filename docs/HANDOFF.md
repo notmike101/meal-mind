@@ -1,5 +1,15 @@
 # MealMind Handoff
 
+## Current Active Work - 2026-06-29 Vue/Nuxt Migration
+
+The web interface now runs on Nuxt 4 SSR with Vue 3 Composition API and Pinia. The existing routes, Tailwind design, theme preference, planning controls, CookLang recipe rendering, shopping interactions, settings behavior, and same-origin `/api/*` surface are preserved. Nitro proxies REST traffic to `services/api` and streams `/api/mcp` to `services/mcp`.
+
+The frontend source now lives under `apps/web/app`: route components are in `pages`, focused UI components are grouped by feature, and canonical client/SSR state is separated into Pinia stores for planning, recipes, shopping, settings, and theme. Production builds run from `apps/web/.output/server/index.mjs`.
+
+The migration is intentionally isolated to the pushed `dev` branch. Do not merge it into `main` as part of this work.
+
+Older Next.js references below describe historical states and should not be used as current implementation guidance.
+
 ## Current Active Work - 2026-06-21 CookLang Tokenized Recipes
 
 MealMind now stores recipes as CookLang `.cook` files and parses them with `@cooklang/cooklang` inside `packages/domain`. Recipe detail responses keep the existing flat `ingredients` and `instructions` fields, and also expose stable `cooklang` DTOs for metadata, ingredients, cookware, timers, sections, steps, and tokens. The web recipe detail page renders instructions from those tokens. MCP recipe detail tools/resources include the same tokenized detail object.
@@ -108,7 +118,7 @@ The refactor is complete. Next steps are:
 
 ## Current State (Post-Refactor)
 MealMind is now a Dockerized microservices architecture:
-- **`apps/web`**: Next.js UI only (standalone output), fetches from Fastify API at `/api/*`.
+- **`apps/web`**: Nuxt 4/Vue SSR UI with Pinia and Nitro proxies to Fastify/MCP at `/api/*`.
 - **`services/api`** (`@mealmind/api`): Fastify REST API owning domain workflows and writes, backed by Postgres.
 - **`services/mcp`** (`@mealmind/mcp`): Standalone MCP HTTP service (port 3102) with Zod schemas, calls the API via `MEALMIND_API_BASE_URL`.
 - **`services/ai-gateway`** (`@mealmind/ai-gateway`): LM Studio proxy on port 8080.

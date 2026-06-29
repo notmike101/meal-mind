@@ -2,7 +2,9 @@
 import type { MealType } from "@mealmind/contracts";
 import { Clock, Tags, Utensils } from "@lucide/vue";
 
-defineProps<{ mealTypes: MealType[]; totalTime: number; tags: string[] }>();
+withDefaults(defineProps<{ mealTypes: MealType[]; totalTime: number; tags: string[]; showTags?: boolean }>(), {
+  showTags: true,
+});
 </script>
 
 <template>
@@ -13,7 +15,7 @@ defineProps<{ mealTypes: MealType[]; totalTime: number; tags: string[] }>();
     <span class="inline-flex items-center gap-1 rounded-md bg-field px-2 py-1">
       <Clock :size="14" aria-hidden="true" /> {{ totalTime }} min
     </span>
-    <span v-for="tag in tags" :key="tag" class="inline-flex items-center gap-1 rounded-md bg-field px-2 py-1">
+    <span v-for="tag in showTags ? tags : []" :key="tag" class="inline-flex items-center gap-1 rounded-md bg-field px-2 py-1">
       <Tags :size="14" aria-hidden="true" /> {{ tag }}
     </span>
   </div>

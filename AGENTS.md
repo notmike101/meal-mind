@@ -8,7 +8,7 @@ MealMind is a local meal-planning app for trusted CookLang recipes. It generates
 
 The repo is an npm workspace monorepo:
 
-- `apps/web`: Next.js app. User-facing UI and `/api/*` rewrites.
+- `apps/web`: Nuxt 4/Vue app. User-facing SSR UI and Nitro `/api/*` proxies.
 - `services/api`: Fastify REST API. Owns writes, workflows, DB initialization, and AI calls.
 - `services/mcp`: MCP stdio/HTTP server. Uses the API instead of importing DB/domain write logic directly.
 - `services/ai-gateway`: Fastify proxy from containers to LM Studio/OpenAI-compatible local model.
@@ -149,7 +149,7 @@ Important conventions:
 ## Code Organization Rules
 
 - Put shared request/response types and validation in `packages/contracts`.
-- Keep pure business logic in `packages/domain`; avoid DB, Fastify, React, or Node server concerns there.
+- Keep pure business logic in `packages/domain`; avoid DB, Fastify, Vue, or Node server concerns there.
 - Keep DB access in `packages/db` repositories.
 - Keep AI prompting/client behavior in `packages/ai`.
 - Keep workflow orchestration in `services/api/src/services`.
@@ -163,7 +163,7 @@ Prefer existing patterns before adding new abstractions. Keep changes scoped to 
 The app is a work-focused planning tool. Keep UI quiet, dense, and usable rather than marketing-like.
 
 - Use existing Tailwind styles and component patterns.
-- Use `lucide-react` icons where appropriate.
+- Use `@lucide/vue` icons where appropriate.
 - Do not create a landing page for app work; keep the first screen useful.
 - Avoid nested cards and large decorative sections.
 - Ensure text does not overflow on mobile or desktop.
