@@ -20,6 +20,19 @@ test("renders core MealMind pages", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
   await expect(page.getByLabel("AI base URL")).toHaveValue(/http:\/\/(127\.0\.0\.1:1234|ai-gateway:8080)\/v1/);
+
+  await page.goto("/shopping");
+  await expect(page.getByRole("heading", { name: "Consolidated grocery list" })).toBeVisible();
+  await expect(page.getByText(/No meal plan selected|Shopping list/)).toBeVisible();
+});
+
+test("supports direct recipe routes and missing recipe responses", async ({ page }) => {
+  await page.goto("/recipes/beef-tacos");
+  await expect(page.getByRole("heading", { name: "Beef Tacos" })).toBeVisible();
+  await expect(page.getByText("Brown 1 lb ground beef in a skillet for 8 minutes.")).toBeVisible();
+
+  const response = await page.goto("/recipes/not-a-recipe");
+  expect(response?.status()).toBe(404);
 });
 
 test("plan page exposes generation controls", async ({ page }) => {
