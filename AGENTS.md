@@ -248,6 +248,16 @@ git push origin main
 - Do not revert user changes unless explicitly asked.
 - If committing, include only intended files and verify the worktree afterward.
 
+## Importing recipes from URLs
+
+To convert external recipe pages into CookLang `.cook` files, use the import skill:
+
+    cd D:\meal-mind && uv run .agents/skills/import-cooklang/scripts/import-recipe.py "https://example.com/recipe" recipes
+
+The script extracts Recipe JSON-LD (90%+ of sites), falls back to DOM scraping, and writes valid `.cook` files with metadata. See the skill for details: `.agents/skills/import-cooklang/SKILL.md`.
+
+---
+
 ## Current Known Good Verification Set
 
 After the MealMind rename, these checks passed:
