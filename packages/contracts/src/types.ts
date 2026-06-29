@@ -11,6 +11,7 @@ export type SettingsDto = {
   planningVarietyRules: string;
   defaultLunchServings: number;
   defaultDinnerServings: number;
+  autoGenerateNextWeek: boolean;
   createdAt: string;
   updatedAt: string;
 };

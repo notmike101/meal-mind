@@ -11,6 +11,7 @@ export type SettingsUpdate = {
   planningVarietyRules?: string;
   defaultLunchServings?: number;
   defaultDinnerServings?: number;
+  autoGenerateNextWeek?: boolean;
   pantryStaples?: string[];
 };
 
@@ -72,6 +73,10 @@ export async function updateSettings(input: SettingsUpdate) {
 
   if (input.defaultDinnerServings !== undefined) {
     updates.defaultDinnerServings = validateServingCount(input.defaultDinnerServings);
+  }
+
+  if (input.autoGenerateNextWeek !== undefined) {
+    updates.autoGenerateNextWeek = input.autoGenerateNextWeek;
   }
 
   await db.update(settings).set(updates).where(eq(settings.id, 1));

@@ -1,5 +1,9 @@
 # MealMind Handoff
 
+## Automatic Next-Week Planning
+
+The API automatically creates a missing next-week draft plan and shopping list after startup and every 15 minutes. This behavior is enabled by default, can be disabled in Settings, never replaces an existing plan, and retries failed attempts on the next check without blocking API readiness. Manual generation remains available as a fallback and for deliberate draft replacement.
+
 ## Current Active Work - 2026-06-29 Vue/Nuxt Migration
 
 The web interface now runs on Nuxt 4 SSR with Vue 3 Composition API and Pinia. The existing routes, Tailwind design, theme preference, planning controls, CookLang recipe rendering, shopping interactions, settings behavior, and same-origin `/api/*` surface are preserved. Nitro proxies REST traffic to `services/api` and streams `/api/mcp` to `services/mcp`.

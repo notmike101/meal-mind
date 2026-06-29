@@ -8,7 +8,7 @@ await callOnce("settings-data", () => settings.fetchSettings(), { mode: "navigat
 
 <template>
   <div class="space-y-6">
-    <PageHeading eyebrow="Settings" title="Local planner settings" description="AI access, preferences, portions, and pantry staples." />
+    <PageHeading eyebrow="Settings" title="Local planner settings" description="Automation, AI access, preferences, portions, and pantry staples." />
     <section class="flex flex-col gap-3 rounded-md bg-surface p-5 shadow-line sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 class="font-semibold">Appearance</h2>

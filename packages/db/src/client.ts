@@ -46,6 +46,7 @@ export async function ensureDatabase() {
       planning_variety_rules TEXT NOT NULL DEFAULT 'Avoid repeating the same recipe in a week unless no alternatives exist.',
       default_lunch_servings INTEGER NOT NULL DEFAULT 1 CHECK(default_lunch_servings >= 1 AND default_lunch_servings <= 12),
       default_dinner_servings INTEGER NOT NULL DEFAULT 1 CHECK(default_dinner_servings >= 1 AND default_dinner_servings <= 12),
+      auto_generate_next_week BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -123,6 +124,9 @@ export async function ensureDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS ai_events_type_idx ON ai_events(event_type);
+
+    ALTER TABLE settings
+      ADD COLUMN IF NOT EXISTS auto_generate_next_week BOOLEAN NOT NULL DEFAULT TRUE;
   `);
 
   const now = new Date().toISOString();

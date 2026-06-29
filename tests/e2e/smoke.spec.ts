@@ -20,6 +20,7 @@ test("renders core MealMind pages", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
   await expect(page.getByLabel("AI base URL")).toHaveValue(/http:\/\/(127\.0\.0\.1:1234|ai-gateway:8080)\/v1/);
+  await expect(page.getByRole("checkbox", { name: "Automatically generate next week's plan" })).toBeChecked();
 
   await page.goto("/shopping");
   await expect(page.getByRole("heading", { name: "Consolidated grocery list" })).toBeVisible();

@@ -26,12 +26,16 @@ import {
 import { generateShoppingList, getShoppingList } from "./services/shopping.js";
 import { getRecipeDetail, listRecipes } from "./recipes.js";
 
+type RouteDependencies = {
+  triggerAutomaticPlanning?: () => void | Promise<void>;
+};
+
 function sendError(reply: FastifyReply, error: unknown) {
   const appError = toAppError(error);
   return reply.status(appError.status).send(fail(appError.code, appError.message, appError.details));
 }
 
-export function registerRoutes(app: FastifyInstance) {
+export function registerRoutes(app: FastifyInstance, dependencies: RouteDependencies = {}) {
   app.get("/healthz", async () => ok({ status: "ok" }));
   app.get("/readyz", async () => ok({ status: "ready" }));
 
@@ -53,7 +57,13 @@ export function registerRoutes(app: FastifyInstance) {
   app.patch("/api/settings", async (request, reply) => {
     try {
       const body = settingsUpdateRequestSchema.parse(request.body ?? {});
-      return ok(await updateSettings(body));
+      const updated = await updateSettings(body);
+      if (body.autoGenerateNextWeek === true && dependencies.triggerAutomaticPlanning) {
+        void Promise.resolve(dependencies.triggerAutomaticPlanning()).catch((error) => {
+          app.log.warn({ err: error }, "Could not trigger automatic meal plan generation after settings update.");
+        });
+      }
+      return ok(updated);
     } catch (error) {
       return sendError(reply, error);
     }

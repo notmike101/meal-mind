@@ -15,6 +15,7 @@ const form = reactive({
   planningVarietyRules: props.settings.planningVarietyRules,
   defaultLunchServings: props.settings.defaultLunchServings,
   defaultDinnerServings: props.settings.defaultDinnerServings,
+  autoGenerateNextWeek: props.settings.autoGenerateNextWeek,
   pantryStaples: props.pantryStaples.map((staple) => staple.name).join("\n"),
 });
 const status = ref<string | null>(null);
@@ -77,6 +78,7 @@ async function testAi() {
       v-model:preferences="form.planningPreferences"
       v-model:variety-rules="form.planningVarietyRules"
     />
+    <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
     <SettingsPantryField v-model="form.pantryStaples" />
     <SettingsFormActions :busy="busy" @save="runSave" @test-ai="testAi" />
     <p v-if="status" class="text-sm text-ink/70">{{ status }}</p>

@@ -21,6 +21,7 @@ export const settings = pgTable("settings", {
     .default("Avoid repeating the same recipe in a week unless no alternatives exist."),
   defaultLunchServings: integer("default_lunch_servings").notNull().default(1),
   defaultDinnerServings: integer("default_dinner_servings").notNull().default(1),
+  autoGenerateNextWeek: boolean("auto_generate_next_week").notNull().default(true),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
