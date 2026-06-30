@@ -667,3 +667,14 @@ This file is append-only during implementation. Each entry records current objec
 - Verified `npm run lint`, 19 Vitest tests, the complete monorepo production build, 4 Playwright tests, MCP stdio, direct MCP HTTP, and MCP HTTP through the Nuxt `/api/mcp` proxy.
 - Rebuilt the Compose stack from a stopped state; Postgres, API, MCP, and AI gateway reported healthy and the Nuxt web container served all six routes from port 3100.
 - Browser inspection confirmed the settings form, recipe catalog/detail rendering, theme controls, desktop layout, and a 375px mobile viewport without horizontal overflow or console errors.
+
+# 2026-06-30 - Flexible Weekly Meals
+
+- Replaced fixed lunch/dinner slots with arbitrary dated meals and optional 50-character free-text slot labels.
+- Added blank-plan creation, meal add/update/remove APIs, exact-count AI generation, unified serving defaults, default automatic meal count, and clean meal-oriented MCP tools.
+- Added idempotent Postgres migration logic that preserves existing plans, removes slot uniqueness/type constraints, adds stable ordering, and supports nullable AI provenance for manual plans.
+- Updated the Nuxt planner with per-day Add meal actions, a generation-count dialog, optional slot suggestions, date/slot editing, removal, empty-plan support, and updated dashboard/settings/recipe rendering.
+- Added flexible-schema/domain/component/MCP smoke coverage.
+- Verified the preserved legacy draft migrated to 14 meals; reversible REST checks passed for duplicate slots, unlabeled meals, serving updates, deletion, blank plans, and empty commits.
+- Verified local Qwen generated exactly 3 requested meals for a temporary future week; the test plan was removed afterward.
+- `npm run lint`, `npm run test` (36 tests), and `npm run build` passed before runtime verification.

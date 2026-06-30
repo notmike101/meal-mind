@@ -34,6 +34,10 @@ function textFromContent(content: unknown) {
 try {
   await client.connect(transport);
   const tools = await client.listTools();
+  const toolNames = tools.tools.map((tool) => tool.name);
+  for (const expectedTool of ["create_blank_plan", "add_plan_meal", "update_plan_meal", "remove_plan_meal", "swap_meal_recipe"]) {
+    if (!toolNames.includes(expectedTool)) throw new Error(`Missing HTTP MCP tool: ${expectedTool}`);
+  }
   const resources = await client.listResources();
   const recipe = await client.callTool({
     name: "get_recipe",
@@ -50,7 +54,7 @@ try {
       {
         ok: true,
         endpoint,
-        tools: tools.tools.length,
+        tools: toolNames.length,
         resources: resources.resources.length,
       },
       null,

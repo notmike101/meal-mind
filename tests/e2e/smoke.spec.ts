@@ -21,6 +21,8 @@ test("renders core MealMind pages", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
   await expect(page.getByLabel("AI base URL")).toHaveValue(/http:\/\/(127\.0\.0\.1:1234|ai-gateway:8080)\/v1/);
   await expect(page.getByRole("checkbox", { name: "Automatically generate next week's plan" })).toBeChecked();
+  await expect(page.getByLabel("Default meal servings")).toHaveValue(/\d+/);
+  await expect(page.getByLabel("Weekly meals")).toHaveValue(/\d+/);
 
   await page.goto("/shopping");
   await expect(page.getByRole("heading", { name: "Consolidated grocery list" })).toBeVisible();
@@ -39,7 +41,14 @@ test("supports direct recipe routes and missing recipe responses", async ({ page
 test("plan page exposes generation controls", async ({ page }) => {
   await page.goto("/plan");
   await expect(page.getByRole("heading", { name: /Choose next week's meals|Weekly meal plan/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Generate next week|Replace draft/ })).toBeVisible();
+  const generationButton = page.getByRole("button", { name: /Generate next week|Replace draft/ });
+  await expect(generationButton).toBeVisible();
+  await generationButton.click();
+  const generationDialog = page.getByRole("dialog");
+  await expect(generationDialog).toBeVisible();
+  await expect(generationDialog.getByRole("spinbutton", { name: "Number of meals" })).toHaveValue(/\d+/);
+  await generationDialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(generationDialog).toHaveCount(0);
   for (const width of [390, 768, 1280, 1600]) {
     await page.setViewportSize({ width, height: 900 });
     await page.reload();
