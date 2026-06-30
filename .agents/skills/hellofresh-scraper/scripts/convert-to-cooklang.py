@@ -20,6 +20,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from cooklang_schema import build_recipe_cooklang, parse_ingredient, slugify  # noqa: E402
 from recipe_jsonld import infer_meal_types, parse_iso_duration_minutes, parse_servings  # noqa: E402
+from recipe_images import cache_recipe_image  # noqa: E402
 
 
 def _as_string_list(value: Any) -> list[str]:
@@ -113,10 +114,20 @@ def main() -> int:
             recipe_data = json.load(sys.stdin)
         else:
             recipe_data = json.loads(Path(args.input).read_text(encoding="utf-8"))
-        content = build_cooklang(recipe_data, meal_type=args.meal_type)
         output_path = Path(args.output or f"recipes/{slugify(str(recipe_data.get('title') or 'recipe'))}.cook")
         if output_path.exists() and not args.force:
             raise FileExistsError(f"Output already exists: {output_path}. Pass --force to replace it.")
+        normalized = _normalize_input(recipe_data, meal_type=args.meal_type)
+        recipe_id = slugify(str(normalized.get("title") or "recipe"))
+        image_url = str(normalized.get("image_url") or "").strip()
+        if image_url:
+            try:
+                image = cache_recipe_image(image_url, output_path.parent, recipe_id)
+                if image:
+                    normalized["image"] = image
+            except Exception as error:
+                print(f"WARNING: Could not cache recipe image: {error}", file=sys.stderr)
+        content = build_recipe_cooklang(normalized, recipe_id=recipe_id)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(content, encoding="utf-8", newline="\n")
         print(f"Written to {output_path}", file=sys.stderr)

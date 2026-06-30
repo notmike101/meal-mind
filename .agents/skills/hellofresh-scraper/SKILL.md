@@ -35,6 +35,7 @@ cd D:\meal-mind && uv run .agents/skills/hellofresh-scraper/scripts/convert-to-c
 
 The converter validates before writing and produces:
 - **Frontmatter**: required MealMind fields, canonical minute strings, source, author, tags, and nutrition
+- **Local image**: a supported source photo cached under `recipes/images/` and referenced by relative frontmatter path
 - **Ingredients**: one inline `@ingredient{quantity%unit}` marker per source ingredient
 - **Steps**: standard `#cookware{}` and `~{duration%unit}` markers with alternate-serving notes removed
 - **Completeness fallback**: an opening gather step if source wording cannot be matched safely
@@ -58,10 +59,10 @@ Do not move or commit an output unless both validation layers pass.
 ## Gotchas
 
 - **Ingredient quantities** — JSON-LD is the source of truth for generated CookLang quantities; review unusual source wording before committing.
-- **Ratings and images** — Normalized JSON preserves available rating and image fields; MealMind CookLang frontmatter intentionally keeps only metadata consumed by the app.
+- **Ratings and images** — Normalized JSON preserves both; conversion caches supported images locally while ratings remain extraction-only metadata.
 - **Unmeasured pantry staples** — Drizzles, pinches, and "to taste" ingredients remain plain text because the source provides no scalable quantity.
 - **Some recipes have empty `cuisine` or `prepTime`/`cookTime` fields** — These are optional in Schema.org Recipe and may be absent on certain HelloFresh pages.
-- **Image URLs use HelloFresh CDN with query params** — They include `f_auto,fl_lossy,q_auto,w_1200` etc. for responsive delivery; strip or keep as-is depending on whether you need the original resolution.
+- **Image downloads are optional** — JPEG, PNG, and WebP files up to 10 MB are cached. A failed image request warns without blocking the recipe.
 - **No authentication required** — All recipe data is publicly available in the server-side rendered HTML.
 
 ## See also

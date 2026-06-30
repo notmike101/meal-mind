@@ -5,12 +5,43 @@ import {
   type Recipe,
 } from "@mealmind/domain";
 import type { RecipeFilterRequest } from "@mealmind/contracts";
+import fs from "node:fs";
+import path from "node:path";
+
+const imageContentTypes: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+};
+
+function recipeRoot() {
+  return path.resolve(process.env.MEALMIND_RECIPE_ROOT || path.join(process.cwd(), "recipes"));
+}
+
+function resolveRecipeImage(recipe: Pick<Recipe, "image">) {
+  if (!recipe.image) return null;
+  const root = recipeRoot();
+  const filePath = path.resolve(root, recipe.image);
+  const relative = path.relative(root, filePath);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return null;
+  const contentType = imageContentTypes[path.extname(filePath).toLowerCase()];
+  if (!contentType || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return null;
+  return { filePath, contentType };
+}
+
+export function getRecipeImage(recipeId: string) {
+  const recipe = getRecipeById(recipeId);
+  return recipe ? resolveRecipeImage(recipe) : null;
+}
 
 export function summarizeRecipe(recipe: Recipe) {
+  const image = resolveRecipeImage(recipe);
   return {
     id: recipe.id,
     title: recipe.title,
     description: getRecipeDescription(recipe),
+    imageUrl: image ? `/api/recipes/${encodeURIComponent(recipe.id)}/image` : null,
     format: recipe.format,
     mealTypes: recipe.mealTypes,
     tags: recipe.tags,

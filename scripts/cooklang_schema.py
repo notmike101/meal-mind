@@ -453,6 +453,7 @@ def build_frontmatter(
     source_url: str = "",
     author: str = "",
     nutrition: Any = None,
+    image: str = "",
     utensils: list[str] | None = None,
     ingredients: list[str] | None = None,
     *,
@@ -493,6 +494,8 @@ def build_frontmatter(
         fm["cuisine"] = cuisine
     if source_url:
         fm["source"] = source_url
+    if image:
+        fm["image"] = image
     if author:
         fm["author"] = author
     normalized_nutrition = _normalize_nutrition(nutrition)
@@ -570,6 +573,7 @@ def build_recipe_cooklang(recipe: dict[str, Any], recipe_id: str | None = None) 
         source_url=str(recipe.get("source") or recipe.get("source_url") or ""),
         author=str(recipe.get("author") or ""),
         nutrition=recipe.get("nutrition"),
+        image=str(recipe.get("image") or ""),
         recipe_id=recipe_id,
         total_time_minutes=recipe.get("total_time_minutes"),
         prep_time_minutes=recipe.get("prep_time_minutes"),

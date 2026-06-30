@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
+import { createReadStream } from "node:fs";
 import {
   adherenceRequestSchema,
   fail,
@@ -24,7 +25,7 @@ import {
   updateSlot,
 } from "./services/planning.js";
 import { generateShoppingList, getShoppingList } from "./services/shopping.js";
-import { getRecipeDetail, listRecipes } from "./recipes.js";
+import { getRecipeDetail, getRecipeImage, listRecipes } from "./recipes.js";
 
 type RouteDependencies = {
   triggerAutomaticPlanning?: () => void | Promise<void>;
@@ -50,6 +51,17 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
       return reply.status(404).send(fail("NOT_FOUND", "Recipe not found."));
     }
     return ok(recipe);
+  });
+
+  app.get<{ Params: { recipeId: string } }>("/api/recipes/:recipeId/image", async (request, reply) => {
+    const image = getRecipeImage(request.params.recipeId);
+    if (!image) {
+      return reply.status(404).send(fail("NOT_FOUND", "Recipe image not found."));
+    }
+    return reply
+      .header("Content-Type", image.contentType)
+      .header("Cache-Control", "public, max-age=86400")
+      .send(createReadStream(image.filePath));
   });
 
   app.get("/api/settings", async () => ok(await getSettingsWithPantry()));
