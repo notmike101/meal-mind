@@ -22,6 +22,10 @@ The script attempts extraction in priority order:
 2. **DOM scraping fallback** — handles simple static ingredient and instruction lists
 3. **Reports failure** — if both strategies fail, use browser tools for manual extraction
 
+When the source exposes a supported recipe image, the importer caches it under `recipes/images/`
+and writes a relative `image` path in frontmatter. Image download failures are warnings and do not
+prevent a valid recipe from being saved.
+
 Override the inferred/default meal type when needed:
 
     cd D:\meal-mind && uv run .agents/skills/import-cooklang/scripts/import-recipe.py "https://example.com/recipe/slug" recipes --meal-type lunch
@@ -58,6 +62,7 @@ Do not move or commit an output that fails either validation layer. `build_recip
 - **Unmeasured pantry staples** — Drizzles, pinches, and "to taste" amounts remain plain text because there is no defensible quantity to scale.
 - **JS-rendered pages** — Most recipe sites emit JSON-LD in the initial HTML, but some load content via JavaScript. If JSON-LD is missing, the DOM scraping fallback handles static content only.
 - **Existing filenames** — The importer creates `-1`, `-2`, and subsequent suffixes instead of overwriting an existing recipe.
+- **Recipe images** — Only JPEG, PNG, and WebP files up to 10 MB are cached. App rendering never fetches remote image URLs.
 
 ## See also
 

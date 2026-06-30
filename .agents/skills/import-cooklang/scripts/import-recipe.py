@@ -33,6 +33,7 @@ from recipe_jsonld import (  # noqa: E402
     infer_meal_types,
     normalize_recipe_json_ld,
 )
+from recipe_images import cache_recipe_image  # noqa: E402
 
 
 class RecipeExtractor:
@@ -89,6 +90,7 @@ def _scrape_from_dom(
         "//meta[@property='og:description']/@content"
     )
     description = clean_html_text(description_values[0]) if description_values else ""
+    image_values = tree.xpath("//meta[@property='og:image']/@content")
     lowercase = "translate(@class,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')"
     ingredient_nodes = tree.xpath(
         f"//*[contains({lowercase},'ingredient')]//li"
@@ -115,6 +117,7 @@ def _scrape_from_dom(
         "ingredients": ingredients,
         "instructions": instructions,
         "nutrition": {},
+        "image_url": str(image_values[0]).strip() if image_values else "",
     }
 
 
@@ -131,6 +134,14 @@ def _next_recipe_path(output_dir: str | os.PathLike[str], base_id: str) -> tuple
 def _save_recipe(recipe: dict[str, Any], output_dir: str = "recipes") -> dict[str, Any]:
     base_id = slugify(str(recipe["title"]))
     filepath, recipe_id = _next_recipe_path(output_dir, base_id)
+    image_url = str(recipe.get("image_url") or "").strip()
+    if image_url:
+        try:
+            image = cache_recipe_image(image_url, output_dir, recipe_id)
+            if image:
+                recipe = {**recipe, "image": image}
+        except Exception as error:
+            print(f"WARNING: Could not cache recipe image: {error}", file=sys.stderr)
     content = build_recipe_cooklang(recipe, recipe_id=recipe_id)
 
     filepath.parent.mkdir(parents=True, exist_ok=True)

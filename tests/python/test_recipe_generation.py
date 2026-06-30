@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["PyYAML>=6.0"]
+# dependencies = ["PyYAML>=6.0", "requests>=2.31"]
 # ///
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ from recipe_jsonld import (  # noqa: E402
     normalize_recipe_json_ld,
     parse_iso_duration_minutes,
 )
+from recipe_images import cache_recipe_image  # noqa: E402
 
 CONVERTER_PATH = REPO_ROOT / ".agents/skills/hellofresh-scraper/scripts/convert-to-cooklang.py"
 CONVERTER_SPEC = importlib.util.spec_from_file_location("hellofresh_convert", CONVERTER_PATH)
@@ -83,6 +84,7 @@ class JsonLdTests(unittest.TestCase):
         [{"@context":"https://schema.org","@graph":[
           {"@type":"WebPage","name":"Page"},
           {"@type":["Thing","Recipe"],"name":"Nested Soup","recipeYield":"4 servings",
+           "image":{"url":"https://images.example.test/soup.webp"},
            "totalTime":"PT1H5M","recipeCategory":["Lunch"],
            "recipeIngredient":["1 cup Lentils"],
            "recipeInstructions":[{"@type":"HowToSection","itemListElement":[
@@ -100,6 +102,7 @@ class JsonLdTests(unittest.TestCase):
         self.assertEqual(normalized["meal_types"], ["lunch"])
         self.assertEqual(normalized["instructions"], ["Cook lentils."])
         self.assertEqual(normalized["source"], "https://example.test/soup")
+        self.assertEqual(normalized["image_url"], "https://images.example.test/soup.webp")
 
     def test_large_html_extraction_is_linear(self) -> None:
         html = "<html><body>" + ("x" * 1_000_000) + """
@@ -168,13 +171,14 @@ Cook @rice{1%cup}.
                 self.assertEqual((parsed.quantity, parsed.unit, parsed.name), expected)
 
     def test_generates_complete_unique_hellofresh_recipe(self) -> None:
-        content = build_recipe_cooklang(HELLOFRESH_RECIPE)
+        content = build_recipe_cooklang({**HELLOFRESH_RECIPE, "image": "images/sweet-soy.webp"})
         metadata = yaml.safe_load(content.split("---", 2)[1])
         ingredients = parse_cooklang_ingredients(content)
         names = [ingredient["name"] for ingredient in ingredients]
 
         self.assertEqual(validate_cooklang(content), [])
         self.assertEqual(metadata["source"], HELLOFRESH_RECIPE["source"])
+        self.assertEqual(metadata["image"], "images/sweet-soy.webp")
         self.assertEqual(metadata["time required"], "20 minutes")
         self.assertEqual(metadata["cook time"], "20 minutes")
         self.assertNotIn("ingredients", metadata)
@@ -271,6 +275,41 @@ Cook @rice{1%cup}.
             accepted = subprocess.run(command + ["--force"], capture_output=True, text=True, check=False)
             self.assertEqual(accepted.returncode, 0, accepted.stderr)
             self.assertIn("mealTypes", output_path.read_text(encoding="utf-8"))
+
+
+class RecipeImageTests(unittest.TestCase):
+    def test_caches_supported_images_under_the_recipe_root(self) -> None:
+        class Response:
+            headers = {"content-type": "image/webp; charset=binary"}
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def iter_content(self, chunk_size: int):
+                del chunk_size
+                return iter([b"recipe-image"])
+
+            def close(self) -> None:
+                return None
+
+        class Session:
+            @staticmethod
+            def get(*args, **kwargs):
+                del args, kwargs
+                return Response()
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            relative = cache_recipe_image(
+                "https://images.example.test/recipe",
+                temporary_directory,
+                "test-recipe",
+                session=Session,
+            )
+            self.assertEqual(relative, "images/test-recipe.webp")
+            self.assertEqual(
+                (Path(temporary_directory) / "images/test-recipe.webp").read_bytes(),
+                b"recipe-image",
+            )
 
 
 if __name__ == "__main__":

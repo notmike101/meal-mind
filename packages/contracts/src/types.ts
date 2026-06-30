@@ -171,6 +171,7 @@ export type RecipeDto = {
   id: string;
   title: string;
   description: string;
+  imageUrl: string | null;
   format: "cooklang";
   defaultServings: number;
   mealTypes: MealType[];

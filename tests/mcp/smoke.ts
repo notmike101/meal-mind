@@ -58,15 +58,15 @@ try {
     arguments: { mealType: "dinner" },
   });
   const recipeText = textFromContent(recipeList.content);
-  if (!recipeText?.includes("Chicken Rice Bowl")) {
+  if (!recipeText?.includes("Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli")) {
     throw new Error("list_recipes did not return expected recipe content.");
   }
 
   const recipeDetail = await client.readResource({
-    uri: "mealmind://recipes/chicken-rice-bowl",
+    uri: "mealmind://recipes/hot-honey-chicken-with-bbq-roasted-potatoes-buttery-broccoli",
   });
   const detailText = textFromContent(recipeDetail.contents);
-  if (!detailText?.includes("cooklang") || !detailText.includes("Cook 1 cup white rice in a pot according to package instructions.")) {
+  if (!detailText?.includes("cooklang") || !detailText.includes("Adjust racks to top and middle positions and preheat oven to 425 degrees.")) {
     throw new Error("recipe detail resource did not include instructions.");
   }
 

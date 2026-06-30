@@ -19,6 +19,7 @@ tags:
 - quick
 - easy
 source: https://example.com/recipe
+image: images/recipe-slug.jpg
 author: Source Name
 nutrition:
   calories: 450 kcal
@@ -27,6 +28,8 @@ nutrition:
 ```
 
 Required MealMind fields are `id`, `title`, `servings`, and `mealTypes`. The `id` must use lowercase kebab-case. `mealTypes` must be a non-empty list containing only `lunch` or `dinner`; omitting it makes the recipe invalid. Keep ingredients and cookware in the instruction body. The skill validator rejects an `ingredients:` frontmatter list.
+
+`image` is optional. It must be a recipe-root-relative JPEG, PNG, or WebP path using forward slashes; absolute paths and `..` traversal are invalid.
 
 ## Ingredients
 
