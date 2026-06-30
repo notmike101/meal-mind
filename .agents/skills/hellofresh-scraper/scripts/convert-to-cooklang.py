@@ -3,7 +3,7 @@
 
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["PyYAML>=6.0"]
+# dependencies = ["PyYAML>=6.0", "requests>=2.31"]
 # ///
 
 from __future__ import annotations
