@@ -1,19 +1,17 @@
 import { z } from "zod";
 
 export const weeklyPlanDraftSchema = z.object({
-  slots: z
-    .array(
-      z.object({
-        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-        mealType: z.enum(["lunch", "dinner"]),
-        recipeId: z.string().min(1),
-        reason: z.string().min(1).max(500),
-      }),
-    )
-    .length(14),
+  meals: z.array(
+    z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      slot: z.string().trim().min(1).max(50).nullable().optional(),
+      recipeId: z.string().min(1),
+      reason: z.string().min(1).max(500),
+    }),
+  ).min(1),
 });
 
-export const slotSwapSchema = z.object({
+export const mealSwapSchema = z.object({
   recipeId: z.string().min(1),
   reason: z.string().min(1).max(500),
 });
@@ -42,6 +40,6 @@ export const shoppingListDraftSchema = z.object({
 });
 
 export type WeeklyPlanDraft = z.infer<typeof weeklyPlanDraftSchema>;
-export type SlotSwap = z.infer<typeof slotSwapSchema>;
+export type MealSwap = z.infer<typeof mealSwapSchema>;
 export type ShoppingListDraft = z.infer<typeof shoppingListDraftSchema>;
 export type ShoppingCategory = z.infer<typeof shoppingCategorySchema>;

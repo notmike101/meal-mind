@@ -27,7 +27,7 @@ describe("parseRecipeCooklang", () => {
     expect(recipe.description).toBe("A short test recipe.");
     expect(recipe.format).toBe("cooklang");
     expect(recipe.defaultServings).toBe(2);
-    expect(recipe.mealTypes).toEqual(["lunch", "dinner"]);
+    expect(recipe.suggestedSlots).toEqual(["lunch", "dinner"]);
     expect(recipe.image).toBe("images/test-recipe.webp");
     expect(recipe.prepTimeMinutes).toBe(5);
     expect(recipe.cookTimeMinutes).toBe(10);

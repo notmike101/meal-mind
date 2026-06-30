@@ -2,9 +2,9 @@ import { runJsonPrompt, shoppingListDraftSchema, shoppingListMessages, type Shop
 import { AppError } from "@mealmind/contracts";
 import { buildMealIngredients, loadRecipes, normalizeShoppingItemName } from "@mealmind/domain";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
-import { getPlanWithSlots } from "@mealmind/db/repositories/plans";
+import { getPlanWithMeals } from "@mealmind/db/repositories/plans";
 import { getSettingsWithPantry } from "@mealmind/db/repositories/settings";
-import { getShoppingListForPlan, replaceShoppingList } from "@mealmind/db/repositories/shopping";
+import { deleteShoppingListForPlan, getShoppingListForPlan, replaceShoppingList } from "@mealmind/db/repositories/shopping";
 
 function validateShoppingListAgainstRecipes(draft: ShoppingListDraft, recipeIds: Set<string>) {
   const errors: string[] = [];
@@ -19,7 +19,7 @@ function validateShoppingListAgainstRecipes(draft: ShoppingListDraft, recipeIds:
 }
 
 export async function generateShoppingList(planId: string) {
-  const plan = await getPlanWithSlots(planId);
+  const plan = await getPlanWithMeals(planId);
   if (!plan) {
     throw new AppError("NOT_FOUND", "Meal plan not found.", 404);
   }
@@ -28,11 +28,16 @@ export async function generateShoppingList(planId: string) {
   const { recipes } = loadRecipes();
   const pantryNames = pantryStaples.map((staple) => staple.name);
   const mealIngredients = buildMealIngredients({
-    slots: plan.slots,
+    meals: plan.meals,
     recipes,
     pantryStaples: pantryNames,
   });
   const recipeIds = new Set(recipes.map((recipe) => recipe.id));
+
+  if (mealIngredients.length === 0) {
+    await deleteShoppingListForPlan(planId);
+    return null;
+  }
 
   let validationErrors: string[] = [];
   for (let attempt = 0; attempt < 2; attempt += 1) {

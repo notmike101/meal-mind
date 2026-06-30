@@ -43,7 +43,7 @@ export function summarizeRecipe(recipe: Recipe) {
     description: getRecipeDescription(recipe),
     imageUrl: image ? `/api/recipes/${encodeURIComponent(recipe.id)}/image` : null,
     format: recipe.format,
-    mealTypes: recipe.mealTypes,
+    suggestedSlots: recipe.suggestedSlots,
     tags: recipe.tags,
     defaultServings: recipe.defaultServings,
     prepTimeMinutes: recipe.prepTimeMinutes ?? undefined,
@@ -71,8 +71,12 @@ export function listRecipes(input: RecipeFilterRequest = {}) {
   const { recipes, invalidRecipes } = loadRecipes();
   const search = input.search?.trim().toLowerCase();
   const tag = input.tag?.trim().toLowerCase();
+  const suggestedSlot = input.suggestedSlot?.trim().toLowerCase();
 
   const filteredRecipes = recipes.filter((recipe) => {
+     if (suggestedSlot && !recipe.suggestedSlots.some((slot) => slot.toLowerCase() === suggestedSlot)) {
+       return false;
+     }
      if (tag && !recipe.tags.some((recipeTag) => recipeTag.toLowerCase() === tag)) {
        return false;
      }

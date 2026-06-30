@@ -37,7 +37,7 @@ const totalTime = computed(() => (recipe.value?.prepTimeMinutes ?? 0) + (recipe.
         </span>
       </div>
       <div class="mt-5">
-        <RecipesRecipeMeta :meal-types="recipe.mealTypes" :total-time="totalTime" :tags="recipe.tags" />
+        <RecipesRecipeMeta :suggested-slots="recipe.suggestedSlots" :total-time="totalTime" :tags="recipe.tags" />
       </div>
     </section>
     <div class="grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">

@@ -17,24 +17,24 @@ function recipeFor(recipeId: string) {
       <h2 class="border-b border-ink/10 pb-2 text-xl font-semibold">{{ formatDisplayDate(date) }}</h2>
       <div class="grid gap-4 md:grid-cols-2">
         <article
-          v-for="slot in plan.slots.filter((candidate) => candidate.date === date)"
-          :key="slot.id"
+          v-for="meal in plan.meals.filter((candidate) => candidate.date === date)"
+          :key="meal.id"
           class="overflow-hidden rounded-xl border border-ink/10 bg-surface shadow-sm sm:grid sm:grid-cols-[180px_1fr]"
         >
-          <PlanRecipePhoto :image-url="recipeFor(slot.recipeId)?.imageUrl ?? null" :title="slot.recipeTitleSnapshot" />
+          <PlanRecipePhoto :image-url="recipeFor(meal.recipeId)?.imageUrl ?? null" :title="meal.recipeTitleSnapshot" />
           <div class="flex flex-col p-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-moss">{{ slot.mealType }}</p>
-            <h3 class="mt-1 text-lg font-semibold">{{ slot.recipeTitleSnapshot }}</h3>
-            <p v-if="slot.notes" class="mt-2 line-clamp-2 text-sm text-ink/60">{{ slot.notes }}</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
+            <h3 class="mt-1 text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h3>
+            <p v-if="meal.notes" class="mt-2 line-clamp-2 text-sm text-ink/60">{{ meal.notes }}</p>
             <div class="mt-4 flex flex-wrap gap-4 text-sm text-ink/65">
-              <span v-if="recipeFor(slot.recipeId)" class="inline-flex items-center gap-1">
-                <Clock :size="15" aria-hidden="true" /> {{ recipeFor(slot.recipeId)?.totalTimeMinutes }} min
+              <span v-if="recipeFor(meal.recipeId)" class="inline-flex items-center gap-1">
+                <Clock :size="15" aria-hidden="true" /> {{ recipeFor(meal.recipeId)?.totalTimeMinutes }} min
               </span>
-              <span class="inline-flex items-center gap-1"><Users :size="15" aria-hidden="true" /> {{ slot.servings }} servings</span>
+              <span class="inline-flex items-center gap-1"><Users :size="15" aria-hidden="true" /> {{ meal.servings }} servings</span>
             </div>
             <NuxtLink
-              v-if="recipeFor(slot.recipeId)"
-              :to="`/recipes/${slot.recipeId}`"
+              v-if="recipeFor(meal.recipeId)"
+              :to="`/recipes/${meal.recipeId}`"
               class="focus-ring mt-auto self-start rounded-md py-2 text-sm font-semibold text-moss hover:underline"
             >
               Recipe details
