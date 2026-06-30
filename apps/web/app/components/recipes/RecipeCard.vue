@@ -19,7 +19,7 @@ defineProps<{ recipe: RecipeSummaryDto }>();
       </div>
       <div class="mt-4">
         <RecipesRecipeMeta
-          :meal-types="recipe.mealTypes"
+          :suggested-slots="recipe.suggestedSlots"
           :total-time="recipe.totalTimeMinutes"
           :tags="recipe.tags"
           :show-tags="false"

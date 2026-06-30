@@ -13,8 +13,8 @@ const form = reactive({
   aiModel: props.settings.aiModel,
   planningPreferences: props.settings.planningPreferences,
   planningVarietyRules: props.settings.planningVarietyRules,
-  defaultLunchServings: props.settings.defaultLunchServings,
-  defaultDinnerServings: props.settings.defaultDinnerServings,
+  defaultMealServings: props.settings.defaultMealServings,
+  defaultWeeklyMealCount: props.settings.defaultWeeklyMealCount,
   autoGenerateNextWeek: props.settings.autoGenerateNextWeek,
   pantryStaples: props.pantryStaples.map((staple) => staple.name).join("\n"),
 });
@@ -70,8 +70,8 @@ async function testAi() {
         v-model:timezone="form.timezone"
       />
       <SettingsServingFields
-        v-model:lunch="form.defaultLunchServings"
-        v-model:dinner="form.defaultDinnerServings"
+        v-model:servings="form.defaultMealServings"
+        v-model:weekly-meal-count="form.defaultWeeklyMealCount"
       />
     </div>
     <SettingsPlanningFields
