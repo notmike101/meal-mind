@@ -7,6 +7,7 @@ const plan: MealPlanDto = {
   id: "plan-1", weekStart: "2026-07-06", weekEnd: "2026-07-12", status: "committed",
   creationSource: "manual", commitSource: "manual", committedAt: "2026-07-01T00:00:00.000Z",
   createdAt: "2026-06-29T00:00:00.000Z", aiModel: null, aiBaseUrl: null, aiPromptHash: null,
+  skippedDates: [],
   meals: [{ id: "meal-1", planId: "plan-1", date: "2026-07-06", slot: null, recipeId: "missing", recipeTitleSnapshot: "Archived Meal", servings: 2, status: "planned", swapCount: 0, notes: "Saved snapshot", sortOrder: 0 }],
 };
 

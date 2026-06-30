@@ -39,6 +39,11 @@ export const updateMealRequestSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
+export const updateSkippedDayRequestSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  skipped: z.boolean(),
+});
+
 export const swapMealRequestSchema = z.object({
   mode: z.enum(["ai", "manual"]),
   recipeId: z.string().optional(),
@@ -65,6 +70,7 @@ export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;
 export type SettingsUpdateRequest = z.infer<typeof settingsUpdateRequestSchema>;
 export type CreateMealRequest = z.infer<typeof createMealRequestSchema>;
 export type UpdateMealRequest = z.infer<typeof updateMealRequestSchema>;
+export type UpdateSkippedDayRequest = z.infer<typeof updateSkippedDayRequestSchema>;
 export type SwapMealRequest = z.infer<typeof swapMealRequestSchema>;
 export type UpdateShoppingItemRequest = z.infer<typeof updateShoppingItemRequestSchema>;
 export type AdherenceRequest = z.infer<typeof adherenceRequestSchema>;

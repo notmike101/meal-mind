@@ -76,6 +76,14 @@ export async function updatePlanStatus(planId: string, status: MealPlan["status"
   return getPlanWithMeals(planId);
 }
 
+export async function updatePlanSkippedDates(planId: string, skippedDates: string[]) {
+  await getDb()
+    .update(mealPlans)
+    .set({ skippedDates })
+    .where(eq(mealPlans.id, planId));
+  return getPlanWithMeals(planId);
+}
+
 export async function applyLazyLocks(now: Date, timezone: string) {
   const drafts = await getDb().select().from(mealPlans).where(eq(mealPlans.status, "draft"));
   for (const plan of drafts) {

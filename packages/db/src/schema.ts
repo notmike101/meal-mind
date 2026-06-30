@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   serial,
   text,
@@ -46,6 +47,7 @@ export const mealPlans = pgTable(
     aiModel: text("ai_model"),
     aiBaseUrl: text("ai_base_url"),
     aiPromptHash: text("ai_prompt_hash"),
+    skippedDates: jsonb("skipped_dates").$type<string[]>().notNull().default([]),
   },
   (table) => [
     uniqueIndex("meal_plans_week_start_unique").on(table.weekStart),

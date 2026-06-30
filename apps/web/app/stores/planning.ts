@@ -49,6 +49,13 @@ export const usePlanningStore = defineStore("planning", {
       await apiRequest(`/api/plans/${encodeURIComponent(planId)}/meals/${encodeURIComponent(mealId)}`, { method: "DELETE" });
       await this.fetchState();
     },
+    async setDaySkipped(planId: string, date: string, skipped: boolean) {
+      await apiRequest(`/api/plans/${encodeURIComponent(planId)}/skipped-days`, {
+        method: "PATCH",
+        body: { date, skipped },
+      });
+      await this.fetchState();
+    },
     async swap(planId: string, mealId: string, mode: "manual" | "ai", recipeId?: string) {
       await apiRequest(`/api/plans/${encodeURIComponent(planId)}/meals/${encodeURIComponent(mealId)}/swap`, {
         method: "POST",

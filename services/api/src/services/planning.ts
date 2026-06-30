@@ -28,6 +28,7 @@ import {
   replacePlanWithMeals,
   updateMealStatus,
   updatePlanMeal,
+  updatePlanSkippedDates,
   updatePlanStatus,
 } from "@mealmind/db/repositories/plans";
 import { getSettings, getSettingsWithPantry } from "@mealmind/db/repositories/settings";
@@ -109,6 +110,7 @@ export async function createBlankPlan(input: { weekStart?: string }) {
     aiModel: null,
     aiBaseUrl: null,
     aiPromptHash: null,
+    skippedDates: [],
   }, []);
 }
 
@@ -169,6 +171,7 @@ export async function generateWeeklyPlan(input: { weekStart?: string; replaceExi
       aiModel: settings.aiModel,
       aiBaseUrl: settings.aiBaseUrl,
       aiPromptHash: hashPrompt({ messages, draft }),
+      skippedDates: [],
     };
     const positions = new Map<string, number>();
     const meals = draft.meals.map((meal) => {
@@ -278,6 +281,25 @@ export async function removeMeal(planId: string, mealId: string) {
   if (!plan.meals.some((meal) => meal.id === mealId)) throw new AppError("NOT_FOUND", "Meal not found.", 404);
   const updated = await deletePlanMeal(planId, mealId);
   await refreshShoppingList(planId);
+  return updated;
+}
+
+export async function updateSkippedDay(input: { planId: string; date: string; skipped: boolean }) {
+  const plan = await getPlanWithMeals(input.planId);
+  assertEditablePlan(plan);
+  if (!isDateWithinRange(input.date, plan)) {
+    throw new AppError("BAD_REQUEST", "Skipped date must be within the plan week.", 400);
+  }
+
+  const skippedDates = new Set(plan.skippedDates);
+  if (input.skipped) skippedDates.add(input.date);
+  else skippedDates.delete(input.date);
+  if (skippedDates.size >= 7) {
+    throw new AppError("BAD_REQUEST", "At least one day must remain in the meal plan.", 400);
+  }
+
+  const updated = await updatePlanSkippedDates(input.planId, [...skippedDates].sort());
+  await refreshShoppingList(input.planId);
   return updated;
 }
 

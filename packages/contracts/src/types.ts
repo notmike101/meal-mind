@@ -47,6 +47,7 @@ export type MealPlanDto = {
   aiModel: string | null;
   aiBaseUrl: string | null;
   aiPromptHash: string | null;
+  skippedDates: string[];
   meals: MealDto[];
 };
 

@@ -70,7 +70,8 @@ export async function ensureDatabase() {
       generated_at TEXT NOT NULL,
       ai_model TEXT,
       ai_base_url TEXT,
-      ai_prompt_hash TEXT
+      ai_prompt_hash TEXT,
+      skipped_dates JSONB NOT NULL DEFAULT '[]'::jsonb
     );
 
     CREATE UNIQUE INDEX IF NOT EXISTS meal_plans_week_start_unique ON meal_plans(week_start);
@@ -152,6 +153,8 @@ export async function ensureDatabase() {
 
     ALTER TABLE meal_plans
       ADD COLUMN IF NOT EXISTS creation_source TEXT NOT NULL DEFAULT 'ai';
+    ALTER TABLE meal_plans
+      ADD COLUMN IF NOT EXISTS skipped_dates JSONB NOT NULL DEFAULT '[]'::jsonb;
     ALTER TABLE meal_plans ALTER COLUMN ai_model DROP NOT NULL;
     ALTER TABLE meal_plans ALTER COLUMN ai_base_url DROP NOT NULL;
     ALTER TABLE meal_plans ALTER COLUMN ai_prompt_hash DROP NOT NULL;

@@ -28,4 +28,20 @@ describe("planning store", () => {
       body: { replaceExisting: true },
     });
   });
+
+  it("updates a skipped day and refreshes planning state", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, data: { id: "plan-1" } })
+      .mockResolvedValueOnce({ ok: true, data: emptyState });
+    vi.stubGlobal("$fetch", fetchMock);
+    const store = usePlanningStore();
+
+    await store.setDaySkipped("plan-1", "2026-07-08", true);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/plans/plan-1/skipped-days", {
+      method: "PATCH",
+      body: { date: "2026-07-08", skipped: true },
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/plans/current", {});
+  });
 });

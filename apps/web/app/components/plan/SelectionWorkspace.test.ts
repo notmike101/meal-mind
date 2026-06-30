@@ -17,6 +17,7 @@ const plan: MealPlanDto = {
   aiModel: "test-model",
   aiBaseUrl: "http://localhost/v1",
   aiPromptHash: "hash",
+  skippedDates: [],
   meals: [
     { id: "meal-1", planId: "plan-1", date: "2026-07-06", slot: null, recipeId: "missing", recipeTitleSnapshot: "Missing Meal", servings: 1, status: "planned", swapCount: 0, notes: "", sortOrder: 0 },
     { id: "meal-2", planId: "plan-1", date: "2026-07-06", slot: "Dinner", recipeId: "dinner-a", recipeTitleSnapshot: "Dinner A", servings: 2, status: "planned", swapCount: 0, notes: "Balanced dinner", sortOrder: 1 },

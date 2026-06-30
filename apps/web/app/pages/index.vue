@@ -15,7 +15,9 @@ await Promise.all([
 
 const timezone = computed(() => settings.data?.settings.timezone ?? "America/Chicago");
 const today = computed(() => formatDateInTimeZone(new Date(), timezone.value));
-const todayMeals = computed(() => planning.activePlan?.meals.filter((meal) => meal.date === today.value) ?? []);
+const todayMeals = computed(() => planning.activePlan?.skippedDates.includes(today.value)
+  ? []
+  : planning.activePlan?.meals.filter((meal) => meal.date === today.value) ?? []);
 </script>
 
 <template>

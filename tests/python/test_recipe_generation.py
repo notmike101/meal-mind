@@ -142,6 +142,14 @@ class JsonLdTests(unittest.TestCase):
             ],
         )
 
+    def test_infers_measured_butter_when_source_omits_its_unit(self) -> None:
+        inferred = infer_measured_pantry_ingredients(
+            ["Melt 2 TBSP butter.", "Add 2 TBSP butter."],
+            ["4 Butter"],
+        )
+        self.assertEqual(inferred[0]["quantity"], "4")
+        self.assertEqual(len(inferred[0]["uses"]), 2)
+
 
 class CooklangGenerationTests(unittest.TestCase):
     def test_rejects_missing_mealmind_metadata(self) -> None:
@@ -228,6 +236,58 @@ Cook @rice{1%cup}.
         self.assertNotIn("BBQ @sweet", body)
         self.assertIn("Melt @butter{1%tbsp}.", body)
         self.assertIn("toss with @&butter{1%tbsp}", body)
+
+    def test_marks_each_measured_use_when_source_butter_has_no_unit(self) -> None:
+        content = build_recipe_cooklang(
+            {
+                "title": "Repeated Butter",
+                "servings": 2,
+                "meal_types": ["dinner"],
+                "ingredients": ["4 Butter", "1 cup Rice"],
+                "instructions": [
+                    "Melt 2 TBSP butter and add rice.",
+                    "Finish with 2 TBSP butter.",
+                ],
+            }
+        )
+        self.assertIn("@butter{2%tbsp}", content)
+        self.assertIn("@&butter{2%tbsp}", content)
+        self.assertNotIn("2 TBSP @butter", content)
+
+    def test_marks_unicode_fraction_pantry_uses_for_scaling(self) -> None:
+        content = build_recipe_cooklang(
+            {
+                "title": "Unicode Salt",
+                "servings": 2,
+                "meal_types": ["dinner"],
+                "ingredients": ["Salt", "1 cup Rice"],
+                "instructions": [
+                    "Mix rice with ½ tsp salt and slice vegetables into ¼-inch pieces.",
+                    "Finish with ¼ tsp salt and 1½ cups water.",
+                ],
+            }
+        )
+        self.assertIn("@salt{1/2%tsp}", content)
+        self.assertIn("@&salt{1/4%tsp}", content)
+        self.assertIn("1/4-inch pieces", content)
+        self.assertIn("1 1/2 cups water", content)
+        self.assertNotIn("½ tsp salt", content)
+        self.assertEqual(validate_cooklang(content), [])
+
+    def test_leaves_unmeasured_pantry_wording_as_prose(self) -> None:
+        content = build_recipe_cooklang(
+            {
+                "title": "Unmeasured Pantry",
+                "servings": 2,
+                "meal_types": ["dinner"],
+                "ingredients": ["1 cup Rice"],
+                "instructions": ["Cook rice with a pinch of salt, pepper, and sugar to taste."],
+            }
+        )
+        self.assertIn("a pinch of salt, pepper, and sugar to taste", content)
+        self.assertNotIn("@salt", content)
+        self.assertNotIn("@pepper", content)
+        self.assertNotIn("@sugar", content)
 
     def test_hellofresh_converter_normalizes_scalar_legacy_fields(self) -> None:
         content = CONVERTER.build_cooklang(

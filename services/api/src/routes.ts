@@ -13,6 +13,7 @@ import {
   toAppError,
   updateShoppingItemRequestSchema,
   updateMealRequestSchema,
+  updateSkippedDayRequestSchema,
 } from "@mealmind/contracts";
 import { testAiConnectivity } from "@mealmind/ai";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
@@ -28,6 +29,7 @@ import {
   swapMeal,
   updateAdherence,
   updateMeal,
+  updateSkippedDay,
 } from "./services/planning.js";
 import { generateShoppingList, getShoppingList } from "./services/shopping.js";
 import { getRecipeDetail, getRecipeImage, listRecipes } from "./recipes.js";
@@ -137,6 +139,15 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
   app.delete<{ Params: { planId: string; mealId: string } }>("/api/plans/:planId/meals/:mealId", async (request, reply) => {
     try {
       return ok(await removeMeal(request.params.planId, request.params.mealId));
+    } catch (error) {
+      return sendError(reply, error);
+    }
+  });
+
+  app.patch<{ Params: { planId: string } }>("/api/plans/:planId/skipped-days", async (request, reply) => {
+    try {
+      const body = updateSkippedDayRequestSchema.parse(request.body ?? {});
+      return ok(await updateSkippedDay({ planId: request.params.planId, ...body }));
     } catch (error) {
       return sendError(reply, error);
     }

@@ -8,8 +8,11 @@ import { formatDisplayDate, getDatesInWeek } from "~/utils/dates";
 
 const props = defineProps<{ plan: MealPlanDto; recipes: RecipeSummaryDto[]; defaultServings: number }>();
 const planning = usePlanningStore();
-const activeMealId = ref(props.plan.meals[0]?.id ?? "");
-const addingDate = ref<string | null>(props.plan.meals.length === 0 ? props.plan.weekStart : null);
+const dates = computed(() => getDatesInWeek(props.plan.weekStart));
+const availableMeals = computed(() => props.plan.meals.filter((meal) => !props.plan.skippedDates.includes(meal.date)));
+const firstAvailableDate = () => dates.value.find((date) => !props.plan.skippedDates.includes(date)) ?? props.plan.weekStart;
+const activeMealId = ref(availableMeals.value[0]?.id ?? "");
+const addingDate = ref<string | null>(availableMeals.value.length === 0 ? firstAvailableDate() : null);
 const search = ref("");
 const activeTag = ref<string | null>(null);
 const busy = ref(false);
@@ -19,8 +22,7 @@ const addServings = ref(props.defaultServings);
 const editDate = ref(props.plan.meals[0]?.date ?? props.plan.weekStart);
 const editSlot = ref(props.plan.meals[0]?.slot ?? "");
 
-const dates = computed(() => getDatesInWeek(props.plan.weekStart));
-const activeMeal = computed(() => props.plan.meals.find((meal) => meal.id === activeMealId.value));
+const activeMeal = computed(() => availableMeals.value.find((meal) => meal.id === activeMealId.value));
 const currentRecipe = computed(() => props.recipes.find((recipe) => recipe.id === activeMeal.value?.recipeId) ?? null);
 const availableTags = computed(() => [...new Set(props.recipes.flatMap((recipe) => recipe.tags))].sort((a, b) => a.localeCompare(b)));
 const filteredRecipes = computed(() => {
@@ -34,8 +36,14 @@ const filteredRecipes = computed(() => {
 
 watch(() => props.plan.meals, (meals) => {
   if (activeMealId.value && !meals.some((meal) => meal.id === activeMealId.value)) {
-    activeMealId.value = meals[0]?.id ?? "";
+    activeMealId.value = availableMeals.value[0]?.id ?? "";
   }
+});
+watch(() => props.plan.skippedDates, () => {
+  if (!availableMeals.value.some((meal) => meal.id === activeMealId.value)) {
+    activeMealId.value = availableMeals.value[0]?.id ?? "";
+  }
+  if (addingDate.value && props.plan.skippedDates.includes(addingDate.value)) addingDate.value = null;
 });
 watch(activeMeal, (meal) => {
   if (!meal) return;
@@ -63,11 +71,20 @@ function selectMeal(mealId: string) {
 }
 
 function beginAdd(date: string) {
+  if (props.plan.skippedDates.includes(date)) return;
   addingDate.value = date;
   activeMealId.value = "";
   addSlot.value = "";
   addServings.value = props.defaultServings;
   resetCatalog();
+}
+
+async function toggleDay(date: string, skipped: boolean) {
+  if (busy.value) return;
+  await runChange(
+    () => planning.setDaySkipped(props.plan.id, date, skipped),
+    `Could not ${skipped ? "skip" : "restore"} that day.`,
+  );
 }
 
 async function runChange(change: () => Promise<void>, fallback: string) {
@@ -150,8 +167,10 @@ function mealLabel(meal: MealDto) {
       :plan="plan"
       :active-meal-id="activeMealId"
       :adding-date="addingDate"
+      :busy="busy"
       @select="selectMeal"
       @add="beginAdd"
+      @toggle-day="toggleDay"
     />
 
     <section v-if="addingDate" class="rounded-xl border border-moss/25 bg-surface p-4 shadow-sm sm:p-5">
