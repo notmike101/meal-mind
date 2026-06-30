@@ -2,8 +2,6 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #   "requests>=2.31",
-#   "lxml>=5.0",
-#   "PyYAML>=6.0",
 # ]
 # ///
 
@@ -15,11 +13,74 @@ import argparse
 import os
 import re
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
+from xml.etree import ElementTree as ET
 
 import requests
-from lxml import etree
+
+
+class _HtmlStripper(HTMLParser):
+    """Convert HTML to plain text, preserving <li> boundaries for step extraction."""
+
+    def __init__(self):
+        super().__init__()
+        self._parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:
+        self._parts.append(data)
+
+    def get_text(self) -> str:
+        return " ".join(self._parts)
+
+
+def _html_to_text(html: str) -> str:
+    """Strip HTML tags and extract clean text."""
+    try:
+        from xml.etree import ElementTree as ET  # type: ignore[import]
+
+        tree = ET.fromstring("<root>" + html + "</root>")
+
+        lines = []
+        for li in tree.xpath(".//li"):
+            text = "".join(li.itertext()).strip()
+            if text:
+                lines.append(re.sub(r"\s+", " ", text))
+
+        if not lines:
+            text = "".join(tree.itertext()).strip()
+            for line in text.split("\n"):
+                cleaned = re.sub(r"\s+", " ", line).strip()
+                if cleaned:
+                    lines.append(cleaned)
+
+        return "\n".join(lines)
+    except Exception:
+        full = re.sub(r"<[^>]+>", " ", html)
+        return "\n".join(re.sub(r"\s+", " ", line).strip() for line in full.split("\n") if line.strip())
+
+
+def _extract_text_from_nodes(html: str, tag: str, attr_name: str | None = None, attr_value: str | None = None) -> list[str]:
+    """Extract text from matching tags using xml.etree.ElementTree."""
+    try:
+        tree = ET.fromstring("<root>" + html + "</root>")
+
+        xpath_parts = [tag]
+        if attr_name and attr_value:
+            xpath_parts.append(f"[@{attr_name}='{attr_value}']")
+        xpath_parts.append("//text()")
+
+        results = []
+        for el in tree.xpath("".join(xpath_parts)):
+            text = el.strip() if isinstance(el, str) else "".join(el.itertext()).strip()
+            if text:
+                results.append(text)
+
+        return results
+    except Exception:
+        return []
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[3]
@@ -76,30 +137,37 @@ def _scrape_from_dom(
     html: str, url: str, meal_type: str | None = None
 ) -> dict[str, Any] | None:
     """Small fallback for static pages without Recipe JSON-LD."""
-    parser = etree.HTMLParser(recover=True)
-    tree = etree.fromstring(html.encode("utf-8"), parser)
-    if tree is None:
+    try:
+        tree = ET.fromstring("<root>" + html + "</root>")
+    except Exception:
         return None
 
-    title_values = tree.xpath("//h1[1]//text()") or tree.xpath("//meta[@property='og:title']/@content")
-    title = clean_html_text(" ".join(str(value) for value in title_values))
+    title_values = _extract_text_from_nodes(html, "h1") or _extract_text_from_nodes(
+        html, "meta", "property", "og:title"
+    )
+    title = clean_html_text(" ".join(title_values))
     if not title:
         return None
 
-    description_values = tree.xpath("//meta[@name='description']/@content") or tree.xpath(
-        "//meta[@property='og:description']/@content"
+    description_values = _extract_text_from_nodes(html, "meta", "name", "description") or _extract_text_from_nodes(
+        html, "meta", "property", "og:description"
     )
     description = clean_html_text(description_values[0]) if description_values else ""
-    image_values = tree.xpath("//meta[@property='og:image']/@content")
-    lowercase = "translate(@class,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')"
-    ingredient_nodes = tree.xpath(
-        f"//*[contains({lowercase},'ingredient')]//li"
-        f" | //*[contains({lowercase},'ingredient')][self::li]"
-    )
-    instruction_nodes = tree.xpath(
-        f"//*[contains({lowercase},'instruction')]//li"
-        f" | //*[contains({lowercase},'step')][self::li or self::p]"
-    )
+    image_values = _extract_text_from_nodes(html, "meta", "property", "og:image")
+
+    # Find ingredient and instruction sections by class attribute
+    lowercase_class = "@*[translate(name(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')]"
+    try:
+        ingredient_nodes = tree.xpath(
+            f"//*[contains({lowercase_class}, 'ingredient')]//li | //*[contains({lowercase_class}, 'ingredient')][self::li]"
+        )
+        instruction_nodes = tree.xpath(
+            f"//*[contains({lowercase_class}, 'instruction')]//li | //*[contains({lowercase_class}, 'step')][self::li or self::p]"
+        )
+    except Exception:
+        ingredient_nodes = []
+        instruction_nodes = []
+
     ingredients = _text_list(ingredient_nodes)
     instructions = _text_list(instruction_nodes)
     if not ingredients or not instructions:
