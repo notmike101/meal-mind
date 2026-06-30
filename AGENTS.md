@@ -196,14 +196,16 @@ If you cannot run a relevant check, state why in the final response.
 
 ### Branching
 
-All development must branch off `main`. Never commit directly to `main`:
+All development must branch off `dev`. Never commit directly to `dev` or `main`:
 
 ```bash
-# From main, create a new feature or fix branch
-git checkout main
-git pull origin main
+# From dev, create a new feature, fix, docs, or chore branch
+git checkout dev
+git pull origin dev
 git checkout -b <type>/<short-description>
 ```
+
+The `main` branch is reserved for releases. Do not branch ordinary development work from it or merge feature, bugfix, docs, or chore branches directly into it.
 
 Branch naming convention:
 
@@ -231,15 +233,32 @@ git push -u origin <branch-name>
 
 When the work on a branch is complete and verified:
 
-1. Rebase onto latest `main` if needed: `git rebase main`.
+1. Rebase onto latest `dev` if needed: `git rebase dev`.
 2. Push: `git push origin <branch-name> --force-with-lease` (after rebase).
-3. Merge back into `main` via a PR or, for local-only work:
+3. Merge back into `dev` via a PR or, for local-only work:
+
+```bash
+git checkout dev
+git pull origin dev
+git merge --no-ff <branch-name> -m "Merge branch '<branch-name>' into dev"
+git push origin dev
+```
+
+### Releases
+
+Merges into `main` are reserved for releases:
+
+1. Confirm `dev` contains the complete, verified release candidate.
+2. Choose the next [Semantic Versioning](https://semver.org/) version: increment `MAJOR` for incompatible changes, `MINOR` for backward-compatible features, or `PATCH` for backward-compatible fixes.
+3. Open and merge a release PR from `dev` into `main`. Do not merge individual development branches into `main`.
+4. Create an annotated `vMAJOR.MINOR.PATCH` tag on the resulting `main` merge commit and push it:
 
 ```bash
 git checkout main
 git pull origin main
-git merge --no-ff <branch-name> -m "Merge branch '<branch-name>' into main"
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
 git push origin main
+git push origin vX.Y.Z
 ```
 
 ### Safety Rules
