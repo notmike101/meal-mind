@@ -67,7 +67,8 @@ export async function ensureDatabase() {
       generated_at TEXT NOT NULL,
       ai_model TEXT NOT NULL,
       ai_base_url TEXT NOT NULL,
-      ai_prompt_hash TEXT NOT NULL
+      ai_prompt_hash TEXT NOT NULL,
+      skipped_dates JSONB NOT NULL DEFAULT '[]'::jsonb
     );
 
     CREATE UNIQUE INDEX IF NOT EXISTS meal_plans_week_start_unique ON meal_plans(week_start);
@@ -127,6 +128,9 @@ export async function ensureDatabase() {
 
     ALTER TABLE settings
       ADD COLUMN IF NOT EXISTS auto_generate_next_week BOOLEAN NOT NULL DEFAULT TRUE;
+
+    ALTER TABLE meal_plans
+      ADD COLUMN IF NOT EXISTS skipped_dates JSONB NOT NULL DEFAULT '[]'::jsonb;
   `);
 
   const now = new Date().toISOString();

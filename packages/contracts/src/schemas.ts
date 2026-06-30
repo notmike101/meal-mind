@@ -22,6 +22,11 @@ export const updateSlotRequestSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const updateSkippedDayRequestSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  skipped: z.boolean(),
+});
+
 export const swapSlotRequestSchema = z.object({
   slotId: z.string().min(1),
   mode: z.enum(["ai", "manual"]),
@@ -47,6 +52,7 @@ export const recipeFilterRequestSchema = z.object({
 export type GeneratePlanRequest = z.infer<typeof generatePlanRequestSchema>;
 export type SettingsUpdateRequest = z.infer<typeof settingsUpdateRequestSchema>;
 export type UpdateSlotRequest = z.infer<typeof updateSlotRequestSchema>;
+export type UpdateSkippedDayRequest = z.infer<typeof updateSkippedDayRequestSchema>;
 export type SwapSlotRequest = z.infer<typeof swapSlotRequestSchema>;
 export type UpdateShoppingItemRequest = z.infer<typeof updateShoppingItemRequestSchema>;
 export type AdherenceRequest = z.infer<typeof adherenceRequestSchema>;

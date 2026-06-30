@@ -28,7 +28,7 @@ export async function generateShoppingList(planId: string) {
   const { recipes } = loadRecipes();
   const pantryNames = pantryStaples.map((staple) => staple.name);
   const mealIngredients = buildMealIngredients({
-    slots: plan.slots,
+    slots: plan.slots.filter((slot) => !plan.skippedDates.includes(slot.date)),
     recipes,
     pantryStaples: pantryNames,
   });

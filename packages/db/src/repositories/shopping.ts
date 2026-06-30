@@ -55,6 +55,10 @@ export async function getShoppingListForPlan(planId: string): Promise<ShoppingLi
   return { ...list, items };
 }
 
+export async function deleteShoppingListForPlan(planId: string) {
+  await getDb().delete(shoppingLists).where(eq(shoppingLists.planId, planId));
+}
+
 export async function updateShoppingItemChecked(itemId: string, checked: boolean) {
   const db = getDb();
   await db.update(shoppingItems).set({ checked }).where(eq(shoppingItems.id, itemId));

@@ -16,6 +16,7 @@ const plan: MealPlanDto = {
   aiModel: "test-model",
   aiBaseUrl: "http://localhost/v1",
   aiPromptHash: "hash",
+  skippedDates: [],
   slots: [
     { id: "lunch-1", planId: "plan-1", date: "2026-07-06", mealType: "lunch", recipeId: "missing", recipeTitleSnapshot: "Missing Lunch", servings: 1, status: "planned", swapCount: 0, notes: "" },
     { id: "dinner-1", planId: "plan-1", date: "2026-07-06", mealType: "dinner", recipeId: "dinner-a", recipeTitleSnapshot: "Dinner A", servings: 2, status: "planned", swapCount: 0, notes: "Balanced dinner" },
@@ -47,9 +48,9 @@ const recipes = [recipe("dinner-a", "Dinner A", ["quick"]), recipe("dinner-b", "
 
 const stubs = {
   PlanScheduleStrip: {
-    props: ["plan", "activeSlotId"],
-    emits: ["select"],
-    template: `<div><button data-slot="lunch-1" @click="$emit('select', 'lunch-1')">Lunch</button><button data-slot="dinner-1" @click="$emit('select', 'dinner-1')">Dinner</button></div>`,
+    props: ["plan", "activeSlotId", "busy"],
+    emits: ["select", "toggleDay"],
+    template: `<div><button data-slot="lunch-1" @click="$emit('select', 'lunch-1')">Lunch</button><button data-slot="dinner-1" @click="$emit('select', 'dinner-1')">Dinner</button><button data-skip @click="$emit('toggleDay', '2026-07-06', true)">Skip</button></div>`,
   },
   PlanServingsStepper: {
     props: ["servings", "disabled"],
@@ -110,5 +111,13 @@ describe("SelectionWorkspace", () => {
     await wrapper.get('[data-recipe="dinner-b"] button').trigger("click");
     await flushPromises();
     expect(wrapper.get('[role="alert"]').text()).toContain("network unavailable");
+  });
+
+  it("persists a whole-day skip from the schedule", async () => {
+    const wrapper = render();
+    const planning = usePlanningStore();
+    await wrapper.get("[data-skip]").trigger("click");
+    await flushPromises();
+    expect(planning.setDaySkipped).toHaveBeenCalledWith("plan-1", "2026-07-06", true);
   });
 });
