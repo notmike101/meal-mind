@@ -263,7 +263,7 @@ def _ingredient_candidates(ingredient: IngredientData) -> list[str]:
 
 
 def clean_instruction_text(text: str) -> str:
-    text = re.sub(r"\*", "", str(text))
+    text = normalize_fraction_text(re.sub(r"\*", "", str(text)))
     text = re.sub(r"\s*\([^)]*\bfor\s+\d+\s+servings?[^)]*\)", "", text, flags=re.IGNORECASE)
     text = re.sub(
         r"[;,]\s*\d+(?:\s+\d+/\d+|/\d+|\.\d+)?\s+[a-zA-Z]+\s+for\s+\d+\s+servings?",
