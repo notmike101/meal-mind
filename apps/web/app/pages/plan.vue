@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { callOnce, definePageMeta } from "#app";
+import { callOnce } from "#app";
 import { computed } from "vue";
 import { usePlanningStore } from "~/stores/planning";
 import { useRecipesStore } from "~/stores/recipes";
 import { isPlanLocked } from "~/utils/plans";
 
+// eslint-disable-next-line no-undef
 definePageMeta({ layout: "wide" });
 
 const planning = usePlanningStore();
