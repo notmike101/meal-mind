@@ -678,3 +678,12 @@ This file is append-only during implementation. Each entry records current objec
 - Verified the preserved legacy draft migrated to 14 meals; reversible REST checks passed for duplicate slots, unlabeled meals, serving updates, deletion, blank plans, and empty commits.
 - Verified local Qwen generated exactly 3 requested meals for a temporary future week; the test plan was removed afterward.
 - `npm run lint`, `npm run test` (36 tests), and `npm run build` passed before runtime verification.
+
+## 2026-06-30 — OpenAI-compatible provider configuration
+
+- Generalized AI endpoint documentation and gateway configuration beyond LM Studio while retaining LM Studio and `qwen3.6-35b-a3b` defaults.
+- Added optional environment-managed bearer authentication for model discovery and chat completions.
+- Added authenticated model discovery and Settings-based selection from the provider's reported model catalog.
+- `npm run lint`, `npm run test` (49 tests), `npm run build`, both MCP smoke suites, and all 4 Playwright scenarios passed.
+- Rebuilt the Compose stack and verified model discovery plus a real chat-completions request through the gateway against LM Studio.
+- Visually verified the rebuilt Settings page, model dropdown, authentication status, responsive width, and successful live model loading.

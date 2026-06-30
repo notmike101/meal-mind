@@ -99,9 +99,10 @@ Copy `.env.example` for Docker/local env defaults when needed. Key variables:
 - `MEALMIND_RECIPE_ROOT`
 - `MEALMIND_DOCS_ROOT`
 - `MEALMIND_AI_BASE_URL`
-- `LM_STUDIO_URL`
+- `OPENAI_COMPATIBLE_UPSTREAM_URL`
+- `OPENAI_COMPATIBLE_API_KEY` (optional bearer token; never commit a real value)
 
-For Docker, LM Studio may need a LAN-reachable host URL rather than `host.docker.internal`. Check `docs/HANDOFF.md` before changing AI connectivity assumptions.
+For Docker, a host provider such as LM Studio may need a LAN-reachable URL rather than `host.docker.internal`. Check `docs/AI_CONFIGURATION.md` and `docs/HANDOFF.md` before changing AI connectivity assumptions.
 
 Do not commit local `.env`, `apps/web/.env.local`, SQLite data, build output, test output, `node_modules`, or other ignored local artifacts.
 

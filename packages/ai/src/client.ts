@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { AppError, type SettingsDto as Settings } from "@mealmind/contracts";
+import { AppError, type AiModelsDto, type SettingsDto as Settings } from "@mealmind/contracts";
 
 export type AiEventType = "plan_generate" | "slot_swap" | "shopping_list" | "connectivity_test";
 
@@ -18,9 +18,33 @@ type AiEventLogger = (event: AiEventLogInput) => Promise<unknown> | unknown;
 
 function getOpenAI(settings: Pick<Settings, "aiBaseUrl">) {
   return new OpenAI({
-    apiKey: "lm-studio",
+    apiKey: process.env.OPENAI_COMPATIBLE_API_KEY?.trim() || "not-required",
     baseURL: settings.aiBaseUrl,
+    fetch: globalThis.fetch,
   });
+}
+
+function authorizationHeaders(): Record<string, string> {
+  const token = process.env.OPENAI_COMPATIBLE_API_KEY?.trim();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function normalizeModels(payload: unknown): AiModelsDto {
+  const data = payload && typeof payload === "object" && "data" in payload
+    ? (payload as { data?: unknown }).data
+    : undefined;
+  if (!Array.isArray(data)) {
+    throw new Error("Provider returned an invalid model catalog.");
+  }
+
+  const ids = data
+    .map((model) => model && typeof model === "object" && "id" in model ? String(model.id).trim() : "")
+    .filter(Boolean);
+
+  return {
+    models: [...new Set(ids)].sort((left, right) => left.localeCompare(right)).map((id) => ({ id })),
+    authConfigured: Boolean(process.env.OPENAI_COMPATIBLE_API_KEY?.trim()),
+  };
 }
 
 function messageContentToString(content: unknown) {
@@ -130,23 +154,26 @@ export async function runJsonPrompt<T>(input: {
 
     throw new AppError(
       "AI_UNAVAILABLE",
-      `Cannot reach local AI endpoint at ${input.settings.aiBaseUrl}.`,
+      `Cannot reach AI endpoint at ${input.settings.aiBaseUrl}.`,
       502,
       error instanceof Error ? error.message : String(error),
     );
   }
 }
 
-export async function testAiConnectivity(settings: Settings, logEvent: AiEventLogger) {
+export async function testAiConnectivity(settings: Pick<Settings, "aiBaseUrl" | "aiModel">, logEvent: AiEventLogger) {
   const endpoint = `${settings.aiBaseUrl.replace(/\/$/, "")}/models`;
   const requestJson = JSON.stringify({ endpoint });
 
   try {
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, {
+      headers: authorizationHeaders(),
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!response.ok) {
       throw new Error(`Endpoint returned HTTP ${response.status}.`);
     }
-    const models = await response.json();
+    const models = normalizeModels(await response.json());
     await logEvent({
       eventType: "connectivity_test",
       model: settings.aiModel,
@@ -167,6 +194,6 @@ export async function testAiConnectivity(settings: Settings, logEvent: AiEventLo
       status: "request_failed",
       errorMessage: error instanceof Error ? error.message : String(error),
     });
-    throw new AppError("AI_UNAVAILABLE", `Cannot reach local AI endpoint at ${endpoint}.`, 502);
+    throw new AppError("AI_UNAVAILABLE", `Cannot reach AI endpoint at ${endpoint}.`, 502);
   }
 }
