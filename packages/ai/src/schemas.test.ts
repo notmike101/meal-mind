@@ -1,21 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { shoppingListDraftSchema, slotSwapSchema, weeklyPlanDraftSchema } from "./schemas";
-import { addDays } from "@mealmind/domain";
+import { mealSwapSchema, shoppingListDraftSchema, weeklyPlanDraftSchema } from "./schemas";
 
 describe("AI schemas", () => {
-  it("accepts a complete weekly plan response", () => {
-    const slots = Array.from({ length: 7 }, (_, day) => addDays("2026-06-22", day)).flatMap(
-      (date) => [
-        { date, mealType: "lunch", recipeId: "recipe-a", reason: "Fits lunch." },
-        { date, mealType: "dinner", recipeId: "recipe-b", reason: "Fits dinner." },
-      ],
-    );
-
-    expect(weeklyPlanDraftSchema.parse({ slots }).slots).toHaveLength(14);
+  it("accepts arbitrary meal counts and optional slots", () => {
+    const meals = [
+      { date: "2026-06-22", slot: null, recipeId: "recipe-a", reason: "Flexible meal." },
+      { date: "2026-06-22", slot: "Post-workout", recipeId: "recipe-b", reason: "Extra meal." },
+      { date: "2026-06-22", slot: "Post-workout", recipeId: "recipe-a", reason: "Duplicates are valid." },
+    ];
+    expect(weeklyPlanDraftSchema.parse({ meals }).meals).toHaveLength(3);
   });
 
   it("accepts swap responses", () => {
-    expect(slotSwapSchema.parse({ recipeId: "lentil-soup", reason: "More variety." })).toEqual({
+    expect(mealSwapSchema.parse({ recipeId: "lentil-soup", reason: "More variety." })).toEqual({
       recipeId: "lentil-soup",
       reason: "More variety.",
     });

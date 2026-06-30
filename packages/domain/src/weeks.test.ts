@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, getCurrentWeekRange, getNextWeekRange, getWeekSlots } from "./weeks";
+import { addDays, getCurrentWeekRange, getNextWeekRange } from "./weeks";
 
 describe("week utilities", () => {
   it("computes Monday-Sunday ranges", () => {
@@ -20,12 +20,7 @@ describe("week utilities", () => {
     });
   });
 
-  it("builds fourteen lunch and dinner slots", () => {
-    const slots = getWeekSlots("2026-06-22");
-
-    expect(slots).toHaveLength(14);
-    expect(slots[0]).toEqual({ date: "2026-06-22", mealType: "lunch" });
-    expect(slots[13]).toEqual({ date: "2026-06-28", mealType: "dinner" });
+  it("adds days within a weekly range", () => {
     expect(addDays("2026-06-22", 6)).toBe("2026-06-28");
   });
 });

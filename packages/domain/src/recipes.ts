@@ -31,7 +31,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 
-const mealTypeSchema = z.enum(["lunch", "dinner"]);
+const suggestedSlotSchema = z.string().trim().min(1).max(50);
 const imagePathSchema = z.string().trim().refine((value) => {
   const normalized = value.replaceAll("\\", "/");
   return normalized === value
@@ -46,7 +46,7 @@ const recipeMetadataSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional().default(""),
   defaultServings: z.coerce.number().int().min(1).max(12),
-  mealTypes: z.array(mealTypeSchema).min(1),
+  suggestedSlots: z.array(suggestedSlotSchema).optional().default([]),
   tags: z.array(z.string()).optional().default([]),
   image: imagePathSchema.optional(),
   prepTimeMinutes: z.coerce.number().int().min(0).optional(),
@@ -80,12 +80,12 @@ export function getInstructionSteps(instructions: string) {
     .filter(Boolean);
 }
 
-export function getRecipeDescription(recipe: Pick<Recipe, "description" | "tags" | "mealTypes">) {
+export function getRecipeDescription(recipe: Pick<Recipe, "description" | "tags" | "suggestedSlots">) {
   if (recipe.description.trim()) {
     return recipe.description.trim();
   }
 
-  const categories = [...recipe.tags, ...recipe.mealTypes].filter(Boolean);
+  const categories = [...recipe.tags, ...recipe.suggestedSlots].filter(Boolean);
   if (categories.length > 0) {
     return `${categories.slice(0, 3).join(", ")} recipe.`;
   }
@@ -129,7 +129,7 @@ function readRecipeMetadata(recipe: ParsedCooklangRecipe) {
     title: rawMetadata.title ?? recipe.title,
     description: rawMetadata.description ?? recipe.description ?? "",
     defaultServings: rawMetadata.defaultServings ?? rawMetadata.servings ?? recipe.servings,
-    mealTypes: rawMetadata.mealTypes,
+    suggestedSlots: rawMetadata.suggestedSlots ?? rawMetadata.mealTypes ?? [],
     tags: rawMetadata.tags ?? [...recipe.tags],
     image: rawMetadata.image,
     prepTimeMinutes: rawMetadata.prepTimeMinutes ?? recipeTime.prepTimeMinutes,
