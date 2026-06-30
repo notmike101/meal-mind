@@ -250,10 +250,19 @@ def infer_measured_pantry_ingredients(
         "salt",
         "sugar",
     )
-    source_text = " ".join(source_ingredients).lower()
-    missing_names = [
-        name for name in pantry_names if not re.search(rf"\b{re.escape(name)}\b", source_text)
-    ]
+    measurable_unit = r"(?:tablespoons?|tbsp|teaspoons?|tsp|cups?|ounces?|oz)"
+    missing_names = []
+    for name in pantry_names:
+        matching_sources = [
+            ingredient
+            for ingredient in source_ingredients
+            if re.search(rf"\b{re.escape(name)}\b", ingredient, re.IGNORECASE)
+        ]
+        if not matching_sources or not any(
+            re.search(rf"\b{measurable_unit}\b", ingredient, re.IGNORECASE)
+            for ingredient in matching_sources
+        ):
+            missing_names.append(name)
     if not missing_names:
         return []
 

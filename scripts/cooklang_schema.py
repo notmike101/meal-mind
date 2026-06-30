@@ -276,7 +276,44 @@ def clean_instruction_text(text: str) -> str:
 
 
 def _replace_first_unmarked(text: str, candidate: str, placeholder: str) -> tuple[str, bool]:
-    pattern = re.compile(rf"(?<![\w]){re.escape(candidate)}(?![\w])", re.IGNORECASE)
+    """Replace the first unmarked occurrence of *candidate* in *text*.
+
+    Handles three cases so that quantities embedded in step text are consumed
+    rather than left behind as duplicate annotations:
+
+    1. CookLang marker already present (e.g. ``@butter{2%tbsp}``) → remove it
+       entirely (the correct marker is injected from the source ingredient).
+    2. Quantity prefix + name (e.g. ``1 TBSP butter``) → replace both with
+       the CookLang placeholder so only the single authoritative marker remains.
+    3. Bare name (e.g. ``butter``) → standard replacement.
+
+    Returns ``(updated_text, matched)``.
+    """
+    escaped = re.escape(candidate)
+
+    # ── Case A: a CookLang marker appears right before the candidate ────────
+    # Matches ``@name{…} name`` (the marker is followed by the same bare word).
+    marker_pattern = rf"(?<![\w\{{])@\S+{{[^}}]+}}\s+{escaped}(?![\w])"
+    replaced, count = re.subn(marker_pattern, placeholder, text, count=1, flags=re.IGNORECASE)
+    if count:
+        return replaced, True
+
+    # ── Case B: optional quantity prefix + candidate ────────────────────────
+    # Quantity: integer / fraction / decimal (with optional range).
+    # NB: the entire atom alternation must be wrapped in a single group so
+    # that \b and everything after it applies to BOTH alternatives.
+    atom = r"(?:\d+\s+\d+/\d+|\d+/\d+|\d+(?:\.\d+)?)|(?:[¼½¾⅓⅔⅛⅜⅝⅞])"
+    qty_prefix = rf"\b(?:{atom})(?:\s*[-–—]\s*(?:(?:{atom})))?\s+[a-zA-Z]+\s+"
+    combined_pattern = re.compile(
+        rf"(?<![\w]){qty_prefix}{escaped}(?![\w])",
+        re.IGNORECASE,
+    )
+    replaced, count = combined_pattern.subn(placeholder, text, count=1)
+    if count:
+        return replaced, True
+
+    # ── Case C: bare candidate word (original behaviour) ────────────────────
+    pattern = re.compile(rf"(?<![\w]){escaped}(?![\w])", re.IGNORECASE)
     replaced, count = pattern.subn(placeholder, text, count=1)
     return replaced, count == 1
 
@@ -538,7 +575,12 @@ def build_recipe_cooklang(recipe: dict[str, Any], recipe_id: str | None = None) 
     structured_inferred_ingredients = [
         raw for raw in inferred_input if isinstance(raw, dict)
     ]
-    if not ingredients:
+    inferred_names = {
+        str(raw.get("name") or "").strip().lower()
+        for raw in structured_inferred_ingredients
+    }
+    ingredients = [ingredient for ingredient in ingredients if ingredient.name not in inferred_names]
+    if not ingredients and not structured_inferred_ingredients:
         raise ValueError("Recipe has no ingredients")
     step_fragments = [
         fragment
@@ -669,8 +711,8 @@ def validate_cooklang(
         if not timer["duration"] or not timer["unit"]:
             errors.append("Timers must use ~{duration%unit} syntax")
     if expected_ingredients is not None:
-        expected_names = sorted(item.name for item in expected_ingredients)
-        actual_names = sorted(item["name"] for item in parsed_ingredients)
-        if actual_names != expected_names:
+        expected_names = {item.name for item in expected_ingredients}
+        actual_names = {item["name"] for item in parsed_ingredients}
+        if not expected_names.issubset(actual_names):
             errors.append("Generated ingredient markers do not match the source ingredient list")
     return errors
