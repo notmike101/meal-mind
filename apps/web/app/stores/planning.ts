@@ -34,6 +34,13 @@ export const usePlanningStore = defineStore("planning", {
       });
       await this.fetchState();
     },
+    async setDaySkipped(planId: string, date: string, skipped: boolean) {
+      await apiRequest(`/api/plans/${encodeURIComponent(planId)}/skipped-days`, {
+        method: "PATCH",
+        body: { date, skipped },
+      });
+      await this.fetchState();
+    },
     async swap(planId: string, slotId: string, mode: "manual" | "ai", recipeId?: string) {
       await apiRequest(`/api/plans/${encodeURIComponent(planId)}/swap`, {
         method: "POST",

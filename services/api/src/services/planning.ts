@@ -25,6 +25,7 @@ import {
   replaceSlotRecipe,
   updateSlotStatus,
   updatePlanStatus,
+  updatePlanSkippedDates,
   updateSlotServing,
 } from "@mealmind/db/repositories/plans";
 import { getSettings, getSettingsWithPantry } from "@mealmind/db/repositories/settings";
@@ -143,6 +144,7 @@ export async function generateWeeklyPlan(input: { weekStart?: string; replaceExi
       aiModel: settings.aiModel,
       aiBaseUrl: settings.aiBaseUrl,
       aiPromptHash: hashPrompt({ messages, draft }),
+      skippedDates: [],
     };
 
     const slots = draft.slots.map((slot) => {
@@ -213,6 +215,29 @@ export async function updateSlot(input: { planId: string; slotId: string; servin
   }
 
   return updateSlotServing(input.planId, input.slotId, servings ?? slot.servings, input.notes);
+}
+
+export async function updateSkippedDay(input: { planId: string; date: string; skipped: boolean }) {
+  const plan = await getPlanWithSlots(input.planId);
+  if (!plan) {
+    throw new AppError("NOT_FOUND", "Meal plan not found.", 404);
+  }
+  if (isPlanLocked(plan)) {
+    throw new AppError("CONFLICT", "This meal plan is locked.", 409);
+  }
+  if (input.date < plan.weekStart || input.date > plan.weekEnd) {
+    throw new AppError("BAD_REQUEST", "Skipped date must be within the plan week.", 400);
+  }
+
+  const skippedDates = new Set(plan.skippedDates);
+  if (input.skipped) skippedDates.add(input.date);
+  else skippedDates.delete(input.date);
+
+  if (skippedDates.size >= 7) {
+    throw new AppError("BAD_REQUEST", "At least one day must remain in the meal plan.", 400);
+  }
+
+  return updatePlanSkippedDates(input.planId, [...skippedDates].sort());
 }
 
 export async function swapSlot(input: {

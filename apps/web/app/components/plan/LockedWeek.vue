@@ -15,7 +15,10 @@ function recipeFor(recipeId: string) {
   <div class="space-y-6">
     <section v-for="date in dates" :key="date" class="space-y-3">
       <h2 class="border-b border-ink/10 pb-2 text-xl font-semibold">{{ formatDisplayDate(date) }}</h2>
-      <div class="grid gap-4 md:grid-cols-2">
+      <div v-if="plan.skippedDates.includes(date)" class="rounded-md border border-dashed border-ink/15 bg-field p-5 text-sm font-medium text-ink/60">
+        Skipped
+      </div>
+      <div v-else class="grid gap-4 md:grid-cols-2">
         <article
           v-for="slot in plan.slots.filter((candidate) => candidate.date === date)"
           :key="slot.id"

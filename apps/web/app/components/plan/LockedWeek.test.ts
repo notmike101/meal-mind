@@ -7,6 +7,7 @@ const plan: MealPlanDto = {
   id: "plan-1", weekStart: "2026-07-06", weekEnd: "2026-07-12", status: "committed", commitSource: "manual",
   committedAt: "2026-07-01T00:00:00.000Z", generatedAt: "2026-06-29T00:00:00.000Z", aiModel: "model",
   aiBaseUrl: "http://localhost/v1", aiPromptHash: "hash",
+  skippedDates: ["2026-07-07"],
   slots: [{ id: "slot-1", planId: "plan-1", date: "2026-07-06", mealType: "dinner", recipeId: "missing", recipeTitleSnapshot: "Archived Dinner", servings: 2, status: "planned", swapCount: 0, notes: "Saved snapshot" }],
 };
 
@@ -19,6 +20,8 @@ describe("LockedWeek", () => {
     expect(wrapper.text()).toContain("Mon, Jul 6");
     expect(wrapper.text()).toContain("Archived Dinner");
     expect(wrapper.text()).toContain("Recipe no longer in library");
+    expect(wrapper.text()).toContain("Tue, Jul 7");
+    expect(wrapper.text()).toContain("Skipped");
     expect(wrapper.find("button").exists()).toBe(false);
   });
 });

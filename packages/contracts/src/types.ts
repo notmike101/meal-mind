@@ -46,6 +46,7 @@ export type MealPlanDto = {
   aiModel: string;
   aiBaseUrl: string;
   aiPromptHash: string;
+  skippedDates: string[];
   slots: MealSlotDto[];
 };
 

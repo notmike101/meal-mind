@@ -10,12 +10,13 @@ import {
   swapSlotRequestSchema,
   toAppError,
   updateShoppingItemRequestSchema,
+  updateSkippedDayRequestSchema,
   updateSlotRequestSchema,
 } from "@mealmind/contracts";
 import { testAiConnectivity } from "@mealmind/ai";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
 import { getSettings, getSettingsWithPantry, updateSettings } from "@mealmind/db/repositories/settings";
-import { updateShoppingItemChecked } from "@mealmind/db/repositories/shopping";
+import { deleteShoppingListForPlan, updateShoppingItemChecked } from "@mealmind/db/repositories/shopping";
 import {
   commitPlan,
   generateWeeklyPlan,
@@ -23,6 +24,7 @@ import {
   swapSlot,
   updateAdherence,
   updateSlot,
+  updateSkippedDay,
 } from "./services/planning.js";
 import { generateShoppingList, getShoppingList } from "./services/shopping.js";
 import { getRecipeDetail, getRecipeImage, listRecipes } from "./recipes.js";
@@ -117,6 +119,21 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
       }
     },
   );
+
+  app.patch<{ Params: { planId: string } }>("/api/plans/:planId/skipped-days", async (request, reply) => {
+    try {
+      const body = updateSkippedDayRequestSchema.parse(request.body ?? {});
+      const planId = request.params.planId;
+      const plan = await updateSkippedDay({ planId, ...body });
+      await deleteShoppingListForPlan(planId);
+      void generateShoppingList(planId).catch((error) => {
+        app.log.warn({ err: error, planId }, "Could not refresh shopping list after changing a skipped day.");
+      });
+      return ok(plan);
+    } catch (error) {
+      return sendError(reply, error);
+    }
+  });
 
   app.post<{ Params: { planId: string } }>("/api/plans/:planId/swap", async (request, reply) => {
     try {

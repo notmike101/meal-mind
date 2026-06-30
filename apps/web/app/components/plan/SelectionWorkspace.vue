@@ -14,7 +14,9 @@ const activeTag = ref<string | null>(null);
 const busy = ref(false);
 const error = ref<string | null>(null);
 
-const activeSlot = computed(() => props.plan.slots.find((slot) => slot.id === activeSlotId.value) ?? props.plan.slots[0]);
+const availableSlots = computed(() => props.plan.slots.filter((slot) => !props.plan.skippedDates.includes(slot.date)));
+
+const activeSlot = computed(() => availableSlots.value.find((slot) => slot.id === activeSlotId.value) ?? availableSlots.value[0]);
 const currentRecipe = computed(() => props.recipes.find((recipe) => recipe.id === activeSlot.value?.recipeId) ?? null);
 const compatibleRecipes = computed(() => props.recipes);
 const availableTags = computed(() => [...new Set(compatibleRecipes.value.flatMap((recipe) => recipe.tags))].sort((a, b) => a.localeCompare(b)));
@@ -28,7 +30,12 @@ const filteredRecipes = computed(() => {
 });
 
 watch(() => props.plan.slots, (slots) => {
-  if (!slots.some((slot) => slot.id === activeSlotId.value)) activeSlotId.value = slots[0]?.id ?? "";
+  if (!slots.some((slot) => slot.id === activeSlotId.value)) activeSlotId.value = availableSlots.value[0]?.id ?? "";
+});
+watch(() => props.plan.skippedDates, () => {
+  if (!availableSlots.value.some((slot) => slot.id === activeSlotId.value)) {
+    activeSlotId.value = availableSlots.value[0]?.id ?? "";
+  }
 });
 watch(compatibleRecipes, () => {
   if (activeTag.value && !availableTags.value.includes(activeTag.value)) activeTag.value = null;
@@ -69,6 +76,14 @@ async function updateServings(servings: number) {
   );
 }
 
+async function toggleDay(date: string, skipped: boolean) {
+  if (busy.value) return;
+  await runChange(
+    () => planning.setDaySkipped(props.plan.id, date, skipped),
+    `Could not ${skipped ? "skip" : "restore"} that day.`,
+  );
+}
+
 async function runChange(change: () => Promise<void>, fallback: string) {
   busy.value = true;
   error.value = null;
@@ -88,7 +103,13 @@ function slotLabel(slot: MealSlotDto) {
 
 <template>
   <div class="space-y-6">
-    <PlanScheduleStrip :plan="plan" :active-slot-id="activeSlotId" @select="selectSlot" />
+    <PlanScheduleStrip
+      :plan="plan"
+      :active-slot-id="activeSlotId"
+      :busy="busy"
+      @select="selectSlot"
+      @toggle-day="toggleDay"
+    />
 
     <section v-if="activeSlot" class="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm sm:p-5">
       <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
