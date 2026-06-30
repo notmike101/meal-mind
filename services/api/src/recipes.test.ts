@@ -2,7 +2,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import Fastify from "fastify";
 import { getRecipeImage, listRecipes } from "./recipes";
+import { registerRoutes } from "./routes";
 
 const originalRecipeRoot = process.env.MEALMIND_RECIPE_ROOT;
 const temporaryRoots: string[] = [];
@@ -41,5 +43,17 @@ describe("recipe images", () => {
     createRecipeRoot(false);
     expect(listRecipes().recipes[0]?.imageUrl).toBeNull();
     expect(getRecipeImage("photo-recipe")).toBeNull();
+  });
+
+  it("serves declared images with a stable content type and cache policy", async () => {
+    createRecipeRoot(true);
+    const app = Fastify();
+    registerRoutes(app);
+    const response = await app.inject({ method: "GET", url: "/api/recipes/photo-recipe/image" });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["content-type"]).toContain("image/webp");
+    expect(response.headers["cache-control"]).toBe("public, max-age=86400");
+    expect(response.rawPayload).toEqual(Buffer.from("image"));
+    await app.close();
   });
 });

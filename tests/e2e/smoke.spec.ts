@@ -38,8 +38,13 @@ test("supports direct recipe routes and missing recipe responses", async ({ page
 
 test("plan page exposes generation controls", async ({ page }) => {
   await page.goto("/plan");
-  await expect(page.getByRole("heading", { name: "Weekly meal grid" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Choose next week's meals|Weekly meal plan/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Generate next week|Replace draft/ })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
 
 test("theme preference defaults to system and can be overridden", async ({ page }) => {
