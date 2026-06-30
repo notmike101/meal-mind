@@ -48,17 +48,14 @@ function validateRecipeSelections(
   const recipesById = getRecipeLookup(recipes);
 
   for (const slot of slots) {
-    const recipe = recipesById.get(slot.recipeId);
-    if (!recipe) {
-      errors.push(`${slot.date} ${slot.mealType} references unknown recipe "${slot.recipeId}".`);
-      continue;
-    }
-    if (!recipe.mealTypes.includes(slot.mealType)) {
-      errors.push(`${recipe.title} is not allowed for ${slot.mealType}.`);
-    }
-  }
+     const recipe = recipesById.get(slot.recipeId);
+     if (!recipe) {
+       errors.push(`${slot.date} ${slot.mealType} references unknown recipe "${slot.recipeId}".`);
+       continue;
+     }
+   }
 
-  return errors;
+   return errors;
 }
 
 export async function getCurrentPlanningState() {
@@ -239,58 +236,57 @@ export async function swapSlot(input: {
     throw new AppError("NOT_FOUND", "Meal slot not found.", 404);
   }
 
-  const { recipes } = loadRecipes();
-  const compatibleRecipes = recipes.filter((recipe) => recipe.mealTypes.includes(slot.mealType));
-  let selectedRecipeId = input.recipeId;
-  let note = input.note;
+  const recipesList = loadRecipes().recipes;
+   let selectedRecipeId = input.recipeId;
+   let note = input.note;
 
-  if (input.mode === "ai") {
-    let validationErrors: string[] = [];
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      const messages = slotSwapMessages({
-        settings,
-        recipes,
-        date: slot.date,
-        mealType: slot.mealType,
-        currentRecipeId: slot.recipeId,
-        note: input.note,
-        validationErrors,
-      });
-      const swap = await runJsonPrompt({
-        eventType: "slot_swap",
-        settings,
-        system: messages.system,
-        user: messages.user,
-        schema: slotSwapSchema,
-        logEvent: createAiEvent,
-      }).catch((error: unknown) => {
-        if (error instanceof AppError && error.code === "AI_VALIDATION_FAILED" && attempt === 0) {
-          validationErrors = ["The prior response did not match the required JSON schema."];
-          return null;
-        }
-        throw error;
-      });
-      if (!swap) {
-        continue;
-      }
-      selectedRecipeId = swap.recipeId;
-      note = swap.reason;
-      const selected = compatibleRecipes.find((recipe) => recipe.id === selectedRecipeId);
-      validationErrors = selected ? [] : [`Recipe "${selectedRecipeId}" is not compatible.`];
-      if (validationErrors.length === 0) {
-        break;
-      }
-    }
-    if (validationErrors.length > 0) {
-      throw new AppError("AI_VALIDATION_FAILED", "AI swap failed validation after retry.", 502, {
-        validationErrors,
-      });
-    }
-  }
+   if (input.mode === "ai") {
+     let validationErrors: string[] = [];
+     for (let attempt = 0; attempt < 2; attempt += 1) {
+       const messages = slotSwapMessages({
+         settings,
+         recipes: recipesList,
+         date: slot.date,
+         mealType: slot.mealType,
+         currentRecipeId: slot.recipeId,
+         note: input.note,
+         validationErrors,
+       });
+       const swap = await runJsonPrompt({
+         eventType: "slot_swap",
+         settings,
+         system: messages.system,
+         user: messages.user,
+         schema: slotSwapSchema,
+         logEvent: createAiEvent,
+       }).catch((error: unknown) => {
+         if (error instanceof AppError && error.code === "AI_VALIDATION_FAILED" && attempt === 0) {
+           validationErrors = ["The prior response did not match the required JSON schema."];
+           return null;
+         }
+         throw error;
+       });
+       if (!swap) {
+         continue;
+       }
+       selectedRecipeId = swap.recipeId;
+       note = swap.reason;
+       const selected = recipesList.find((recipe) => recipe.id === selectedRecipeId);
+       validationErrors = selected ? [] : [`Recipe "${selectedRecipeId}" is not available.`];
+       if (validationErrors.length === 0) {
+         break;
+       }
+     }
+     if (validationErrors.length > 0) {
+       throw new AppError("AI_VALIDATION_FAILED", "AI swap failed validation after retry.", 502, {
+         validationErrors,
+       });
+     }
+   }
 
-  const recipe = compatibleRecipes.find((candidate) => candidate.id === selectedRecipeId);
+   const recipe = recipesList.find((candidate) => candidate.id === selectedRecipeId);
   if (!recipe) {
-    throw new AppError("BAD_REQUEST", "Selected recipe is not compatible with this meal slot.", 400);
+    throw new AppError("BAD_REQUEST", "Selected recipe is not available in the library.", 400);
   }
 
   const updated = await replaceSlotRecipe({

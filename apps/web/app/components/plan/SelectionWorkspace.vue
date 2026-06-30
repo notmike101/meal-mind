@@ -16,9 +16,7 @@ const error = ref<string | null>(null);
 
 const activeSlot = computed(() => props.plan.slots.find((slot) => slot.id === activeSlotId.value) ?? props.plan.slots[0]);
 const currentRecipe = computed(() => props.recipes.find((recipe) => recipe.id === activeSlot.value?.recipeId) ?? null);
-const compatibleRecipes = computed(() => activeSlot.value
-  ? props.recipes.filter((recipe) => recipe.mealTypes.includes(activeSlot.value!.mealType))
-  : []);
+const compatibleRecipes = computed(() => props.recipes);
 const availableTags = computed(() => [...new Set(compatibleRecipes.value.flatMap((recipe) => recipe.tags))].sort((a, b) => a.localeCompare(b)));
 const filteredRecipes = computed(() => {
   const query = search.value.trim().toLowerCase();

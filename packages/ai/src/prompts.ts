@@ -76,10 +76,8 @@ export function slotSwapMessages(input: {
       reason: "short reason",
     },
     recipeCatalog: buildRecipeCatalog(
-      input.recipes.filter(
-        (recipe) => recipe.id !== input.currentRecipeId && recipe.mealTypes.includes(input.mealType),
-      ),
-    ),
+       input.recipes.filter((recipe) => recipe.id !== input.currentRecipeId),
+     ),
     validationErrorsFromPriorAttempt: input.validationErrors ?? [],
   };
 

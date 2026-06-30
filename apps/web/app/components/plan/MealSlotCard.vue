@@ -16,7 +16,7 @@ const servings = ref(props.mealSlot.servings);
 const selectedRecipeId = ref(props.mealSlot.recipeId);
 const busy = ref(false);
 const error = ref<string | null>(null);
-const compatibleRecipes = computed(() => props.recipes.filter((recipe) => recipe.mealTypes.includes(props.mealSlot.mealType)));
+const compatibleRecipes = computed(() => props.recipes);
 
 watch(() => props.mealSlot, (slot) => {
   servings.value = slot.servings;

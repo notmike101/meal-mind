@@ -73,12 +73,9 @@ export function listRecipes(input: RecipeFilterRequest = {}) {
   const tag = input.tag?.trim().toLowerCase();
 
   const filteredRecipes = recipes.filter((recipe) => {
-    if (input.mealType && !recipe.mealTypes.includes(input.mealType)) {
-      return false;
-    }
-    if (tag && !recipe.tags.some((recipeTag) => recipeTag.toLowerCase() === tag)) {
-      return false;
-    }
+     if (tag && !recipe.tags.some((recipeTag) => recipeTag.toLowerCase() === tag)) {
+       return false;
+     }
     if (search) {
       const haystack = [
         recipe.title,
