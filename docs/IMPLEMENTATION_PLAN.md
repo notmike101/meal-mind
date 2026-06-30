@@ -227,7 +227,10 @@ First launch:
 
 Generate plan:
 
-- User clicks Generate Next Week.
+- Automatic generation is enabled by default and can be disabled in Settings.
+- The API checks after startup and every 15 minutes, creating a missing next-week draft without replacing an existing plan.
+- Failed automatic attempts are logged and retried on the next check without blocking API readiness.
+- Manual generation remains available as a fallback and for explicit draft replacement.
 - App computes next Monday in configured timezone.
 - If no plan exists for that week, call Qwen and persist a `draft`.
 - If a draft exists, require explicit replacement.

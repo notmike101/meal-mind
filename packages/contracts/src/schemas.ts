@@ -13,6 +13,7 @@ export const settingsUpdateRequestSchema = z.object({
   planningVarietyRules: z.string().optional(),
   defaultLunchServings: z.coerce.number().int().min(1).max(12).optional(),
   defaultDinnerServings: z.coerce.number().int().min(1).max(12).optional(),
+  autoGenerateNextWeek: z.boolean().optional(),
   pantryStaples: z.array(z.string()).optional(),
 });
 

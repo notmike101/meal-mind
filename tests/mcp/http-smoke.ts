@@ -37,11 +37,11 @@ try {
   const resources = await client.listResources();
   const recipe = await client.callTool({
     name: "get_recipe",
-    arguments: { recipeId: "chicken-rice-bowl" },
+    arguments: { recipeId: "hot-honey-chicken-with-bbq-roasted-potatoes-buttery-broccoli" },
   });
   const recipeText = textFromContent(recipe.content);
 
-  if (!recipeText.includes("cooklang") || !recipeText.includes("Cook 1 cup white rice in a pot according to package instructions.")) {
+  if (!recipeText.includes("cooklang") || !recipeText.includes("Adjust racks to top and middle positions and preheat oven to 425 degrees.")) {
     throw new Error("HTTP MCP get_recipe did not return recipe instructions.");
   }
 

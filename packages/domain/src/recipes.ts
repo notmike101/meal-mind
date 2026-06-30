@@ -1,5 +1,9 @@
 import {
   CooklangParser,
+  grouped_quantity_display,
+  grouped_quantity_is_empty,
+  ingredient_display_name,
+  ingredient_should_be_listed,
   quantity_display,
   type Content,
   type CooklangRecipe as ParsedCooklangRecipe,
@@ -28,6 +32,14 @@ import path from "node:path";
 import { z } from "zod";
 
 const mealTypeSchema = z.enum(["lunch", "dinner"]);
+const imagePathSchema = z.string().trim().refine((value) => {
+  const normalized = value.replaceAll("\\", "/");
+  return normalized === value
+    && !normalized.startsWith("/")
+    && !/^[a-z]:/i.test(normalized)
+    && !normalized.split("/").includes("..")
+    && /\.(?:jpe?g|png|webp)$/i.test(normalized);
+}, "Use a safe relative JPEG, PNG, or WebP path with forward slashes.");
 
 const recipeMetadataSchema = z.object({
   id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase kebab-case."),
@@ -36,6 +48,7 @@ const recipeMetadataSchema = z.object({
   defaultServings: z.coerce.number().int().min(1).max(12),
   mealTypes: z.array(mealTypeSchema).min(1),
   tags: z.array(z.string()).optional().default([]),
+  image: imagePathSchema.optional(),
   prepTimeMinutes: z.coerce.number().int().min(0).optional(),
   cookTimeMinutes: z.coerce.number().int().min(0).optional(),
 });
@@ -118,6 +131,7 @@ function readRecipeMetadata(recipe: ParsedCooklangRecipe) {
     defaultServings: rawMetadata.defaultServings ?? rawMetadata.servings ?? recipe.servings,
     mealTypes: rawMetadata.mealTypes,
     tags: rawMetadata.tags ?? [...recipe.tags],
+    image: rawMetadata.image,
     prepTimeMinutes: rawMetadata.prepTimeMinutes ?? recipeTime.prepTimeMinutes,
     cookTimeMinutes: rawMetadata.cookTimeMinutes ?? recipeTime.cookTimeMinutes,
   });
@@ -411,6 +425,24 @@ function plainInstructions(cooklang: CooklangRecipeDto) {
     .join("\n");
 }
 
+function groupedIngredientDisplayTexts(recipe: ParsedCooklangRecipe) {
+  return recipe.groupedIngredients
+    .filter(([ingredient]) => ingredient_should_be_listed(ingredient))
+    .map(([ingredient, quantity]) => {
+      const relation = ingredient.relation.relation;
+      const hasReferences = relation.type === "definition" && relation.referenced_from.length > 0;
+      const quantityText = hasReferences
+        ? grouped_quantity_is_empty(quantity)
+          ? ""
+          : grouped_quantity_display(quantity)
+        : ingredient.quantity
+          ? quantity_display(ingredient.quantity)
+          : "";
+      const display = [quantityText, ingredient_display_name(ingredient)].filter(Boolean).join(" ").trim();
+      return ingredient.note ? `${display} (${ingredient.note})` : display;
+    });
+}
+
 export function parseRecipeCooklang(content: string, filePath: string): Recipe {
   const parser = new CooklangParser();
   const [parsedRecipe, report] = parser.parse(content);
@@ -433,7 +465,7 @@ export function parseRecipeCooklang(content: string, filePath: string): Recipe {
     ...metadata,
     format: "cooklang",
     filePath,
-    ingredients: cooklang.ingredients.map((ingredient) => ingredient.displayText),
+    ingredients: groupedIngredientDisplayTexts(parsedRecipe),
     instructions,
     cooklang,
   };

@@ -8,6 +8,7 @@ description: A short test recipe.
 servings: 2
 mealTypes: [lunch, dinner]
 tags: [easy]
+image: images/test-recipe.webp
 prep time: 5 minutes
 cook time: 10 minutes
 ---
@@ -27,6 +28,7 @@ describe("parseRecipeCooklang", () => {
     expect(recipe.format).toBe("cooklang");
     expect(recipe.defaultServings).toBe(2);
     expect(recipe.mealTypes).toEqual(["lunch", "dinner"]);
+    expect(recipe.image).toBe("images/test-recipe.webp");
     expect(recipe.prepTimeMinutes).toBe(5);
     expect(recipe.cookTimeMinutes).toBe(10);
     expect(recipe.ingredients).toEqual(["1 cup rice", "2 eggs", "salt"]);
@@ -62,5 +64,32 @@ Nothing to do.
         "recipes/bad-recipe.cook",
       ),
     ).toThrow("ingredient");
+  });
+
+  it("rejects unsafe recipe image paths", () => {
+    expect(() => parseRecipeCooklang(validRecipe.replace("images/test-recipe.webp", "../secret.jpg"), "bad.cook"))
+      .toThrow("safe relative");
+  });
+
+  it("groups repeated scalable ingredient uses while preserving per-step amounts", () => {
+    const recipe = parseRecipeCooklang(
+      `---
+id: butter-test
+title: Butter Test
+servings: 2
+mealTypes: [dinner]
+---
+
+Melt @butter{1%tbsp} in a #bowl{}.
+
+Toss with @&butter{1%tbsp}.
+`,
+      "recipes/butter-test.cook",
+    );
+
+    expect(recipe.ingredients).toEqual(["2 tbsp butter"]);
+    expect(recipe.instructions).toContain("Melt 1 tbsp butter in a bowl.");
+    expect(recipe.instructions).toContain("Toss with 1 tbsp butter.");
+    expect(recipe.cooklang.ingredients).toHaveLength(2);
   });
 });

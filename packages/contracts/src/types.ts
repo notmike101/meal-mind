@@ -11,6 +11,7 @@ export type SettingsDto = {
   planningVarietyRules: string;
   defaultLunchServings: number;
   defaultDinnerServings: number;
+  autoGenerateNextWeek: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -170,6 +171,7 @@ export type RecipeDto = {
   id: string;
   title: string;
   description: string;
+  imageUrl: string | null;
   format: "cooklang";
   defaultServings: number;
   mealTypes: MealType[];

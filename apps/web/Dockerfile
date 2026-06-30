@@ -8,16 +8,13 @@ COPY services ./services
 COPY tsconfig.base.json ./
 RUN npm ci
 RUN npm run build -w @mealmind/contracts
-RUN npm run build -w @mealmind/domain
 RUN npm run build -w @mealmind/web
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder --chown=node:node /app/package.json /app/package-lock.json ./
-COPY --from=builder --chown=node:node /app/node_modules ./node_modules
-COPY --from=builder --chown=node:node /app/packages ./packages
-COPY --from=builder --chown=node:node /app/apps/web ./apps/web
+ENV HOST=0.0.0.0
+COPY --from=builder --chown=node:node /app/apps/web/.output ./apps/web/.output
 USER node
 EXPOSE 3000
-CMD ["npm", "run", "start", "-w", "@mealmind/web"]
+CMD ["node", "apps/web/.output/server/index.mjs"]

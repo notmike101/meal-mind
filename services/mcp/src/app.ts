@@ -373,9 +373,8 @@ export function createMealMindMcpServer() {
     async (args) => {
       const recipeList = await getJson<RecipeListDto>("/api/recipes");
       const filtered = recipeList.recipes.filter((recipe) => {
-        if (args.mealType && !recipe.mealTypes.includes(args.mealType)) return false;
-        const tag = (args.tag ?? "").trim().toLowerCase();
-        if (tag && !recipe.tags.some((t: string) => t.toLowerCase() === tag)) return false;
+         const tag = (args.tag ?? "").trim().toLowerCase();
+         if (tag && !recipe.tags.some((t: string) => t.toLowerCase() === tag)) return false;
         const search = (args.search ?? "").trim().toLowerCase();
         if (search) {
           const haystack = [recipe.title, recipe.description, recipe.id, ...recipe.tags].join(" ").toLowerCase();
