@@ -1,9 +1,6 @@
-import type { SettingsUpdateRequest } from "@mealmind/contracts";
-import type { SettingsWithPantryDto } from "@mealmind/contracts";
+import type { AiModelsDto, SettingsUpdateRequest, SettingsWithPantryDto } from "@mealmind/contracts";
 import { defineStore } from "pinia";
 import { apiRequest } from "~/composables/use-api";
-
-type AiModelsResponse = { data?: unknown[] };
 
 export const useSettingsStore = defineStore("settings", {
   state: () => ({ data: null as SettingsWithPantryDto | null }),
@@ -15,8 +12,11 @@ export const useSettingsStore = defineStore("settings", {
       await apiRequest("/api/settings", { method: "PATCH", body: input });
       await this.fetchSettings();
     },
-    async testAi() {
-      return apiRequest<AiModelsResponse>("/api/settings/test-ai", { method: "POST" });
+    async testAi(aiBaseUrl: string) {
+      return apiRequest<AiModelsDto>("/api/settings/test-ai", {
+        method: "POST",
+        body: { aiBaseUrl },
+      });
     },
   },
 });

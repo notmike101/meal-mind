@@ -34,7 +34,7 @@ The Dockerized microservices refactor is implemented and verified. The repo comp
 All tasks from the initial checklist are complete:
 - MCP service rewritten to API-backed calls with Zod schemas and verified over stdio + HTTP.
 - AI gateway proxy created on container port `8080`, host port `3103`.
-- AI gateway GET and POST proxying verified against LM Studio via `LM_STUDIO_URL=http://192.168.2.181:1234`.
+- AI gateway GET and POST proxying verified against LM Studio via `OPENAI_COMPATIBLE_UPSTREAM_URL=http://192.168.2.181:1234`.
 - Docker infrastructure added and verified: service Dockerfiles, `compose.yaml`, `.env.example`, migration script.
 - All packages build: contracts, domain, db, ai, api, web, mcp, ai-gateway.
 - Root verification configs are workspace-aware.
@@ -68,7 +68,7 @@ Endpoint checks passed:
 - `GET http://127.0.0.1:3101/api/plans/bf5560c8-d19c-445e-880d-618d6d675b68/shopping-list` returns shopping list `e853ced8-96dc-4bab-85b6-0eacabae1d6d`.
 
 ### External AI Dependency
-LM Studio is running outside Docker. On this machine the containers can reach it through `LM_STUDIO_URL=http://192.168.2.181:1234`; `host.docker.internal:1234` was not reachable from the AI gateway container during verification. Keep `.env` pointed at the LAN URL unless Docker host networking changes.
+LM Studio is running outside Docker. On this machine the containers can reach it through `OPENAI_COMPATIBLE_UPSTREAM_URL=http://192.168.2.181:1234`; `host.docker.internal:1234` was not reachable from the AI gateway container during verification. Keep `.env` pointed at the LAN URL unless Docker host networking changes. Other OpenAI-compatible providers use the same variable and optional `OPENAI_COMPATIBLE_API_KEY`; see `docs/AI_CONFIGURATION.md`.
 
 ### Resume by running:
 ```powershell
@@ -113,7 +113,7 @@ See `docs/WORK_LOG.md` for the detailed final state.
 - `services/api/src/server.ts`, `routes.ts`, and `recipes.ts` implement the Fastify API route surface.
 - **MCP service rewritten** (`services/mcp/src/app.ts`): all 10 tools and resources now call `MEALMIND_API_BASE_URL` instead of importing domain/repositories/services directly. All tool schemas converted to Zod (SDK v1.29 compliant).
 - **MCP HTTP server** (`services/mcp/src/http.ts`): Fastify on port 3102 using `StreamableHTTPServerTransport`, exposes `/api/mcp`, `/healthz`, `/readyz`.
-- **AI-Gateway proxy** (`services/ai-gateway/src/server.ts`): LM Studio router with JSON body forwarding, filtered hop-by-hop headers, and health endpoints on port 8080.
+- **AI-Gateway proxy** (`services/ai-gateway/src/server.ts`): OpenAI-compatible provider router with JSON body forwarding, optional bearer authentication, filtered hop-by-hop headers, and health endpoints on port 8080.
 - **Docker infrastructure**: `Dockerfile.api`, `Dockerfile.mcp`, `Dockerfile.ai-gateway`, `Dockerfile.web`, `compose.yaml`, `.env.example`, `scripts/migrate-sqlite-to-postgres.ts`.
 - All 8 workspace packages/services/apps build successfully: contracts, domain, db, ai, api, web, mcp, ai-gateway.
 
@@ -121,7 +121,7 @@ See `docs/WORK_LOG.md` for the detailed final state.
 The refactor is complete. Next steps are:
 1. Run `docker compose up --build` to start all services with Postgres.
 2. Run `npx tsx scripts/migrate-sqlite-to-postgres.ts` to migrate existing data from SQLite.
-3. Keep LM Studio running on the host and keep `LM_STUDIO_URL` in `.env` set to a container-reachable URL.
+3. Keep the OpenAI-compatible provider running and keep `OPENAI_COMPATIBLE_UPSTREAM_URL` in `.env` set to a container-reachable URL. LM Studio remains the current local provider.
 4. Add deeper integration tests around plan generation and shopping-list creation if this moves beyond local Compose.
 
 ### Known Notes
@@ -133,7 +133,7 @@ MealMind is now a Dockerized microservices architecture:
 - **`apps/web`**: Nuxt 4/Vue SSR UI with Pinia and Nitro proxies to Fastify/MCP at `/api/*`.
 - **`services/api`** (`@mealmind/api`): Fastify REST API owning domain workflows and writes, backed by Postgres.
 - **`services/mcp`** (`@mealmind/mcp`): Standalone MCP HTTP service (port 3102) with Zod schemas, calls the API via `MEALMIND_API_BASE_URL`.
-- **`services/ai-gateway`** (`@mealmind/ai-gateway`): LM Studio proxy on port 8080.
+- **`services/ai-gateway`** (`@mealmind/ai-gateway`): OpenAI-compatible provider proxy on port 8080.
 - **`packages/contracts`**: Shared DTO types, API envelope helpers, Zod request schemas.
 - **`packages/domain`**: Pure domain logic (recipes, weeks, pantry, meal plans).
 - **`packages/db`**: Async Postgres repositories via Drizzle + `pg`.
@@ -160,7 +160,7 @@ Stages 1-9 complete: repository docs, scaffold, database, recipes, AI services, 
 - `services/api/src/recipes.ts` — Recipe API helpers
 - `services/mcp/src/app.ts` — MCP tool/resource definitions (Zod schemas)
 - `services/mcp/src/http.ts` — MCP HTTP transport server
-- `services/ai-gateway/src/server.ts` — LM Studio proxy
+- `services/ai-gateway/src/server.ts` — OpenAI-compatible provider proxy
 
 ### New Packages
 - `packages/contracts/src/*` — DTO types, API envelope helpers, Zod request schemas
@@ -242,7 +242,7 @@ This migrates existing data from `data/mealmind.sqlite` to the new Postgres data
 | Web UI | 3000 | http://localhost:3000 |
 | Fastify API | 3001 | http://localhost:3001/healthz, /readyz, /api/* |
 | MCP Server | 3102 | http://localhost:3102/api/mcp |
-| AI Gateway | 8080 | http://localhost:8080/v1/chat/completions (proxied to LM Studio) |
+| AI Gateway | 8080 | http://localhost:8080/v1/chat/completions (proxied to the configured provider) |
 
 ## How To Resume
 1. Read `docs/IMPLEMENTATION_PLAN.md`.
@@ -253,8 +253,8 @@ This migrates existing data from `data/mealmind.sqlite` to the new Postgres data
 ## Known Issues (Post-Refactor)
 - `.git` exists but `git status` fails with `fatal: not a git repository`; do not rely on Git history for now.
 - `npm install` reported 8 moderate vulnerabilities; no audit fix has been applied.
-- Shopping-list generation and meal-plan generation require LM Studio to be running at the configured endpoint (proxied via AI-Gateway port 8080).
-- MCP workflow tools can mutate Postgres state and some call LM Studio/Qwen. Read resources first unless explicitly intending to modify state.
+- Shopping-list generation and meal-plan generation require an OpenAI-compatible provider to be running at the configured endpoint (proxied via AI-Gateway port 8080).
+- MCP workflow tools can mutate Postgres state and some call the configured AI provider. Read resources first unless explicitly intending to modify state.
 - `services/mcp` HTTP endpoint is on port **3102** (not the old `localhost:3100`).
 - Database has been migrated from SQLite to Postgres; the old `data/mealmind.sqlite` file still exists for backup but is no longer used by default.
 - Quantity normalization is AI-generated and currently allows readable fractional quantities such as `0.33 zucchini`; improve later if desired.

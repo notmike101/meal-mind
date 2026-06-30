@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { PantryStapleDto, SettingsDto, SettingsUpdateRequest } from "@mealmind/contracts";
-import { reactive, ref } from "vue";
+import type { PantryStapleDto, PublicSettingsDto, SettingsUpdateRequest } from "@mealmind/contracts";
+import { computed, reactive, ref } from "vue";
 import { errorMessage } from "~/composables/use-api";
 import { useSettingsStore } from "~/stores/settings";
 import { parsePantryStaples } from "~/utils/settings";
 
-const props = defineProps<{ settings: SettingsDto; pantryStaples: PantryStapleDto[] }>();
+const props = defineProps<{ settings: PublicSettingsDto; pantryStaples: PantryStapleDto[] }>();
 const store = useSettingsStore();
 const form = reactive({
   timezone: props.settings.timezone,
@@ -20,6 +20,15 @@ const form = reactive({
 });
 const status = ref<string | null>(null);
 const busy = ref(false);
+const models = ref<string[]>([props.settings.aiModel]);
+const catalogUrl = ref<string | null>(null);
+const initialAiBaseUrl = props.settings.aiBaseUrl;
+
+const modelsLoaded = computed(() => catalogUrl.value === form.aiBaseUrl);
+const canSave = computed(() => {
+  if (form.aiBaseUrl === initialAiBaseUrl && !modelsLoaded.value) return Boolean(form.aiModel);
+  return modelsLoaded.value && models.value.includes(form.aiModel);
+});
 
 function payload(): SettingsUpdateRequest {
   return {
@@ -34,6 +43,10 @@ async function save(showMessage = true) {
 }
 
 async function runSave() {
+  if (!canSave.value) {
+    status.value = "Load models and select one before saving this AI endpoint.";
+    return;
+  }
   busy.value = true;
   status.value = null;
   try {
@@ -48,11 +61,17 @@ async function runSave() {
 async function testAi() {
   busy.value = true;
   status.value = null;
+  catalogUrl.value = null;
   try {
-    await save(false);
-    const response = await store.testAi();
-    const count = Array.isArray(response.data) ? response.data.length : 0;
-    status.value = `AI endpoint reachable. ${count} model${count === 1 ? "" : "s"} reported.`;
+    const response = await store.testAi(form.aiBaseUrl);
+    models.value = response.models.map((model) => model.id);
+    catalogUrl.value = form.aiBaseUrl;
+    const currentModelAvailable = models.value.includes(form.aiModel);
+    if (!currentModelAvailable) form.aiModel = "";
+    const count = models.value.length;
+    status.value = currentModelAvailable
+      ? `AI endpoint reachable. ${count} model${count === 1 ? "" : "s"} reported.`
+      : `AI endpoint reachable, but the configured model was not reported. Select an available model.`;
   } catch (caught) {
     status.value = errorMessage(caught, "AI test failed.");
   } finally {
@@ -68,6 +87,9 @@ async function testAi() {
         v-model:ai-base-url="form.aiBaseUrl"
         v-model:ai-model="form.aiModel"
         v-model:timezone="form.timezone"
+        :models="models"
+        :auth-configured="props.settings.aiAuthConfigured"
+        :models-loaded="modelsLoaded"
       />
       <SettingsServingFields
         v-model:servings="form.defaultMealServings"
@@ -80,7 +102,7 @@ async function testAi() {
     />
     <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
     <SettingsPantryField v-model="form.pantryStaples" />
-    <SettingsFormActions :busy="busy" @save="runSave" @test-ai="testAi" />
+    <SettingsFormActions :busy="busy" :can-save="canSave" @save="runSave" @test-ai="testAi" />
     <p v-if="status" class="text-sm text-ink/70">{{ status }}</p>
   </div>
 </template>

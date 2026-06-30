@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { createReadStream } from "node:fs";
 import {
   adherenceRequestSchema,
+  aiModelsRequestSchema,
   createMealRequestSchema,
   createPlanRequestSchema,
   fail,
@@ -90,7 +91,9 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
 
   app.post("/api/settings/test-ai", async (request, reply) => {
     try {
-      return ok(await testAiConnectivity(await getSettings(), createAiEvent));
+      const body = aiModelsRequestSchema.parse(request.body ?? {});
+      const settings = await getSettings();
+      return ok(await testAiConnectivity({ ...settings, aiBaseUrl: body.aiBaseUrl }, createAiEvent));
     } catch (error) {
       return sendError(reply, error);
     }
