@@ -254,6 +254,41 @@ Cook @rice{1%cup}.
         self.assertIn("@&butter{2%tbsp}", content)
         self.assertNotIn("2 TBSP @butter", content)
 
+    def test_marks_unicode_fraction_pantry_uses_for_scaling(self) -> None:
+        content = build_recipe_cooklang(
+            {
+                "title": "Unicode Salt",
+                "servings": 2,
+                "meal_types": ["dinner"],
+                "ingredients": ["Salt", "1 cup Rice"],
+                "instructions": [
+                    "Mix rice with ½ tsp salt and slice vegetables into ¼-inch pieces.",
+                    "Finish with ¼ tsp salt and 1½ cups water.",
+                ],
+            }
+        )
+        self.assertIn("@salt{1/2%tsp}", content)
+        self.assertIn("@&salt{1/4%tsp}", content)
+        self.assertIn("1/4-inch pieces", content)
+        self.assertIn("1 1/2 cups water", content)
+        self.assertNotIn("½ tsp salt", content)
+        self.assertEqual(validate_cooklang(content), [])
+
+    def test_leaves_unmeasured_pantry_wording_as_prose(self) -> None:
+        content = build_recipe_cooklang(
+            {
+                "title": "Unmeasured Pantry",
+                "servings": 2,
+                "meal_types": ["dinner"],
+                "ingredients": ["1 cup Rice"],
+                "instructions": ["Cook rice with a pinch of salt, pepper, and sugar to taste."],
+            }
+        )
+        self.assertIn("a pinch of salt, pepper, and sugar to taste", content)
+        self.assertNotIn("@salt", content)
+        self.assertNotIn("@pepper", content)
+        self.assertNotIn("@sugar", content)
+
     def test_hellofresh_converter_normalizes_scalar_legacy_fields(self) -> None:
         content = CONVERTER.build_cooklang(
             {
