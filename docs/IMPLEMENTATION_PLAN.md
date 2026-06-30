@@ -8,7 +8,7 @@ MealMind is a local-only web application that replaces a meal-kit planning workf
 Fixed decisions:
 
 - Runtime: Next.js App Router, TypeScript, SQLite, Drizzle ORM, Tailwind CSS, lucide-react icons.
-- AI endpoint: OpenAI-compatible LM Studio endpoint, default `http://127.0.0.1:1234/v1`.
+- AI endpoint: provider-neutral OpenAI-compatible endpoint. LM Studio remains the default local example at `http://127.0.0.1:1234/v1`.
 - AI model: default `qwen3.6-35b-a3b`.
 - Recipes: CookLang `.cook` files under `recipes/`; no in-app recipe editor in v1.
 - Week model: Monday-Sunday with any number of meals and optional slot labels.
@@ -171,7 +171,7 @@ Rules:
 Use the OpenAI SDK with:
 
 - `baseURL = settings.ai_base_url`
-- `apiKey = 'lm-studio'`
+- optional bearer authentication from `OPENAI_COMPATIBLE_API_KEY`
 - `model = settings.ai_model`
 - `temperature = 0.2`
 - JSON-only prompts and Zod validation after every response
@@ -346,7 +346,7 @@ Automated:
 
 Manual:
 
-- Confirm LM Studio responds at `http://127.0.0.1:1234/v1/models`.
+- Confirm the configured provider responds at `<base-url>/models`; for LM Studio this is `http://127.0.0.1:1234/v1/models`.
 - Run `npm run dev`.
 - Use Browser plugin for quick localhost visual inspection.
 - Use Playwright MCP for repeatable workflow verification.

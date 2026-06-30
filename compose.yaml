@@ -21,7 +21,8 @@ services:
       dockerfile: services/ai-gateway/Dockerfile
     environment:
       PORT: 8080
-      LM_STUDIO_URL: ${LM_STUDIO_URL:-http://host.docker.internal:1234}
+      OPENAI_COMPATIBLE_UPSTREAM_URL: ${OPENAI_COMPATIBLE_UPSTREAM_URL:-http://host.docker.internal:1234}
+      OPENAI_COMPATIBLE_API_KEY: ${OPENAI_COMPATIBLE_API_KEY:-}
     ports:
       - "3103:8080"
     extra_hosts:
@@ -42,6 +43,7 @@ services:
       MEALMIND_RECIPE_ROOT: /app/recipes
       MEALMIND_DOCS_ROOT: /app/docs
       MEALMIND_AI_BASE_URL: ${MEALMIND_AI_BASE_URL:-http://ai-gateway:8080/v1}
+      OPENAI_COMPATIBLE_API_KEY: ${OPENAI_COMPATIBLE_API_KEY:-}
     ports:
       - "3101:3001"
     volumes:

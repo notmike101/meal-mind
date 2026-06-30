@@ -15,6 +15,19 @@ export type SettingsDto = {
   updatedAt: string;
 };
 
+export type PublicSettingsDto = SettingsDto & {
+  aiAuthConfigured: boolean;
+};
+
+export type AiModelDto = {
+  id: string;
+};
+
+export type AiModelsDto = {
+  models: AiModelDto[];
+  authConfigured: boolean;
+};
+
 export type PantryStapleDto = {
   id: number;
   name: string;
@@ -223,7 +236,7 @@ export type ShoppingListDto = {
 };
 
 export type SettingsWithPantryDto = {
-  settings: SettingsDto;
+  settings: PublicSettingsDto;
   pantryStaples: PantryStapleDto[];
 };
 
@@ -233,7 +246,7 @@ export type CurrentShoppingDto = {
 };
 
 export type AppSummaryDto = {
-  settings: SettingsDto;
+  settings: PublicSettingsDto;
   pantryStaples: PantryStapleDto[];
   recipeCount: number;
   invalidRecipeCount: number;

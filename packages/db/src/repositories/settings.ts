@@ -30,7 +30,10 @@ export async function getPantryStaples() {
 export async function getSettingsWithPantry() {
   const [currentSettings, staples] = await Promise.all([getSettings(), getPantryStaples()]);
   return {
-    settings: currentSettings,
+    settings: {
+      ...currentSettings,
+      aiAuthConfigured: Boolean(process.env.OPENAI_COMPATIBLE_API_KEY?.trim()),
+    },
     pantryStaples: staples,
   };
 }

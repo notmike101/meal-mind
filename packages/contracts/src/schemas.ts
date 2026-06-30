@@ -10,16 +10,24 @@ export const createPlanRequestSchema = z.object({
   weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
+const aiBaseUrlSchema = z.url().refine((value) => ["http:", "https:"].includes(new URL(value).protocol), {
+  message: "AI base URL must use HTTP or HTTPS.",
+});
+
 export const settingsUpdateRequestSchema = z.object({
   timezone: z.string().optional(),
-  aiBaseUrl: z.string().optional(),
-  aiModel: z.string().optional(),
+  aiBaseUrl: aiBaseUrlSchema.optional(),
+  aiModel: z.string().trim().min(1).optional(),
   planningPreferences: z.string().optional(),
   planningVarietyRules: z.string().optional(),
   defaultMealServings: z.coerce.number().int().min(1).max(12).optional(),
   defaultWeeklyMealCount: z.coerce.number().int().positive().safe().optional(),
   autoGenerateNextWeek: z.boolean().optional(),
   pantryStaples: z.array(z.string()).optional(),
+});
+
+export const aiModelsRequestSchema = z.object({
+  aiBaseUrl: aiBaseUrlSchema,
 });
 
 const mealSlotLabelSchema = z.string().trim().max(50).transform((value) => value || null).nullable();
@@ -68,6 +76,7 @@ export const recipeFilterRequestSchema = z.object({
 export type GeneratePlanRequest = z.infer<typeof generatePlanRequestSchema>;
 export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;
 export type SettingsUpdateRequest = z.infer<typeof settingsUpdateRequestSchema>;
+export type AiModelsRequest = z.infer<typeof aiModelsRequestSchema>;
 export type CreateMealRequest = z.infer<typeof createMealRequestSchema>;
 export type UpdateMealRequest = z.infer<typeof updateMealRequestSchema>;
 export type UpdateSkippedDayRequest = z.infer<typeof updateSkippedDayRequestSchema>;

@@ -2,12 +2,17 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const HOST = process.env.HOST ?? "0.0.0.0";
-const BACKEND_URL = process.env.LM_STUDIO_URL ?? "http://127.0.0.1:1234";
+const BACKEND_URL = process.env.OPENAI_COMPATIBLE_UPSTREAM_URL ?? "http://127.0.0.1:1234";
+const API_KEY = process.env.OPENAI_COMPATIBLE_API_KEY?.trim();
+
+function authorizationHeaders(): Record<string, string> {
+  return API_KEY ? { authorization: `Bearer ${API_KEY}` } : {};
+}
 
 async function buildServer(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true });
 
-  // Proxy OpenAI-compatible API requests to the backend (LM Studio / Qwen)
+  // Proxy OpenAI-compatible API requests to the configured provider.
   app.all("/v1/*", async (request, reply) => {
     const url = `${BACKEND_URL}${request.url}`;
     try {
@@ -32,7 +37,7 @@ async function buildServer(): Promise<FastifyInstance> {
 
       const res = await fetch(url, {
         method: request.method,
-        headers: { ...headers, "content-type": "application/json" },
+        headers: { ...headers, ...authorizationHeaders(), "content-type": "application/json" },
         body: bodyText,
       });
       reply.raw.statusCode = res.status;
@@ -48,7 +53,11 @@ async function buildServer(): Promise<FastifyInstance> {
   app.get("/healthz", async () => ({ status: "ok" }));
   app.get("/readyz", async (_request, reply) => {
     try {
-      await fetch(`${BACKEND_URL}/v1/models`, { signal: AbortSignal.timeout(3000) });
+      const response = await fetch(`${BACKEND_URL}/v1/models`, {
+        headers: authorizationHeaders(),
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!response.ok) throw new Error(`Provider returned HTTP ${response.status}.`);
       return { status: "ready" };
     } catch {
       return reply.status(503).send({ status: "unhealthy", error: "Backend not reachable" });
