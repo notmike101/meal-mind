@@ -17,4 +17,8 @@ data/*.sqlite-*
 *.tsbuildinfo
 __pycache__/
 *.py[cod]
+
+# Recipe content is local-only; keep the directory in Git.
+recipes/**
+!recipes/.gitkeep
 nul
