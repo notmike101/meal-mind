@@ -63,4 +63,26 @@ Nothing to do.
       ),
     ).toThrow("ingredient");
   });
+
+  it("groups repeated scalable ingredient uses while preserving per-step amounts", () => {
+    const recipe = parseRecipeCooklang(
+      `---
+id: butter-test
+title: Butter Test
+servings: 2
+mealTypes: [dinner]
+---
+
+Melt @butter{1%tbsp} in a #bowl{}.
+
+Toss with @&butter{1%tbsp}.
+`,
+      "recipes/butter-test.cook",
+    );
+
+    expect(recipe.ingredients).toEqual(["2 tbsp butter"]);
+    expect(recipe.instructions).toContain("Melt 1 tbsp butter in a bowl.");
+    expect(recipe.instructions).toContain("Toss with 1 tbsp butter.");
+    expect(recipe.cooklang.ingredients).toHaveLength(2);
+  });
 });

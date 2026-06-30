@@ -15,4 +15,6 @@ data/*.sqlite-*
 .env.*
 !.env.example
 *.tsbuildinfo
+__pycache__/
+*.py[cod]
 nul

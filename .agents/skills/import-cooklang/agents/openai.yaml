@@ -1,0 +1,4 @@
+interface:
+  display_name: "Import CookLang Recipes"
+  short_description: "Import recipe URLs into MealMind CookLang"
+  default_prompt: "Use $import-cooklang to import this recipe URL into MealMind and validate the generated CookLang file."

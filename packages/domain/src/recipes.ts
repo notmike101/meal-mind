@@ -1,5 +1,9 @@
 import {
   CooklangParser,
+  grouped_quantity_display,
+  grouped_quantity_is_empty,
+  ingredient_display_name,
+  ingredient_should_be_listed,
   quantity_display,
   type Content,
   type CooklangRecipe as ParsedCooklangRecipe,
@@ -411,6 +415,24 @@ function plainInstructions(cooklang: CooklangRecipeDto) {
     .join("\n");
 }
 
+function groupedIngredientDisplayTexts(recipe: ParsedCooklangRecipe) {
+  return recipe.groupedIngredients
+    .filter(([ingredient]) => ingredient_should_be_listed(ingredient))
+    .map(([ingredient, quantity]) => {
+      const relation = ingredient.relation.relation;
+      const hasReferences = relation.type === "definition" && relation.referenced_from.length > 0;
+      const quantityText = hasReferences
+        ? grouped_quantity_is_empty(quantity)
+          ? ""
+          : grouped_quantity_display(quantity)
+        : ingredient.quantity
+          ? quantity_display(ingredient.quantity)
+          : "";
+      const display = [quantityText, ingredient_display_name(ingredient)].filter(Boolean).join(" ").trim();
+      return ingredient.note ? `${display} (${ingredient.note})` : display;
+    });
+}
+
 export function parseRecipeCooklang(content: string, filePath: string): Recipe {
   const parser = new CooklangParser();
   const [parsedRecipe, report] = parser.parse(content);
@@ -433,7 +455,7 @@ export function parseRecipeCooklang(content: string, filePath: string): Recipe {
     ...metadata,
     format: "cooklang",
     filePath,
-    ingredients: cooklang.ingredients.map((ingredient) => ingredient.displayText),
+    ingredients: groupedIngredientDisplayTexts(parsedRecipe),
     instructions,
     cooklang,
   };

@@ -1,0 +1,4 @@
+interface:
+  display_name: "HelloFresh Recipe Scraper"
+  short_description: "Extract and import HelloFresh recipes"
+  default_prompt: "Use $hellofresh-scraper to extract this HelloFresh recipe and create a validated MealMind CookLang file."

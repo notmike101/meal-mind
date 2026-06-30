@@ -1,62 +1,90 @@
-# CookLang Format Reference
+# MealMind CookLang Format
 
-## Frontmatter (YAML)
+MealMind recipes use CookLang YAML frontmatter and inline recipe markup. MealMind adds required application metadata and uses relation syntax supported by the repository's current `@cooklang/cooklang` parser.
 
-    ---
-    id: recipe-slug
-    title: Recipe Name
-    description: Short description from source page.
-    servings: 2
-    mealTypes: [lunch, dinner]
-    tags: [quick, easy, vegetarian]
-    prep time: 10 minutes
-    cook time: 25 minutes
-    time required: 35 minutes
-    difficulty: easy
-    cuisine: American
-    source: https://original-url.com/recipe
-    author: Source Name
-    nutrition:
-      calories: "450"
-      fat: "18g"
-      protein: "32g"
-      carbohydrate: "28g"
-    utensils:
-      - skillet
-      - cutting board
-    ---
+## Frontmatter
 
-### Ingredients — `@ingredient{amount}` syntax
+```yaml
+---
+id: recipe-slug
+title: Recipe Name
+description: Short description from the source page.
+servings: 2
+mealTypes:
+- dinner
+time required: 35 minutes
+prep time: 10 minutes
+cook time: 25 minutes
+tags:
+- quick
+- easy
+source: https://example.com/recipe
+author: Source Name
+nutrition:
+  calories: 450 kcal
+  protein: 32 g
+---
+```
 
-- Amount can include `%` separator for unit (e.g., `1%cup`, `2%tsp`)
-- Multi-word names supported: `@white rice{1%cup}`, `@chicken breast{1%lb}`
-- Preparation in parentheses: `@onion, diced{(finely chopped)}`
+Required MealMind fields are `id`, `title`, `servings`, and `mealTypes`. The `id` must use lowercase kebab-case. `mealTypes` must be a non-empty list containing only `lunch` or `dinner`; omitting it makes the recipe invalid. Keep ingredients and cookware in the instruction body. The skill validator rejects an `ingredients:` frontmatter list.
 
-### Cookware — `#cookware{}` syntax
+## Ingredients
 
-    Heat a #skillet{} over medium heat.
-    Use a #baking sheet{}, #pot{}, or #steamer basket{}.
+Use `@ingredient{quantity%unit}`. Multi-word names require braces even when the amount is
+empty.
 
-### Timers — `~timer{name}{duration%unit}` syntax
+```cooklang
+Cook @white rice{1%cup} with @salt{}.
+Season @chicken breast{10%oz} with @black pepper{}.
+```
 
-    Bake for ~potatoes{20-25%minutes}.
-    Microwave until melted, about ~{30%seconds}.
-    Simmer until tender, ~soup{30%minutes}.
+The `%` separator is required when a quantity has a unit. Prefer ASCII fractions such as
+`1/2%cup` in generated files.
 
-### Steps — separate with blank lines
+When one ingredient is measured in multiple steps, define its first use and reference later uses with the relation modifier supported by MealMind's current parser:
 
-Each paragraph is one step. Use `\` for line breaks within a step:
+```cooklang
+Melt @butter{1%tbsp}.
 
-    Cook @white rice{1%cup} in a #pot{} according to package instructions.
+Toss the vegetables with @&butter{1%tbsp}.
+```
 
-    Season @chicken breast{1%lb} with @garlic powder{1%tsp}, @paprika{1%tsp}, and salt.
+For the default servings MealMind lists 2 tbsp butter while preserving 1 tbsp in each instruction. Scaling by two changes both step uses to 2 tbsp and the grouped total to 4 tbsp. This `@&name{}` relation is a current parser feature; it is not documented as part of the public core syntax.
 
-    Serve over the rice with fresh cilantro.
+## Cookware
 
-### Custom metadata keys (project convention)
+Use `#cookware{}` for multi-word cookware names.
 
-These are not in the official CookLang spec but used by meal-mind apps:
+```cooklang
+Heat a #large pan{} and prepare a #baking sheet{}.
+```
 
-- `nutrition:` — nested dict with per-serving nutritional data
-- `utensils:` — list of cookware/utensil names needed
-- `source:` — original URL for traceability
+## Timers
+
+Use `~{duration%unit}` for unnamed timers or `~name{duration%unit}` for named timers.
+
+```cooklang
+Simmer for ~{15%minutes}.
+Bake for ~potatoes{20-25%minutes}.
+```
+
+## Steps and preparation notes
+
+Separate each step with one blank line. Ingredient preparation notes follow the marker.
+
+```cooklang
+Dice @onion{1}(finely chopped) and add it to a #large pan{}.
+
+Simmer until tender, ~{20%minutes}.
+```
+
+Generated files end with a newline. See the official [CookLang specification](https://cooklang.org/docs/spec/)
+and [metadata conventions](https://cooklang.org/docs/conventions/) for the underlying syntax.
+
+## Validation invariants
+
+- Include `id`, `title`, `servings`, and valid `mealTypes` frontmatter.
+- Put every source ingredient in exactly one definition marker; use references only for additional measured uses.
+- Separate quantities from units with `%`, for example `1/2%cup`.
+- Keep ingredients out of frontmatter and preserve one blank line between steps.
+- End the file with a newline and require both Python generator tests and MealMind parser tests to pass.

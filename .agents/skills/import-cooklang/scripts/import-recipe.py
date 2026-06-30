@@ -7,329 +7,171 @@
 # ]
 # ///
 
-import json, re, sys, os, subprocess, tempfile, unicodedata
-from pathlib import Path
+"""Import a public recipe URL into MealMind's CookLang format."""
 
-# Import shared schema from project scripts/ (repo root)
-import sys, os
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import sys
 from pathlib import Path
-_script_dir = Path(__file__).resolve().parent  # .../.agents/skills/import-cooklang/scripts/
-_repo_root = _script_dir.parents[3]  # up through .agents/, skills/, import-cooklang/ to repo root
-sys.path.insert(0, str(_repo_root / 'scripts'))
-from cooklang_schema import build_frontmatter, slugify, validate_cooklang, format_cooklang
+from typing import Any
+
+import requests
+from lxml import etree
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parents[3]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from cooklang_schema import build_recipe_cooklang, slugify  # noqa: E402
+from recipe_jsonld import (  # noqa: E402
+    clean_html_text,
+    extract_json_ld_documents,
+    find_recipe_json_ld,
+    infer_meal_types,
+    normalize_recipe_json_ld,
+)
+
 
 class RecipeExtractor:
-    """Extract recipe data from a URL using multiple strategies."""
-    
-    def __init__(self, url: str):
+    """Extract and normalize recipe data from JSON-LD or a basic DOM fallback."""
+
+    def __init__(self, url: str, meal_type: str | None = None):
         self.url = url
-        self.html = None
-    
+        self.meal_type = meal_type
+        self.html: str | None = None
+
     def fetch(self) -> str:
-        if not self.html:
-            import requests
-            response = requests.get(self.url, timeout=30)
+        if self.html is None:
+            response = requests.get(
+                self.url,
+                headers={"User-Agent": "MealMind recipe importer/1.0"},
+                timeout=30,
+            )
             response.raise_for_status()
             self.html = response.text
         return self.html
-    
-    def extract_jsonld(self) -> dict | None:
-        """Extract the first Recipe-type JSON-LD block from HTML."""
-        html = self.fetch()
-        from lxml import etree
-        parser = etree.HTMLParser(recover=True)
-        tree = etree.fromstring(html, parser)
-        scripts = tree.xpath('//script[@type="application/ld+json"]/text()')
-        
-        for script_text in scripts:
-            try:
-                data = json.loads(script_text)
-                if isinstance(data, dict):
-                    candidates = [data]
-                elif isinstance(data, list):
-                    candidates = data
-                else:
-                    continue
-                
-                for candidate in candidates:
-                    if not isinstance(candidate, dict):
-                        continue
-                    t = candidate.get('@type', '')
-                    if (isinstance(t, str) and t == 'Recipe') or \
-                       (isinstance(t, list) and 'Recipe' in t):
-                        return candidate
-            except (json.JSONDecodeError, ValueError):
-                continue
-        return None
-    
-    def extract_from_jsonld(self, data: dict) -> dict | None:
-        """Convert a JSON-LD Recipe object to our internal recipe dict."""
-        recipe = {}
-        
-        # Title
-        if isinstance(data.get('name'), str):
-            recipe['title'] = data['name'].strip()
-        elif isinstance(data.get('@id'), str):
-            recipe['title'] = 'Unknown Recipe'
-        else:
-            return None
-        
-        # Description
-        if isinstance(data.get('description'), str):
-            recipe['description'] = data['description'].strip()
-        
-        # Servings / yield
-        servings = data.get('recipeYield')
-        if isinstance(servings, int) and servings > 0:
-            recipe['servings'] = servings
-        elif isinstance(servings, str):
-            m = re.search(r'(\d+)', servings)
-            if m:
-                recipe['servings'] = int(m.group(1))
-        
-        # Time parsing (ISO 8601 duration like PT35M -> "35 minutes")
-        def parse_iso_duration(val):
-            if not val or not isinstance(val, str):
-                return ""
-            m = re.match(r'PT(?:(\d+)H)?(?:?(\d+)M)?', val)
-            if not m:
-                # Try simpler patterns
-                h = re.search(r'(\d+)\s*hour', val, re.IGNORECASE)
-                mi = re.search(r'(\d+)\s*(?:min|minute)', val, re.IGNORECASE)
-                parts = []
-                if h:
-                    parts.append(f"{h.group(1)} hour{'s' if int(h.group(1)) > 1 else ''}")
-                if mi:
-                    parts.append(f"{mi.group(1)} minute{'s' if int(mi.group(1)) > 1 else ''}")
-                return ' + '.join(parts) if parts else val.strip()
-            h, m2 = m.groups()
-            parts = []
-            if h and int(h) > 0:
-                parts.append(f"{h} hour{'s' if int(h) > 1 else ''}")
-            if m2 and int(m2) > 0:
-                parts.append(f"{m2} minute{'s' if int(m2) > 1 else ''}")
-            return ' + '.join(parts) if parts else ""
-        
-        prep = data.get('prepTime')
-        cook = data.get('cookTime')
-        recipe['prep_time'] = parse_iso_duration(prep)
-        recipe['cook_time'] = parse_iso_duration(cook)
-        
-        # Instructions (string or HowToStep array)
-        instructions = data.get('recipeInstructions')
-        if isinstance(instructions, str):
-            recipe['steps_text'] = self._parse_instructions([instructions])
-        elif isinstance(instructions, list):
-            steps = []
-            for instr in instructions:
-                if isinstance(instr, dict):
-                    text = instr.get('text', '')
-                    step_num = instr.get('name', '')  # e.g., "Step 1"
-                    if text:
-                        cleaned = re.sub(r'^[\s•\-–—]+', '', text).strip()
-                        steps.append(cleaned)
-                elif isinstance(instr, str):
-                    cleaned = re.sub(r'^[\s•\-–—]+', instr).strip()
-                    if cleaned:
-                        steps.append(cleaned)
-            recipe['steps_text'] = '\n\n'.join(steps)
-        else:
-            recipe['steps_text'] = ''
-        
-        # Ingredients (from Recipe JSON-LD standard field)
-        ingredients = data.get('recipeIngredient', [])
-        if isinstance(ingredients, list):
-            for ing in ingredients:
-                if isinstance(ing, str):
-                    # Try to add @ingredient{} markers to steps
-                    pass  # We'll handle this during step text processing
-        
-        # Nutrition
-        nutrition_data = data.get('nutrition')
-        if isinstance(nutrition_data, dict):
-            nutrition = {}
-            for key in ['calories', 'totalFat', 'protein', 'totalCarbohydrate', 'saturatedFat']:
-                json_key = {'totalFat': 'fat', 'totalCarbohydrate': 'carbohydrate'}.get(key, key)
-                val = nutrition_data.get(key) or nutrition_data.get(json_key)
-                if isinstance(val, str):
-                    nutrition[json_key] = val
-            recipe['nutrition'] = nutrition
-        
-        # Author / chef
-        author = data.get('author')
-        if isinstance(author, dict):
-            recipe['author'] = author.get('name', '')
-        elif isinstance(author, str):
-            recipe['author'] = author
-        
-        # Cuisine (from custom properties or category)
-        cuisine = data.get('recipeCategory')
-        if isinstance(cuisine, list) and len(cuisine) > 0:
-            recipe['cuisine'] = cuisine[0] if isinstance(cuisine[0], str) else ''
-        
-        # Tags / categories
-        tags = data.get('recipeCategory')
-        if isinstance(tags, list):
-            recipe['tags'] = [t for t in tags if isinstance(t, str)]
-        
-        recipe['source_url'] = data.get('@id', self.url) or self.url
-        
-        return recipe
-    
-    def _parse_instructions(self, instructions) -> list[str]:
-        """Parse recipeInstructions into step strings."""
-        if not instructions:
-            return []
-        steps = []
-        for instr in instructions:
-            if isinstance(instr, dict):
-                text = instr.get('text', '')
-                if text:
-                    cleaned = re.sub(r'^[\s•\-–—]+', '', text).strip()
-                    steps.append(cleaned)
-            elif isinstance(instr, str):
-                cleaned = re.sub(r'^[\s•\-–—]+', instr).strip()
-                if cleaned:
-                    steps.append(cleaned)
-        return steps
 
-def import_recipe_from_url(url: str, output_dir: str = 'recipes') -> dict | None:
-    """Main entry point: fetch a URL and write a .cook file."""
-    extractor = RecipeExtractor(url)
-    
-    # Strategy 1: JSON-LD extraction (most reliable)
-    jsonld = extractor.extract_jsonld()
-    if jsonld:
+    def extract_jsonld(self) -> dict[str, Any] | None:
+        documents = extract_json_ld_documents(self.fetch())
+        return find_recipe_json_ld(documents)
+
+    def extract_from_jsonld(self, data: dict[str, Any]) -> dict[str, Any]:
+        return normalize_recipe_json_ld(data, self.url, self.meal_type)
+
+
+def _text_list(nodes: list[Any]) -> list[str]:
+    values = []
+    for node in nodes:
+        value = clean_html_text(node.text_content() if hasattr(node, "text_content") else node)
+        if value and value not in values:
+            values.append(value)
+    return values
+
+
+def _scrape_from_dom(
+    html: str, url: str, meal_type: str | None = None
+) -> dict[str, Any] | None:
+    """Small fallback for static pages without Recipe JSON-LD."""
+    parser = etree.HTMLParser(recover=True)
+    tree = etree.fromstring(html.encode("utf-8"), parser)
+    if tree is None:
+        return None
+
+    title_values = tree.xpath("//h1[1]//text()") or tree.xpath("//meta[@property='og:title']/@content")
+    title = clean_html_text(" ".join(str(value) for value in title_values))
+    if not title:
+        return None
+
+    description_values = tree.xpath("//meta[@name='description']/@content") or tree.xpath(
+        "//meta[@property='og:description']/@content"
+    )
+    description = clean_html_text(description_values[0]) if description_values else ""
+    lowercase = "translate(@class,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')"
+    ingredient_nodes = tree.xpath(
+        f"//*[contains({lowercase},'ingredient')]//li"
+        f" | //*[contains({lowercase},'ingredient')][self::li]"
+    )
+    instruction_nodes = tree.xpath(
+        f"//*[contains({lowercase},'instruction')]//li"
+        f" | //*[contains({lowercase},'step')][self::li or self::p]"
+    )
+    ingredients = _text_list(ingredient_nodes)
+    instructions = _text_list(instruction_nodes)
+    if not ingredients or not instructions:
+        return None
+
+    body_text = clean_html_text(" ".join(tree.xpath("//body//text()")))
+    servings_match = re.search(r"(\d+)\s+servings?", body_text, flags=re.IGNORECASE)
+    return {
+        "title": title,
+        "description": description,
+        "source": url,
+        "servings": int(servings_match.group(1)) if servings_match else 2,
+        "meal_types": infer_meal_types("", meal_type),
+        "tags": [],
+        "ingredients": ingredients,
+        "instructions": instructions,
+        "nutrition": {},
+    }
+
+
+def _next_recipe_path(output_dir: str | os.PathLike[str], base_id: str) -> tuple[Path, str]:
+    directory = Path(output_dir)
+    candidate_id = base_id
+    counter = 0
+    while (directory / f"{candidate_id}.cook").exists():
+        counter += 1
+        candidate_id = f"{base_id}-{counter}"
+    return directory / f"{candidate_id}.cook", candidate_id
+
+
+def _save_recipe(recipe: dict[str, Any], output_dir: str = "recipes") -> dict[str, Any]:
+    base_id = slugify(str(recipe["title"]))
+    filepath, recipe_id = _next_recipe_path(output_dir, base_id)
+    content = build_recipe_cooklang(recipe, recipe_id=recipe_id)
+
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    filepath.write_text(content, encoding="utf-8", newline="\n")
+    print(f"Saved recipe to {filepath}")
+    return {**recipe, "id": recipe_id, "path": str(filepath)}
+
+
+def import_recipe_from_url(
+    url: str,
+    output_dir: str = "recipes",
+    meal_type: str | None = None,
+) -> dict[str, Any] | None:
+    extractor = RecipeExtractor(url, meal_type)
+    json_ld = extractor.extract_jsonld()
+    if json_ld:
         print(f"Extracted Recipe JSON-LD from {url}")
-        recipe = extractor.extract_from_jsonld(jsonld)
-        return _save_recipe(recipe, output_dir)
-    
-    # Strategy 2: DOM scraping fallback
-    print("No JSON-LD found; attempting DOM scraping...")
-    html = extractor.fetch()
-    recipe = _scrape_from_dom(html, url)
+        return _save_recipe(extractor.extract_from_jsonld(json_ld), output_dir)
+
+    print("No Recipe JSON-LD found; attempting DOM scraping...")
+    recipe = _scrape_from_dom(extractor.fetch(), url, meal_type)
     if recipe:
         return _save_recipe(recipe, output_dir)
-    
-    # Strategy 3: Report failure for manual extraction
-    print(f"Could not extract structured data from {url}")
-    print("Please provide the URL and let me use browser tools for manual extraction.")
+
+    print(f"Could not extract recipe data from {url}", file=sys.stderr)
     return None
 
-def _scrape_from_dom(html: str, url: str) -> dict | None:
-    """Fallback DOM-based scraping using lxml."""
-    from lxml import etree
-    parser = etree.HTMLParser(recover=True)
-    tree = etree.fromstring(html, parser)
-    
-    recipe = {}
-    
-    # Title: look for h1 or meta og:title
-    title_el = tree.xpath('//h1[contains(@class, "title") or contains(@class, "recipe-title")]')
-    if not title_el:
-        og_title = tree.xpath('//meta[@property="og:title"]/@content')
-        if og_title:
-            title_el_text = [og_title[0]]
-        else:
-            h1s = tree.xpath('//h1/text()')
-            if h1s:
-                title_el_text = [h1s[0].strip()]
-            else:
-                return None
-    else:
-        title_el_text = [title_el[0].text_content().strip()]
-    
-    recipe['title'] = title_el_text[0] if title_el_text else 'Unknown Recipe'
-    
-    # Description from meta description or og:description
-    desc = tree.xpath('//meta[@name="description"]/@content')
-    if not desc:
-        desc = tree.xpath('//meta[@property="og:description"]/@content')
-    recipe['description'] = desc[0].strip() if desc else ''
-    
-    # Ingredients from various class patterns
-    ingredients = []
-    for cls in ['ingredient', 'ingredients', 'rec-ingredient']:
-        els = tree.xpath(f'//*[contains(@class, "{cls}")]/li/text()')
-        if els:
-            ingredients.extend([e.strip() for e in els])
-    
-    # Steps from ol/ul with class patterns
-    steps = []
-    for cls in ['step', 'instruction', 'recipe-step']:
-        els = tree.xpath(f'//*[contains(@class, "{cls}")]/p/text() | //*[@class="{cls}"]/text()')
-        if els:
-            cleaned = [e.strip() for e in els if e.strip()]
-            steps.extend(cleaned)
-    
-    # If we got some data, return it
-    if recipe.get('title') and (ingredients or steps):
-        recipe['steps_text'] = '\n\n'.join(steps) if steps else ' '.join(ingredients)
-        recipe['servings'] = 2  # default
-        
-        # Try to extract servings from page text
-        body = tree.xpath('//body/text()')
-        if body:
-            body_text = ' '.join(body)
-            m = re.search(r'(\d+)\s*serving', body_text, re.IGNORECASE)
-            if m:
-                recipe['servings'] = int(m.group(1))
-        
-        return recipe
-    
-    return None
 
-def _save_recipe(recipe: dict, output_dir: str = 'recipes') -> dict | None:
-    """Write recipe dict to a .cook file in the output directory."""
-    recipe_id = slugify(recipe['title'])
-    filename = f"{recipe_id}.cook"
-    
-    filepath = os.path.join(output_dir, filename)
-    counter = 1
-    while os.path.exists(filepath):
-        filename = f"{recipe_id}-{counter}.cook"
-        filepath = os.path.join(output_dir, filename)
-        recipe_id = f"{recipe_id}-{counter}"
-        counter += 1
-    
-    fm = build_frontmatter(
-        title=recipe['title'],
-        description=recipe.get('description', ''),
-        servings=recipe.get('servings', 2),
-        meal_types=recipe.get('meal_types'),
-        tags=recipe.get('tags'),
-        prep_time=recipe.get('prep_time', ''),
-        cook_time=recipe.get('cook_time', ''),
-        difficulty=recipe.get('difficulty', ''),
-        cuisine=recipe.get('cuisine', ''),
-        source_url=recipe.get('source_url', ''),
-        author=recipe.get('author', ''),
-        nutrition=recipe.get('nutrition'),
-        utensils=recipe.get('utensils'),
-    )
-    fm['id'] = recipe_id
-    
-    content = format_cooklang(fm, recipe.get('steps_text', ''))
-    
-    os.makedirs(output_dir, exist_ok=True)
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(content)
-    
-    print(f"Saved recipe to {filepath}")
-    
-    errors = validate_cooklang(content)
-    if errors:
-        print("Validation warnings:")
-        for err in errors:
-            print(f"  - {err}")
-    
-    return recipe
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("url", help="Public recipe URL")
+    parser.add_argument("output_dir", nargs="?", default="recipes")
+    parser.add_argument("--meal-type", choices=("lunch", "dinner"))
+    args = parser.parse_args()
+    try:
+        result = import_recipe_from_url(args.url, args.output_dir, args.meal_type)
+    except Exception as error:
+        print(f"ERROR: {error}", file=sys.stderr)
+        return 1
+    return 0 if result else 1
 
-if __name__ == '__main__':
-    url = sys.argv[1] if len(sys.argv) > 1 else ''
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else 'recipes'
-    if not url:
-        print("Usage: uv run .agents/skills/import-cooklang/scripts/import-recipe.py <url> [output_dir]")
-        sys.exit(1)
-    result = import_recipe_from_url(url, output_dir)
-    sys.exit(0 if result else 1)
+
+if __name__ == "__main__":
+    raise SystemExit(main())
