@@ -1,55 +1,46 @@
-import type { MealSlotDto as MealSlot } from "@mealmind/contracts";
-import type { MealType, WeekRange } from "./weeks.js";
-import { getWeekSlots, isDateWithinRange } from "./weeks.js";
+import type { MealDto as Meal } from "@mealmind/contracts";
+import type { WeekRange } from "./weeks.js";
+import { isDateWithinRange } from "./weeks.js";
 
-export type PlannedSlotInput = {
+export type PlannedMealInput = {
   date: string;
-  mealType: MealType;
+  slot?: string | null;
   recipeId: string;
   reason?: string;
 };
 
-export function validatePlannedSlotsForWeek(slots: PlannedSlotInput[], week: WeekRange) {
-  const expectedSlots = getWeekSlots(week.weekStart);
+export function normalizeMealSlot(value: string | null | undefined) {
+  const normalized = value?.trim() ?? "";
+  return normalized || null;
+}
+
+export function validatePlannedMealsForWeek(meals: PlannedMealInput[], week: WeekRange, expectedCount?: number) {
   const errors: string[] = [];
 
-  if (slots.length !== 14) {
-    errors.push(`Expected exactly 14 slots but received ${slots.length}.`);
+  if (expectedCount !== undefined && meals.length !== expectedCount) {
+    errors.push(`Expected exactly ${expectedCount} meals but received ${meals.length}.`);
   }
 
-  const seen = new Set<string>();
-  for (const slot of slots) {
-    if (!isDateWithinRange(slot.date, week)) {
-      errors.push(`${slot.date} ${slot.mealType} is outside ${week.weekStart} through ${week.weekEnd}.`);
+  for (const meal of meals) {
+    if (!isDateWithinRange(meal.date, week)) {
+      errors.push(`${meal.date} is outside ${week.weekStart} through ${week.weekEnd}.`);
     }
-
-    const key = `${slot.date}:${slot.mealType}`;
-    if (seen.has(key)) {
-      errors.push(`Duplicate meal slot ${key}.`);
-    }
-    seen.add(key);
-  }
-
-  for (const slot of expectedSlots) {
-    const key = `${slot.date}:${slot.mealType}`;
-    if (!seen.has(key)) {
-      errors.push(`Missing meal slot ${key}.`);
+    if ((meal.slot?.trim().length ?? 0) > 50) {
+      errors.push(`Meal slot labels must be 50 characters or fewer.`);
     }
   }
 
   return errors;
 }
 
-export function sortMealSlots(slots: MealSlot[]) {
-  const mealOrder = new Map([
-    ["lunch", 0],
-    ["dinner", 1],
-  ]);
-
-  return [...slots].sort((a, b) => {
+export function sortMeals(meals: Meal[]) {
+  return [...meals].sort((a, b) => {
     if (a.date !== b.date) {
       return a.date.localeCompare(b.date);
     }
-    return (mealOrder.get(a.mealType) ?? 99) - (mealOrder.get(b.mealType) ?? 99);
+    if (a.sortOrder !== b.sortOrder) {
+      return a.sortOrder - b.sortOrder;
+    }
+    return a.id.localeCompare(b.id);
   });
 }

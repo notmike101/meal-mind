@@ -1,5 +1,13 @@
 # MealMind Handoff
 
+## Flexible Weekly Meals - 2026-06-30
+
+Weekly plans now contain any number of dated `meals` instead of fourteen required lunch/dinner `slots`. Each meal has a required recipe and date plus an optional free-text `slot` label. Users can create a blank plan, add/remove meals, edit date/slot/servings, commit an empty plan, and choose an exact meal count for AI generation. Settings now use one default serving count and a default weekly meal count for automation.
+
+The REST and MCP contracts intentionally use clean meal terminology. Existing Postgres plans migrate in place: legacy `meal_type` values become optional slot labels, the uniqueness constraint is removed, stable per-day ordering is added, and AI provenance is nullable for manual plans. Legacy CookLang `mealTypes` metadata remains accepted and is exposed as `suggestedSlots`.
+
+The former `dev` history was merged into `main` before this feature branch, per repository policy. The implementation is on `feature/flexible-plan-meals`.
+
 ## Automatic Next-Week Planning
 
 The API automatically creates a missing next-week draft plan and shopping list after startup and every 15 minutes. This behavior is enabled by default, can be disabled in Settings, never replaces an existing plan, and retries failed attempts on the next check without blocking API readiness. Manual generation remains available as a fallback and for deliberate draft replacement.
@@ -10,7 +18,7 @@ The web interface now runs on Nuxt 4 SSR with Vue 3 Composition API and Pinia. T
 
 The frontend source now lives under `apps/web/app`: route components are in `pages`, focused UI components are grouped by feature, and canonical client/SSR state is separated into Pinia stores for planning, recipes, shopping, settings, and theme. Production builds run from `apps/web/.output/server/index.mjs`.
 
-The migration is intentionally isolated to the pushed `dev` branch. Do not merge it into `main` as part of this work.
+The Vue/Nuxt migration is now part of `main`.
 
 Older Next.js references below describe historical states and should not be used as current implementation guidance.
 

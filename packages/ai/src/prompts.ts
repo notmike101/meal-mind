@@ -6,7 +6,7 @@ export function buildRecipeCatalog(recipes: Recipe[]) {
     id: recipe.id,
     title: recipe.title,
     defaultServings: recipe.defaultServings,
-    mealTypes: recipe.mealTypes,
+    suggestedSlots: recipe.suggestedSlots,
     tags: recipe.tags,
     prepTimeMinutes: recipe.prepTimeMinutes ?? null,
     cookTimeMinutes: recipe.cookTimeMinutes ?? null,
@@ -17,23 +17,25 @@ export function weeklyPlanMessages(input: {
   settings: Settings;
   week: WeekRange;
   recipes: Recipe[];
+  mealCount: number;
   validationErrors?: string[];
 }) {
   const system = [
     "You are MealMind, a local meal-planning assistant.",
     "Return strict JSON only. Do not use Markdown.",
     "You must choose only recipe IDs from the provided recipeCatalog.",
-    "Plan exactly one lunch and one dinner for every date in the requested week.",
+    `Plan exactly ${input.mealCount} meals across the requested week.`,
+    "A meal slot label is optional. Use a concise label when useful, or null when no label is needed.",
   ].join(" ");
 
   const user = {
     task: "Create a weekly meal plan.",
     week: input.week,
     requiredResponseShape: {
-      slots: [
+      meals: [
         {
           date: "YYYY-MM-DD",
-          mealType: "lunch or dinner",
+          slot: "optional label such as Breakfast, Lunch, Dinner, Snack, or null",
           recipeId: "one id from recipeCatalog",
           reason: "short reason",
         },
@@ -48,11 +50,11 @@ export function weeklyPlanMessages(input: {
   return { system, user: JSON.stringify(user, null, 2) };
 }
 
-export function slotSwapMessages(input: {
+export function mealSwapMessages(input: {
   settings: Settings;
   recipes: Recipe[];
   date: string;
-  mealType: "lunch" | "dinner";
+  slot: string | null;
   currentRecipeId: string;
   note?: string;
   validationErrors?: string[];
@@ -64,9 +66,9 @@ export function slotSwapMessages(input: {
   ].join(" ");
 
   const user = {
-    task: "Swap one meal slot.",
+    task: "Swap one planned meal.",
     date: input.date,
-    mealType: input.mealType,
+    slot: input.slot,
     currentRecipeId: input.currentRecipeId,
     userNote: input.note ?? "",
     preferences: input.settings.planningPreferences,
@@ -90,7 +92,7 @@ export function shoppingListMessages(input: {
   mealIngredients: Array<{
     recipeId: string;
     recipeTitle: string;
-    slotServings: number;
+    mealServings: number;
     defaultServings: number;
     ingredients: string[];
   }>;

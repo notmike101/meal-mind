@@ -9,8 +9,8 @@ export type SettingsUpdate = {
   aiModel?: string;
   planningPreferences?: string;
   planningVarietyRules?: string;
-  defaultLunchServings?: number;
-  defaultDinnerServings?: number;
+  defaultMealServings?: number;
+  defaultWeeklyMealCount?: number;
   autoGenerateNextWeek?: boolean;
   pantryStaples?: string[];
 };
@@ -67,12 +67,15 @@ export async function updateSettings(input: SettingsUpdate) {
     updates.planningVarietyRules = input.planningVarietyRules;
   }
 
-  if (input.defaultLunchServings !== undefined) {
-    updates.defaultLunchServings = validateServingCount(input.defaultLunchServings);
+  if (input.defaultMealServings !== undefined) {
+    updates.defaultMealServings = validateServingCount(input.defaultMealServings);
   }
 
-  if (input.defaultDinnerServings !== undefined) {
-    updates.defaultDinnerServings = validateServingCount(input.defaultDinnerServings);
+  if (input.defaultWeeklyMealCount !== undefined) {
+    if (!Number.isSafeInteger(input.defaultWeeklyMealCount) || input.defaultWeeklyMealCount < 1) {
+      throw new Error("Default weekly meal count must be a positive integer.");
+    }
+    updates.defaultWeeklyMealCount = input.defaultWeeklyMealCount;
   }
 
   if (input.autoGenerateNextWeek !== undefined) {

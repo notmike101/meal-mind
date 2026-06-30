@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { settingsUpdateRequestSchema, updateSkippedDayRequestSchema } from "./schemas";
+import { createMealRequestSchema, generatePlanRequestSchema, settingsUpdateRequestSchema, updateMealRequestSchema } from "./schemas";
 
 describe("settingsUpdateRequestSchema", () => {
   it("accepts a boolean automatic planning preference", () => {
@@ -10,13 +10,14 @@ describe("settingsUpdateRequestSchema", () => {
   });
 });
 
-describe("updateSkippedDayRequestSchema", () => {
-  it("requires an ISO date and explicit boolean state", () => {
-    expect(updateSkippedDayRequestSchema.parse({ date: "2026-07-08", skipped: true })).toEqual({
-      date: "2026-07-08",
-      skipped: true,
-    });
-    expect(() => updateSkippedDayRequestSchema.parse({ date: "07/08/2026", skipped: true })).toThrow();
-    expect(() => updateSkippedDayRequestSchema.parse({ date: "2026-07-08", skipped: "true" })).toThrow();
+describe("flexible meal request schemas", () => {
+  it("accepts any positive safe generation count", () => {
+    expect(generatePlanRequestSchema.parse({ mealCount: 250_000 }).mealCount).toBe(250_000);
+    expect(() => generatePlanRequestSchema.parse({ mealCount: 0 })).toThrow();
+  });
+
+  it("normalizes optional slot labels", () => {
+    expect(createMealRequestSchema.parse({ date: "2026-07-06", recipeId: "recipe-a", slot: "  Snack  " }).slot).toBe("Snack");
+    expect(updateMealRequestSchema.parse({ slot: "  " }).slot).toBeNull();
   });
 });

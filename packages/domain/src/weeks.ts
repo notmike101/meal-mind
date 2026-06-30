@@ -1,5 +1,3 @@
-export type MealType = "lunch" | "dinner";
-
 export type WeekRange = {
   weekStart: string;
   weekEnd: string;
@@ -60,13 +58,6 @@ export function getNextWeekRange(now: Date, timezone: string): WeekRange {
 
 export function getDatesInWeek(weekStart: string) {
   return Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
-}
-
-export function getWeekSlots(weekStart: string) {
-  return getDatesInWeek(weekStart).flatMap((date) => [
-    { date, mealType: "lunch" as const },
-    { date, mealType: "dinner" as const },
-  ]);
 }
 
 export function isDateWithinRange(date: string, range: WeekRange) {

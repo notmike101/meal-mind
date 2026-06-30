@@ -6,20 +6,21 @@ defineProps<{ recipe: RecipeSummaryDto }>();
 </script>
 
 <template>
-  <article class="rounded-md bg-surface p-5 shadow-line">
-    <div class="flex min-h-full flex-col">
+  <article class="flex h-full flex-col overflow-hidden rounded-md bg-surface shadow-line">
+    <PlanRecipePhoto :image-url="recipe.imageUrl" :title="recipe.title" />
+    <div class="flex flex-1 flex-col p-4">
       <div class="flex items-start justify-between gap-3">
-        <div>
+        <div class="min-w-0">
           <h2 class="text-lg font-semibold">{{ recipe.title }}</h2>
-          <p class="mt-2 text-sm leading-6 text-ink/65">{{ recipe.description }}</p>
+          <p class="mt-2 line-clamp-3 text-sm leading-5 text-ink/65">{{ recipe.description }}</p>
         </div>
-        <span class="rounded-md bg-field px-2 py-1 text-xs font-medium text-ink/70">
+        <span class="shrink-0 rounded-md bg-field px-2 py-1 text-xs font-medium text-ink/70">
           {{ recipe.defaultServings }} servings
         </span>
       </div>
       <div class="mt-4">
         <RecipesRecipeMeta
-          :meal-types="recipe.mealTypes"
+          :suggested-slots="recipe.suggestedSlots"
           :total-time="recipe.totalTimeMinutes"
           :tags="recipe.tags"
           :show-tags="false"
@@ -30,11 +31,11 @@ defineProps<{ recipe: RecipeSummaryDto }>();
           <Tags :size="13" aria-hidden="true" /> {{ tag }}
         </span>
       </div>
-      <div class="mt-5 flex items-center justify-between border-t border-ink/10 pt-4 text-sm text-ink/60">
-        <span>{{ recipe.ingredientCount }} ingredients · {{ recipe.cookwareCount }} tools · {{ recipe.timerCount }} timers</span>
+      <div class="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-t border-ink/10 pt-4 text-sm text-ink/60">
+        <span class="min-w-0">{{ recipe.ingredientCount }} ingredients · {{ recipe.cookwareCount }} tools · {{ recipe.timerCount }} timers</span>
         <NuxtLink
           :to="`/recipes/${recipe.id}`"
-          class="focus-ring inline-flex items-center gap-2 rounded-md px-2 py-1 font-semibold text-moss hover:bg-moss/10"
+          class="focus-ring ml-auto inline-flex shrink-0 items-center gap-2 rounded-md px-2 py-1 font-semibold text-moss hover:bg-moss/10"
         >
           Details <ArrowRight :size="15" aria-hidden="true" />
         </NuxtLink>

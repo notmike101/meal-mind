@@ -2,28 +2,33 @@ import type { FastifyInstance, FastifyReply } from "fastify";
 import { createReadStream } from "node:fs";
 import {
   adherenceRequestSchema,
+  createMealRequestSchema,
+  createPlanRequestSchema,
   fail,
   generatePlanRequestSchema,
   ok,
   recipeFilterRequestSchema,
   settingsUpdateRequestSchema,
-  swapSlotRequestSchema,
+  swapMealRequestSchema,
   toAppError,
   updateShoppingItemRequestSchema,
+  updateMealRequestSchema,
   updateSkippedDayRequestSchema,
-  updateSlotRequestSchema,
 } from "@mealmind/contracts";
 import { testAiConnectivity } from "@mealmind/ai";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
 import { getSettings, getSettingsWithPantry, updateSettings } from "@mealmind/db/repositories/settings";
-import { deleteShoppingListForPlan, updateShoppingItemChecked } from "@mealmind/db/repositories/shopping";
+import { updateShoppingItemChecked } from "@mealmind/db/repositories/shopping";
 import {
   commitPlan,
+  createBlankPlan,
+  addMeal,
+  removeMeal,
   generateWeeklyPlan,
   getCurrentPlanningState,
-  swapSlot,
+  swapMeal,
   updateAdherence,
-  updateSlot,
+  updateMeal,
   updateSkippedDay,
 } from "./services/planning.js";
 import { generateShoppingList, getShoppingList } from "./services/shopping.js";
@@ -93,6 +98,14 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
 
   app.get("/api/plans/current", async () => ok(await getCurrentPlanningState()));
 
+  app.post("/api/plans", async (request, reply) => {
+    try {
+      return ok(await createBlankPlan(createPlanRequestSchema.parse(request.body ?? {})));
+    } catch (error) {
+      return sendError(reply, error);
+    }
+  });
+
   app.post("/api/plans/generate", async (request, reply) => {
     try {
       const body = generatePlanRequestSchema.parse(request.body ?? {});
@@ -102,43 +115,48 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
     }
   });
 
-  app.patch<{ Params: { planId: string; slotId: string } }>(
-    "/api/plans/:planId/slots/:slotId",
+  app.post<{ Params: { planId: string } }>("/api/plans/:planId/meals", async (request, reply) => {
+    try {
+      const body = createMealRequestSchema.parse(request.body ?? {});
+      return ok(await addMeal({ planId: request.params.planId, ...body }));
+    } catch (error) {
+      return sendError(reply, error);
+    }
+  });
+
+  app.patch<{ Params: { planId: string; mealId: string } }>(
+    "/api/plans/:planId/meals/:mealId",
     async (request, reply) => {
       try {
-        const body = updateSlotRequestSchema.parse(request.body ?? {});
-        const plan = await updateSlot({ planId: request.params.planId, slotId: request.params.slotId, ...body });
-        try {
-          await generateShoppingList(request.params.planId);
-        } catch {
-          // Keep the slot update; shopping generation can be retried.
-        }
-        return ok(plan);
+        const body = updateMealRequestSchema.parse(request.body ?? {});
+        return ok(await updateMeal({ planId: request.params.planId, mealId: request.params.mealId, ...body }));
       } catch (error) {
         return sendError(reply, error);
       }
     },
   );
 
-  app.patch<{ Params: { planId: string } }>("/api/plans/:planId/skipped-days", async (request, reply) => {
+  app.delete<{ Params: { planId: string; mealId: string } }>("/api/plans/:planId/meals/:mealId", async (request, reply) => {
     try {
-      const body = updateSkippedDayRequestSchema.parse(request.body ?? {});
-      const planId = request.params.planId;
-      const plan = await updateSkippedDay({ planId, ...body });
-      await deleteShoppingListForPlan(planId);
-      void generateShoppingList(planId).catch((error) => {
-        app.log.warn({ err: error, planId }, "Could not refresh shopping list after changing a skipped day.");
-      });
-      return ok(plan);
+      return ok(await removeMeal(request.params.planId, request.params.mealId));
     } catch (error) {
       return sendError(reply, error);
     }
   });
 
-  app.post<{ Params: { planId: string } }>("/api/plans/:planId/swap", async (request, reply) => {
+  app.patch<{ Params: { planId: string } }>("/api/plans/:planId/skipped-days", async (request, reply) => {
     try {
-      const body = swapSlotRequestSchema.parse(request.body ?? {});
-      return ok(await swapSlot({ planId: request.params.planId, ...body }));
+      const body = updateSkippedDayRequestSchema.parse(request.body ?? {});
+      return ok(await updateSkippedDay({ planId: request.params.planId, ...body }));
+    } catch (error) {
+      return sendError(reply, error);
+    }
+  });
+
+  app.post<{ Params: { planId: string; mealId: string } }>("/api/plans/:planId/meals/:mealId/swap", async (request, reply) => {
+    try {
+      const body = swapMealRequestSchema.parse(request.body ?? {});
+      return ok(await swapMeal({ planId: request.params.planId, mealId: request.params.mealId, ...body }));
     } catch (error) {
       return sendError(reply, error);
     }

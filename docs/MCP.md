@@ -98,12 +98,15 @@ Read-oriented tools:
 Workflow tools:
 
 - `generate_next_week_plan`
+- `create_blank_plan`
+- `add_plan_meal`
+- `update_plan_meal`
+- `remove_plan_meal`
+- `swap_meal_recipe`
 - `generate_shopping_list`
-- `update_slot_servings`
-- `swap_slot_recipe`
 - `commit_plan`
 
-Workflow tools can mutate local SQLite state and some call LM Studio/Qwen. Agents should inspect resources first and only call mutating tools when explicitly directed.
+`generate_next_week_plan` accepts an optional positive `mealCount`. Plan meals require a date and recipe, while the `slot` label is optional and free-form. Workflow tools mutate local Postgres state and some call LM Studio/Qwen. Agents should inspect resources first and only call mutating tools when explicitly directed.
 
 ## Verification
 
@@ -114,6 +117,6 @@ npm run mcp:smoke
 npm run mcp:http-smoke
 ```
 
-The stdio smoke test starts the MCP server over stdio, lists tools/resources, calls `list_recipes`, and reads `mealmind://recipes/chicken-rice-bowl`.
+The stdio smoke test starts the MCP server over stdio, verifies the flexible-meal tools, lists recipes, and reads a recipe detail resource.
 
 The HTTP smoke test connects to the running app at `/api/mcp`, lists tools/resources, and calls `get_recipe`.

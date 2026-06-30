@@ -13,7 +13,7 @@ await callOnce("recipe-catalog", () => recipes.fetchCatalog(), { mode: "navigati
       v-if="recipes.catalog?.invalidRecipes.length"
       :invalid-recipes="recipes.catalog.invalidRecipes"
     />
-    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <section class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
       <RecipesRecipeCard v-for="recipe in recipes.catalog?.recipes ?? []" :key="recipe.id" :recipe="recipe" />
     </section>
     <div

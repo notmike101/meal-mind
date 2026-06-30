@@ -46,6 +46,8 @@ export async function ensureDatabase() {
       planning_variety_rules TEXT NOT NULL DEFAULT 'Avoid repeating the same recipe in a week unless no alternatives exist.',
       default_lunch_servings INTEGER NOT NULL DEFAULT 1 CHECK(default_lunch_servings >= 1 AND default_lunch_servings <= 12),
       default_dinner_servings INTEGER NOT NULL DEFAULT 1 CHECK(default_dinner_servings >= 1 AND default_dinner_servings <= 12),
+      default_meal_servings INTEGER NOT NULL DEFAULT 1 CHECK(default_meal_servings >= 1 AND default_meal_servings <= 12),
+      default_weekly_meal_count INTEGER NOT NULL DEFAULT 14 CHECK(default_weekly_meal_count >= 1),
       auto_generate_next_week BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -62,12 +64,13 @@ export async function ensureDatabase() {
       week_start TEXT NOT NULL,
       week_end TEXT NOT NULL,
       status TEXT NOT NULL CHECK(status IN ('draft', 'committed', 'active', 'completed')),
+      creation_source TEXT NOT NULL DEFAULT 'ai' CHECK(creation_source IN ('manual', 'ai')),
       commit_source TEXT CHECK(commit_source IN ('manual', 'auto')),
       committed_at TEXT,
       generated_at TEXT NOT NULL,
-      ai_model TEXT NOT NULL,
-      ai_base_url TEXT NOT NULL,
-      ai_prompt_hash TEXT NOT NULL,
+      ai_model TEXT,
+      ai_base_url TEXT,
+      ai_prompt_hash TEXT,
       skipped_dates JSONB NOT NULL DEFAULT '[]'::jsonb
     );
 
@@ -78,16 +81,16 @@ export async function ensureDatabase() {
       id TEXT PRIMARY KEY,
       plan_id TEXT NOT NULL REFERENCES meal_plans(id) ON DELETE CASCADE,
       date TEXT NOT NULL,
-      meal_type TEXT NOT NULL CHECK(meal_type IN ('lunch', 'dinner')),
+      meal_type TEXT,
       recipe_id TEXT NOT NULL,
       recipe_title_snapshot TEXT NOT NULL,
       servings INTEGER NOT NULL CHECK(servings >= 1 AND servings <= 12),
       status TEXT NOT NULL DEFAULT 'planned' CHECK(status IN ('planned', 'done', 'skipped', 'moved')),
       swap_count INTEGER NOT NULL DEFAULT 0,
-      notes TEXT NOT NULL DEFAULT ''
+      notes TEXT NOT NULL DEFAULT '',
+      sort_order INTEGER NOT NULL DEFAULT 0
     );
 
-    CREATE UNIQUE INDEX IF NOT EXISTS meal_slots_plan_date_meal_unique ON meal_slots(plan_id, date, meal_type);
     CREATE INDEX IF NOT EXISTS meal_slots_plan_idx ON meal_slots(plan_id);
 
     CREATE TABLE IF NOT EXISTS shopping_lists (
@@ -129,8 +132,59 @@ export async function ensureDatabase() {
     ALTER TABLE settings
       ADD COLUMN IF NOT EXISTS auto_generate_next_week BOOLEAN NOT NULL DEFAULT TRUE;
 
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'settings' AND column_name = 'default_meal_servings'
+      ) THEN
+        ALTER TABLE settings ADD COLUMN default_meal_servings INTEGER;
+        UPDATE settings SET default_meal_servings = default_dinner_servings;
+        ALTER TABLE settings ALTER COLUMN default_meal_servings SET DEFAULT 1;
+        ALTER TABLE settings ALTER COLUMN default_meal_servings SET NOT NULL;
+      END IF;
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'settings' AND column_name = 'default_weekly_meal_count'
+      ) THEN
+        ALTER TABLE settings ADD COLUMN default_weekly_meal_count INTEGER NOT NULL DEFAULT 14;
+      END IF;
+    END $$;
+
+    ALTER TABLE meal_plans
+      ADD COLUMN IF NOT EXISTS creation_source TEXT NOT NULL DEFAULT 'ai';
     ALTER TABLE meal_plans
       ADD COLUMN IF NOT EXISTS skipped_dates JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE meal_plans ALTER COLUMN ai_model DROP NOT NULL;
+    ALTER TABLE meal_plans ALTER COLUMN ai_base_url DROP NOT NULL;
+    ALTER TABLE meal_plans ALTER COLUMN ai_prompt_hash DROP NOT NULL;
+
+    ALTER TABLE meal_slots DROP CONSTRAINT IF EXISTS meal_slots_meal_type_check;
+    ALTER TABLE meal_slots ALTER COLUMN meal_type DROP NOT NULL;
+    DROP INDEX IF EXISTS meal_slots_plan_date_meal_unique;
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'meal_slots' AND column_name = 'sort_order'
+      ) THEN
+        ALTER TABLE meal_slots ADD COLUMN sort_order INTEGER;
+        WITH ordered AS (
+          SELECT id, ROW_NUMBER() OVER (
+            PARTITION BY plan_id, date
+            ORDER BY CASE meal_type WHEN 'lunch' THEN 0 WHEN 'dinner' THEN 1 ELSE 2 END, id
+          ) - 1 AS position
+          FROM meal_slots
+        )
+        UPDATE meal_slots
+        SET sort_order = ordered.position
+        FROM ordered
+        WHERE meal_slots.id = ordered.id;
+        ALTER TABLE meal_slots ALTER COLUMN sort_order SET DEFAULT 0;
+        ALTER TABLE meal_slots ALTER COLUMN sort_order SET NOT NULL;
+      END IF;
+    END $$;
   `);
 
   const now = new Date().toISOString();

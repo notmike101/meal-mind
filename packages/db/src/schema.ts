@@ -20,8 +20,8 @@ export const settings = pgTable("settings", {
   planningVarietyRules: text("planning_variety_rules")
     .notNull()
     .default("Avoid repeating the same recipe in a week unless no alternatives exist."),
-  defaultLunchServings: integer("default_lunch_servings").notNull().default(1),
-  defaultDinnerServings: integer("default_dinner_servings").notNull().default(1),
+  defaultMealServings: integer("default_meal_servings").notNull().default(1),
+  defaultWeeklyMealCount: integer("default_weekly_meal_count").notNull().default(14),
   autoGenerateNextWeek: boolean("auto_generate_next_week").notNull().default(true),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
@@ -40,12 +40,13 @@ export const mealPlans = pgTable(
     weekStart: text("week_start").notNull(),
     weekEnd: text("week_end").notNull(),
     status: text("status", { enum: ["draft", "committed", "active", "completed"] }).notNull(),
+    creationSource: text("creation_source", { enum: ["manual", "ai"] }).notNull().default("ai"),
     commitSource: text("commit_source", { enum: ["manual", "auto"] }),
     committedAt: text("committed_at"),
-    generatedAt: text("generated_at").notNull(),
-    aiModel: text("ai_model").notNull(),
-    aiBaseUrl: text("ai_base_url").notNull(),
-    aiPromptHash: text("ai_prompt_hash").notNull(),
+    createdAt: text("generated_at").notNull(),
+    aiModel: text("ai_model"),
+    aiBaseUrl: text("ai_base_url"),
+    aiPromptHash: text("ai_prompt_hash"),
     skippedDates: jsonb("skipped_dates").$type<string[]>().notNull().default([]),
   },
   (table) => [
@@ -54,7 +55,7 @@ export const mealPlans = pgTable(
   ],
 );
 
-export const mealSlots = pgTable(
+export const planMeals = pgTable(
   "meal_slots",
   {
     id: text("id").primaryKey(),
@@ -62,7 +63,7 @@ export const mealSlots = pgTable(
       .notNull()
       .references(() => mealPlans.id, { onDelete: "cascade" }),
     date: text("date").notNull(),
-    mealType: text("meal_type", { enum: ["lunch", "dinner"] }).notNull(),
+    slot: text("meal_type"),
     recipeId: text("recipe_id").notNull(),
     recipeTitleSnapshot: text("recipe_title_snapshot").notNull(),
     servings: integer("servings").notNull(),
@@ -71,9 +72,9 @@ export const mealSlots = pgTable(
       .default("planned"),
     swapCount: integer("swap_count").notNull().default(0),
     notes: text("notes").notNull().default(""),
+    sortOrder: integer("sort_order").notNull().default(0),
   },
   (table) => [
-    uniqueIndex("meal_slots_plan_date_meal_unique").on(table.planId, table.date, table.mealType),
     index("meal_slots_plan_idx").on(table.planId),
   ],
 );
@@ -126,13 +127,13 @@ export const aiEvents = pgTable(
 );
 
 export const mealPlansRelations = relations(mealPlans, ({ many }) => ({
-  slots: many(mealSlots),
+  meals: many(planMeals),
   shoppingLists: many(shoppingLists),
 }));
 
-export const mealSlotsRelations = relations(mealSlots, ({ one }) => ({
+export const planMealsRelations = relations(planMeals, ({ one }) => ({
   plan: one(mealPlans, {
-    fields: [mealSlots.planId],
+    fields: [planMeals.planId],
     references: [mealPlans.id],
   }),
 }));
@@ -157,8 +158,8 @@ export type InsertSettings = InferInsertModel<typeof settings>;
 export type PantryStaple = InferSelectModel<typeof pantryStaples>;
 export type MealPlan = InferSelectModel<typeof mealPlans>;
 export type InsertMealPlan = InferInsertModel<typeof mealPlans>;
-export type MealSlot = InferSelectModel<typeof mealSlots>;
-export type InsertMealSlot = InferInsertModel<typeof mealSlots>;
+export type PlanMeal = InferSelectModel<typeof planMeals>;
+export type InsertPlanMeal = InferInsertModel<typeof planMeals>;
 export type ShoppingList = InferSelectModel<typeof shoppingLists>;
 export type InsertShoppingList = InferInsertModel<typeof shoppingLists>;
 export type ShoppingItem = InferSelectModel<typeof shoppingItems>;

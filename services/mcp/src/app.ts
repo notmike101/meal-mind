@@ -63,6 +63,14 @@ async function patchJson<T, R>(path: string, body?: T): Promise<R> {
   return payload.data;
 }
 
+async function deleteJson<R>(path: string): Promise<R> {
+  const res = await fetch(`${API_BASE_URL}${path}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
+  const payload = (await res.json()) as ApiResponse<R>;
+  if (!payload.ok) throw new Error(payload.error.message);
+  return payload.data;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Type aliases for MCP responses                                     */
 /* ------------------------------------------------------------------ */
@@ -109,7 +117,7 @@ function summarizeRecipe(recipe: RecipeDto) {
     title: recipe.title,
     description: recipe.description,
     format: recipe.format,
-    mealTypes: recipe.mealTypes,
+    suggestedSlots: recipe.suggestedSlots,
     tags: recipe.tags,
     defaultServings: recipe.defaultServings,
     prepTimeMinutes: recipe.prepTimeMinutes ?? null,
@@ -174,7 +182,7 @@ const docPaths = {
 /* ------------------------------------------------------------------ */
 
 const ListRecipesInputSchema = z.object({
-  mealType: z.enum(["lunch", "dinner"]).optional(),
+  suggestedSlot: z.string().optional(),
   tag: z.string().optional(),
   search: z.string().optional(),
 });
@@ -189,21 +197,41 @@ const GetShoppingListInputSchema = z.object({
 
 const GenerateNextWeekPlanInputSchema = z.object({
   replaceExisting: z.boolean().default(false),
+  mealCount: z.number().int().positive().optional(),
 }).default({ replaceExisting: false });
+
+const CreateBlankPlanInputSchema = z.object({
+  weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+}).default({});
 
 const GenerateShoppingListInputSchema = z.object({
   planId: z.string().min(1),
 });
 
-const UpdateSlotServingsInputSchema = z.object({
+const AddPlanMealInputSchema = z.object({
   planId: z.string().min(1),
-  slotId: z.string().min(1),
-  servings: z.number().int().min(1).max(12),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  slot: z.string().trim().max(50).nullable().optional(),
+  recipeId: z.string().min(1),
+  servings: z.number().int().min(1).max(12).optional(),
+  notes: z.string().max(500).optional(),
 });
 
-const SwapSlotRecipeInputSchema = z.object({
+const UpdatePlanMealInputSchema = z.object({
   planId: z.string().min(1),
-  slotId: z.string().min(1),
+  mealId: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  slot: z.string().trim().max(50).nullable().optional(),
+  servings: z.number().int().min(1).max(12).optional(),
+  notes: z.string().max(500).optional(),
+});
+
+const MealIdInputSchema = z.object({
+  planId: z.string().min(1),
+  mealId: z.string().min(1),
+});
+
+const SwapMealRecipeInputSchema = MealIdInputSchema.extend({
   mode: z.enum(["manual", "ai"]),
   recipeId: z.string().optional(),
   note: z.string().default(""),
@@ -367,12 +395,14 @@ export function createMealMindMcpServer() {
     "list_recipes",
     {
       title: "List Recipes",
-      description: "List valid recipes with optional meal type, tag, and text filters.",
+      description: "List valid recipes with optional suggested-slot, tag, and text filters.",
       inputSchema: ListRecipesInputSchema,
     },
     async (args) => {
       const recipeList = await getJson<RecipeListDto>("/api/recipes");
       const filtered = recipeList.recipes.filter((recipe) => {
+        const suggestedSlot = (args.suggestedSlot ?? "").trim().toLowerCase();
+        if (suggestedSlot && !recipe.suggestedSlots.some((slot) => slot.toLowerCase() === suggestedSlot)) return false;
          const tag = (args.tag ?? "").trim().toLowerCase();
          if (tag && !recipe.tags.some((t: string) => t.toLowerCase() === tag)) return false;
         const search = (args.search ?? "").trim().toLowerCase();
@@ -461,7 +491,18 @@ export function createMealMindMcpServer() {
       inputSchema: GenerateNextWeekPlanInputSchema,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     },
-    async (args) => jsonText(await postJson("/api/plans/generate", { replaceExisting: args.replaceExisting })),
+    async (args) => jsonText(await postJson("/api/plans/generate", { replaceExisting: args.replaceExisting, mealCount: args.mealCount })),
+  );
+
+  server.registerTool(
+    "create_blank_plan",
+    {
+      title: "Create Blank Plan",
+      description: "Create an empty editable weekly plan without calling AI.",
+      inputSchema: CreateBlankPlanInputSchema,
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    },
+    async (args) => jsonText(await postJson("/api/plans", { weekStart: args.weekStart })),
   );
 
   // generate_shopping_list
@@ -476,36 +517,54 @@ export function createMealMindMcpServer() {
     async (args) => jsonText(await postJson(`/api/plans/${encodeURIComponent(args.planId)}/shopping-list`)),
   );
 
-  // update_slot_servings
   server.registerTool(
-    "update_slot_servings",
+    "add_plan_meal",
     {
-      title: "Update Slot Servings",
-      description: "Update serving count for an editable draft meal slot.",
-      inputSchema: UpdateSlotServingsInputSchema,
+      title: "Add Plan Meal",
+      description: "Add a dated recipe to an editable plan with an optional slot label.",
+      inputSchema: AddPlanMealInputSchema,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     },
-    async (args) => {
-      return jsonText(
-        await patchJson(`/api/plans/${encodeURIComponent(args.planId)}/slots/${encodeURIComponent(args.slotId)}`, { servings: args.servings }),
-      );
-    },
+    async (args) => jsonText(await postJson(`/api/plans/${encodeURIComponent(args.planId)}/meals`, {
+      date: args.date, slot: args.slot, recipeId: args.recipeId, servings: args.servings, notes: args.notes,
+    })),
   );
 
-  // swap_slot_recipe
   server.registerTool(
-    "swap_slot_recipe",
+    "update_plan_meal",
     {
-      title: "Swap Slot Recipe",
-      description: "Swap a recipe in an editable draft slot, manually or via local AI.",
-      inputSchema: SwapSlotRecipeInputSchema,
+      title: "Update Plan Meal",
+      description: "Update the date, optional slot label, servings, or notes for an editable plan meal.",
+      inputSchema: UpdatePlanMealInputSchema,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     },
-    async (args) => {
-      return jsonText(
-        await postJson(`/api/plans/${encodeURIComponent(args.planId)}/swap`, { slotId: args.slotId, mode: args.mode, recipeId: args.recipeId, note: args.note }),
-      );
+    async (args) => jsonText(await patchJson(`/api/plans/${encodeURIComponent(args.planId)}/meals/${encodeURIComponent(args.mealId)}`, {
+      date: args.date, slot: args.slot, servings: args.servings, notes: args.notes,
+    })),
+  );
+
+  server.registerTool(
+    "remove_plan_meal",
+    {
+      title: "Remove Plan Meal",
+      description: "Remove one meal from an editable plan.",
+      inputSchema: MealIdInputSchema,
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
     },
+    async (args) => jsonText(await deleteJson(`/api/plans/${encodeURIComponent(args.planId)}/meals/${encodeURIComponent(args.mealId)}`)),
+  );
+
+  server.registerTool(
+    "swap_meal_recipe",
+    {
+      title: "Swap Meal Recipe",
+      description: "Swap the recipe for an editable plan meal manually or with local AI.",
+      inputSchema: SwapMealRecipeInputSchema,
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    },
+    async (args) => jsonText(await postJson(`/api/plans/${encodeURIComponent(args.planId)}/meals/${encodeURIComponent(args.mealId)}/swap`, {
+      mode: args.mode, recipeId: args.recipeId, note: args.note,
+    })),
   );
 
   // commit_plan

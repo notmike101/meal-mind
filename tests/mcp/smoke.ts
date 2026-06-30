@@ -39,7 +39,16 @@ try {
 
   const tools = await client.listTools();
   const toolNames = tools.tools.map((tool) => tool.name);
-  for (const expectedTool of ["list_recipes", "get_recipe", "get_planning_state"]) {
+  for (const expectedTool of [
+    "list_recipes",
+    "get_recipe",
+    "get_planning_state",
+    "create_blank_plan",
+    "add_plan_meal",
+    "update_plan_meal",
+    "remove_plan_meal",
+    "swap_meal_recipe",
+  ]) {
     if (!toolNames.includes(expectedTool)) {
       throw new Error(`Missing MCP tool: ${expectedTool}`);
     }
@@ -55,7 +64,7 @@ try {
 
   const recipeList = await client.callTool({
     name: "list_recipes",
-    arguments: { mealType: "dinner" },
+    arguments: {},
   });
   const recipeText = textFromContent(recipeList.content);
   if (!recipeText?.includes("Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli")) {

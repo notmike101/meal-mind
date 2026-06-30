@@ -1,4 +1,3 @@
-export type MealType = "lunch" | "dinner";
 export type MealPlanStatus = "draft" | "committed" | "active" | "completed";
 export type MealSlotStatus = "planned" | "done" | "skipped" | "moved";
 
@@ -9,8 +8,8 @@ export type SettingsDto = {
   aiModel: string;
   planningPreferences: string;
   planningVarietyRules: string;
-  defaultLunchServings: number;
-  defaultDinnerServings: number;
+  defaultMealServings: number;
+  defaultWeeklyMealCount: number;
   autoGenerateNextWeek: boolean;
   createdAt: string;
   updatedAt: string;
@@ -22,17 +21,18 @@ export type PantryStapleDto = {
   normalizedName: string;
 };
 
-export type MealSlotDto = {
+export type MealDto = {
   id: string;
   planId: string;
   date: string;
-  mealType: MealType;
+  slot: string | null;
   recipeId: string;
   recipeTitleSnapshot: string;
   servings: number;
   status: MealSlotStatus;
   swapCount: number;
   notes: string;
+  sortOrder: number;
 };
 
 export type MealPlanDto = {
@@ -40,14 +40,15 @@ export type MealPlanDto = {
   weekStart: string;
   weekEnd: string;
   status: MealPlanStatus;
+  creationSource: "manual" | "ai";
   commitSource: "manual" | "auto" | null;
   committedAt: string | null;
-  generatedAt: string;
-  aiModel: string;
-  aiBaseUrl: string;
-  aiPromptHash: string;
+  createdAt: string;
+  aiModel: string | null;
+  aiBaseUrl: string | null;
+  aiPromptHash: string | null;
   skippedDates: string[];
-  slots: MealSlotDto[];
+  meals: MealDto[];
 };
 
 export type WeekRangeDto = {
@@ -175,7 +176,7 @@ export type RecipeDto = {
   imageUrl: string | null;
   format: "cooklang";
   defaultServings: number;
-  mealTypes: MealType[];
+  suggestedSlots: string[];
   tags: string[];
   prepTimeMinutes?: number;
   cookTimeMinutes?: number;

@@ -1,7 +1,9 @@
 # MealMind Implementation Plan
 
 ## Summary
-MealMind is a local-only web application that replaces a meal-kit planning workflow for one user. It reads trusted CookLang recipes from disk, asks a local Qwen model running through LM Studio to curate the following Monday-Sunday lunch/dinner plan, lets the user adjust servings and swap meals before commitment, locks the plan when the week begins or when manually committed, generates a consolidated shopping list, and shows in-app daily accountability prompts.
+MealMind is a local-only web application that replaces a meal-kit planning workflow for one user. It reads trusted CookLang recipes from disk, asks a local Qwen model running through LM Studio to curate a configurable number of meals for the following Monday-Sunday week, lets the user add/remove meals and adjust optional slot labels, dates, servings, and recipes before commitment, locks the plan when the week begins or when manually committed, generates a consolidated shopping list, and shows in-app daily accountability prompts.
+
+> Current model: plans contain an arbitrary `meals` array. Each meal requires a date and recipe; `slot` is a nullable free-text label. This supersedes historical fixed lunch/dinner and fourteen-slot descriptions retained later in this document.
 
 Fixed decisions:
 
@@ -9,10 +11,10 @@ Fixed decisions:
 - AI endpoint: OpenAI-compatible LM Studio endpoint, default `http://127.0.0.1:1234/v1`.
 - AI model: default `qwen3.6-35b-a3b`.
 - Recipes: CookLang `.cook` files under `recipes/`; no in-app recipe editor in v1.
-- Week model: Monday-Sunday, lunch and dinner.
+- Week model: Monday-Sunday with any number of meals and optional slot labels.
 - Lock model: editable until manual commit or local Monday 00:00, then locked.
 - Notifications: in-app reminders only.
-- Portions: editable serving count per meal slot.
+- Portions: one configurable default plus an editable serving count per meal.
 - Pantry: configured staple exclusions.
 - Tracking: each active meal can be marked `planned`, `done`, or `skipped`.
 
