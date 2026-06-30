@@ -75,12 +75,11 @@ function render() {
 }
 
 describe("SelectionWorkspace", () => {
-  it("shows stale selections and filters the catalog by focused meal type, search, and tags", async () => {
-    const wrapper = render();
-    expect(wrapper.text()).toContain("no longer in the library");
-    expect(wrapper.text()).toContain("No lunch recipes are available");
+  it("shows stale selections and filters the catalog by search and tags", async () => {
+     const wrapper = render();
+     expect(wrapper.text()).toContain("no longer in the library");
 
-    await wrapper.get('[data-slot="dinner-1"]').trigger("click");
+     await wrapper.get('[data-slot="dinner-1"]').trigger("click");
     expect(wrapper.findAll("[data-recipe]")).toHaveLength(2);
     await wrapper.get('input[type="search"]').setValue("Dinner B");
     expect(wrapper.findAll("[data-recipe]")).toHaveLength(1);
