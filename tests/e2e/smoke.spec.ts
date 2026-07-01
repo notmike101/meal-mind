@@ -20,6 +20,35 @@ test("primary navigation renders each page on the first click", async ({ page })
   }
 });
 
+test("uses a consistent shell width across primary pages", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 900 });
+  const paths = ["/", "/plan", "/shopping", "/recipes", "/settings"];
+
+  for (const path of paths) {
+    await page.goto(path);
+    await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", path);
+
+    const geometry = await page.evaluate(() => {
+      const header = document.querySelector<HTMLElement>("header > div");
+      const main = document.querySelector<HTMLElement>("main");
+      if (!header || !main) throw new Error("App shell containers were not rendered");
+
+      const headerBox = header.getBoundingClientRect();
+      const mainBox = main.getBoundingClientRect();
+      return {
+        headerLeft: headerBox.left,
+        headerWidth: headerBox.width,
+        mainLeft: mainBox.left,
+        mainWidth: mainBox.width,
+      };
+    });
+
+    expect(geometry.headerWidth).toBeCloseTo(1600, 0);
+    expect(geometry.mainWidth).toBeCloseTo(1600, 0);
+    expect(geometry.headerLeft).toBeCloseTo(geometry.mainLeft, 0);
+  }
+});
+
 test("renders core MealMind pages", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();

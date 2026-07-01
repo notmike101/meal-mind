@@ -175,6 +175,7 @@
 .mm-min-w-10 { min-width: var(--mm-min-w-10); }
 
 /* Container-width utilities */
+.mm-shell-container { width: 100%; max-width: 100rem; margin-inline: auto; }
 .mm-max-w-md { max-width: 22.4rem; }      /* 28rem * 0.8 = 22.4rem */
 .mm-max-w-lg { max-width: 25.6rem; }      /* 32rem * 0.8 = 25.6rem */
 .mm-max-w-xl { max-width: 28.8rem; }      /* 36rem * 0.8 = 28.8rem */
