@@ -59,6 +59,17 @@ describe("RecipeCard", () => {
 
     expect(article.classes()).toContain("h-full");
     expect(footer.text()).toContain("8 ingredients · 2 tools · 1 timers");
-    expect(footer.get("a").attributes("href")).toBe("/recipes/test-recipe");
+    expect(wrapper.get("a").attributes("href")).toBe("/recipes/test-recipe");
+  });
+
+  it("opens details from a normal card click while preserving modified-link navigation", async () => {
+    const wrapper = render();
+    const link = wrapper.get("a");
+
+    await link.trigger("click");
+    expect(wrapper.emitted("openDetails")?.[0]?.[0]).toBe("test-recipe");
+
+    await link.trigger("click", { ctrlKey: true });
+    expect(wrapper.emitted("openDetails")).toHaveLength(1);
   });
 });

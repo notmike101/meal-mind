@@ -1,5 +1,32 @@
 <script setup lang="ts">
-import { useHead } from "#imports";
+import { useHead, useNuxtApp, useRoute, useRouter } from "#imports";
+import { computed, watch } from "vue";
+import { useRecipeModal } from "~/composables/use-recipe-modal";
+
+const route = useRoute();
+const router = useRouter();
+const nuxtApp = useNuxtApp();
+const recipeModal = useRecipeModal();
+const displayedRoute = computed(() => {
+  if (!recipeModal.active.value || !recipeModal.navigation.value) return route;
+  return recipeModal.originRoute.value ?? route;
+});
+const displayedLayout = computed(() => recipeModal.active.value
+  ? recipeModal.navigation.value?.originLayout
+  : undefined);
+
+nuxtApp.hook("page:finish", () => {
+  document.documentElement.dataset.mealmindReady = route.fullPath;
+});
+
+watch(() => router.currentRoute.value.fullPath, (fullPath) => {
+  const navigation = recipeModal.navigation.value;
+  if (!navigation) return;
+  const path = fullPath.split(/[?#]/, 1)[0];
+  if (fullPath !== navigation.originFullPath && path !== navigation.targetPath) {
+    recipeModal.clearNavigation();
+  }
+}, { flush: "sync" });
 
 const themeScript = `
 (() => {
@@ -25,7 +52,8 @@ useHead({
 </script>
 
 <template>
-  <NuxtLayout>
-    <NuxtPage />
+  <NuxtLayout :name="displayedLayout">
+    <NuxtPage :route="displayedRoute" />
   </NuxtLayout>
+  <RecipesRecipeDetailModal v-if="recipeModal.activeRecipeId.value" :recipe-id="recipeModal.activeRecipeId.value" />
 </template>

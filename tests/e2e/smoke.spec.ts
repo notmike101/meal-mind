@@ -10,18 +10,33 @@ test("renders core MealMind pages", async ({ page }) => {
   await expect(page.getByText("Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli")).toBeVisible();
   await expect(page.getByText(/Crispy panko-coated chicken/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Instructions" })).toHaveCount(0);
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/recipes");
+  const recipeCard = page.locator("article")
+    .filter({ hasText: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" });
+  await recipeCard.getByRole("link").click();
+  await expect(page).toHaveURL(/\/recipes\/hot-honey-chicken-with-bbq-roasted-potatoes-buttery-broccoli$/);
+  const recipeDialog = page.getByRole("dialog");
+  await expect(recipeDialog).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CookLang recipe library" })).toBeVisible();
+  await expect(recipeDialog.getByRole("heading", { name: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" })).toBeVisible();
+  await expect(recipeDialog.getByRole("heading", { name: "Ingredients" })).toBeVisible();
+  await expect(recipeDialog.getByRole("heading", { name: "Instructions" })).toBeVisible();
+  await expect(recipeDialog.getByText(/Adjust racks to top and middle positions and preheat oven to 425 degrees/)).toBeVisible();
 
-  await page.locator("article")
-    .filter({ hasText: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" })
-    .getByRole("link", { name: "Details" })
-    .click();
+  await recipeDialog.getByRole("button", { name: "Close recipe details" }).click();
+  await expect(page).toHaveURL(/\/recipes$/);
+  await expect(recipeDialog).toHaveCount(0);
+
+  await page.goForward();
+  await expect(recipeDialog).toBeVisible();
+  await page.reload();
+  await expect(recipeDialog).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Ingredients" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Instructions" })).toBeVisible();
-  await expect(page.getByText(/Adjust racks to top and middle positions and preheat oven to 425 degrees/)).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: "Recipes" })).toBeVisible();
 
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/settings");
   await expect(page.getByLabel("AI base URL")).toHaveValue(/http:\/\/(127\.0\.0\.1:1234|ai-gateway:8080)\/v1/);
   await expect(page.getByLabel("AI model")).toHaveValue("qwen3.6-35b-a3b");
   await page.getByRole("button", { name: "Load models" }).click();
@@ -48,6 +63,7 @@ test("supports direct recipe routes and missing recipe responses", async ({ page
 test("plan page exposes generation controls", async ({ page }) => {
   await page.goto("/plan");
   await expect(page.getByRole("heading", { name: /Choose next week's meals|Weekly meal plan/ })).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/plan");
   const generationButton = page.getByRole("button", { name: /Generate next week|Replace draft/ });
   await expect(generationButton).toBeVisible();
   await generationButton.click();
@@ -56,6 +72,16 @@ test("plan page exposes generation controls", async ({ page }) => {
   await expect(generationDialog.getByRole("spinbutton", { name: "Number of meals" })).toHaveValue(/\d+/);
   await generationDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(generationDialog).toHaveCount(0);
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/plan");
+  const recipeDetailsLink = page.getByRole("main").getByRole("link", { name: /^(Details|Recipe details)$/ }).first();
+  await expect(recipeDetailsLink).toBeVisible();
+  await recipeDetailsLink.click();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
+  const recipeDialog = page.getByRole("dialog");
+  await expect(recipeDialog).toBeVisible();
+  await recipeDialog.getByRole("button", { name: "Close recipe details" }).click();
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(recipeDialog).toHaveCount(0);
   for (const width of [390, 768, 1280, 1600]) {
     await page.setViewportSize({ width, height: 900 });
     await page.reload();
@@ -72,6 +98,7 @@ test("theme preference defaults to system and can be overridden", async ({ page 
 
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Appearance" })).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/settings");
   await page.getByRole("button", { name: "Use light theme" }).click();
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mealmind-theme"))).toBe("light");
@@ -83,6 +110,7 @@ test("theme preference defaults to system and can be overridden", async ({ page 
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
 
   await page.goto("/settings");
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/settings");
   await page.getByRole("button", { name: "Use system theme" }).click();
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("dark");
   await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mealmind-theme"))).toBe("system");

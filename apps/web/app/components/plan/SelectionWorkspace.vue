@@ -7,6 +7,7 @@ import { usePlanningStore } from "~/stores/planning";
 import { formatDisplayDate, getDatesInWeek } from "~/utils/dates";
 
 const props = defineProps<{ plan: MealPlanDto; recipes: RecipeSummaryDto[]; defaultServings: number }>();
+const emit = defineEmits<{ openDetails: [recipeId: string, trigger: globalThis.HTMLElement] }>();
 const planning = usePlanningStore();
 const dates = computed(() => getDatesInWeek(props.plan.weekStart));
 const availableMeals = computed(() => props.plan.meals.filter((meal) => !props.plan.skippedDates.includes(meal.date)));
@@ -159,6 +160,10 @@ async function removeActiveMeal() {
 function mealLabel(meal: MealDto) {
   return `${formatDisplayDate(meal.date)} ${meal.slot || "Meal"}`;
 }
+
+function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
+  emit("openDetails", recipeId, trigger);
+}
 </script>
 
 <template>
@@ -254,6 +259,7 @@ function mealLabel(meal: MealDto) {
           :action-label="addingDate ? `Add to ${formatDisplayDate(addingDate)}` : 'Choose recipe'"
           :disabled="busy"
           @choose="chooseRecipe(recipe.id)"
+          @open-details="openRecipeDetails"
         />
       </div>
       <div v-else class="mt-5 rounded-xl border border-dashed border-ink/20 bg-surface p-8 text-center text-ink/65">No recipes match the current search and tag filters.</div>

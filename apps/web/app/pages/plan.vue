@@ -4,6 +4,7 @@ import { computed } from "vue";
 import { usePlanningStore } from "~/stores/planning";
 import { useRecipesStore } from "~/stores/recipes";
 import { useSettingsStore } from "~/stores/settings";
+import { useRecipeModal } from "~/composables/use-recipe-modal";
 import { isPlanLocked } from "~/utils/plans";
 
 // eslint-disable-next-line no-undef
@@ -12,6 +13,7 @@ definePageMeta({ layout: "wide" });
 const planning = usePlanningStore();
 const recipes = useRecipesStore();
 const settings = useSettingsStore();
+const recipeModal = useRecipeModal();
 await Promise.all([
   callOnce("planning-state", () => planning.fetchState(), { mode: "navigation" }),
   callOnce("recipe-catalog", () => recipes.fetchCatalog(), { mode: "navigation" }),
@@ -26,6 +28,10 @@ const pageDescription = computed(() => locked.value
   : "Add as many meals as you need, with optional meal slot labels.");
 const defaultServings = computed(() => settings.data?.settings.defaultMealServings ?? 1);
 const defaultMealCount = computed(() => settings.data?.settings.defaultWeeklyMealCount ?? 14);
+
+function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
+  void recipeModal.openRecipe(recipeId, trigger);
+}
 </script>
 
 <template>
@@ -43,8 +49,8 @@ const defaultMealCount = computed(() => settings.data?.settings.defaultWeeklyMea
     </div>
     <section v-if="plan" class="space-y-4">
       <PlanSummary :plan="plan" :locked="locked" />
-      <PlanLockedWeek v-if="locked" :plan="plan" :recipes="recipeOptions" />
-      <PlanSelectionWorkspace v-else :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" />
+      <PlanLockedWeek v-if="locked" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
+      <PlanSelectionWorkspace v-else :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" @open-details="openRecipe" />
     </section>
     <section v-else class="rounded-md border border-dashed border-ink/20 bg-surface p-6">
       <h2 class="text-lg font-semibold">No plan yet</h2>
