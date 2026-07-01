@@ -7,12 +7,12 @@ await callOnce("settings-data", () => settings.fetchSettings(), { mode: "navigat
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="mm-space-y-6">
     <PageHeading eyebrow="Settings" title="Local planner settings" description="Automation, AI access, preferences, portions, and pantry staples." />
-    <section class="flex flex-col gap-3 rounded-md bg-surface p-5 shadow-line sm:flex-row sm:items-center sm:justify-between">
+    <section class="flex flex-col mm-gap-3 rounded-md bg-surface mm-p-5 shadow-line sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 class="font-semibold">Appearance</h2>
-        <p class="mt-1 text-sm text-ink/65">Theme</p>
+        <p class="mm-mt-1 mm-text-sm text-ink/65">Theme</p>
       </div>
       <SettingsThemeToggle />
     </section>

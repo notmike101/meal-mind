@@ -13,13 +13,13 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="mm-space-y-6">
     <PageHeading eyebrow="Recipes" title="CookLang recipe library" description="Valid local recipes available for planning." />
     <RecipesInvalidRecipeNotice
       v-if="recipes.catalog?.invalidRecipes.length"
       :invalid-recipes="recipes.catalog.invalidRecipes"
     />
-    <section class="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+    <section class="grid mm-gap-4 sm:grid-cols-2 md:grid-cols-3">
       <RecipesRecipeCard
         v-for="recipe in recipes.catalog?.recipes ?? []"
         :key="recipe.id"
@@ -29,7 +29,7 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
     </section>
     <div
       v-if="recipes.catalog?.recipes.length === 0"
-      class="rounded-md border border-dashed border-ink/20 bg-surface p-6 text-ink/70"
+      class="rounded-md border border-dashed border-ink/20 bg-surface mm-p-6 text-ink/70"
     >
       No valid recipes found.
     </div>

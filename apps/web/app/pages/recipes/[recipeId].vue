@@ -17,10 +17,10 @@ const recipe = computed(() => recipes.details[recipeId]);
 </script>
 
 <template>
-  <div v-if="recipe" class="space-y-6">
+  <div v-if="recipe" class="mm-space-y-6">
     <NuxtLink
       to="/recipes"
-      class="focus-ring inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-semibold text-moss hover:bg-moss/10"
+      class="focus-ring inline-flex items-center mm-gap-2 rounded-md mm-px-2 mm-py-1 mm-text-sm font-semibold text-moss hover:bg-moss/10"
     >
       <ArrowLeft :size="16" aria-hidden="true" /> Recipes
     </NuxtLink>

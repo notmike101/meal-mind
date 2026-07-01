@@ -9,9 +9,9 @@ const fallbackSteps = computed(() => cooklangSteps.value.length === 0 ? getInstr
 </script>
 
 <template>
-  <section class="rounded-md bg-surface p-5 shadow-line">
-    <h2 class="text-xl font-semibold">Instructions</h2>
-    <ol class="mt-4 list-decimal space-y-3 pl-5 text-ink/75">
+  <section class="rounded-md bg-surface mm-p-5 shadow-line">
+    <h2 class="mm-text-xl font-semibold">Instructions</h2>
+    <ol class="mm-mt-4 list-decimal mm-space-y-3 mm-pl-5 text-ink/75">
       <li v-for="step in cooklangSteps" :key="`${recipe.id}-step-${step.number}`">
         <RecipesRecipeToken
           v-for="(token, index) in step.tokens"
