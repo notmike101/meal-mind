@@ -25,7 +25,7 @@ const emit = defineEmits<{
     >
       <option v-for="recipe in recipes" :key="recipe.id" :value="recipe.id">{{ recipe.title }}</option>
     </select>
-    <div class="grid grid-cols-2 gap-2">
+    <div class="grid grid-cols-2 mm-gap-2">
       <button
         type="button"
         :disabled="disabled || busy || selectedRecipeId === currentRecipeId"

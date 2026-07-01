@@ -50,7 +50,7 @@ async function generate() {
       {{ busy ? "Generating" : label ?? (replaceExisting ? "Replace draft" : "Generate next week") }}
     </button>
 
-    <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4" @click.self="open = false">
+    <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 mm-p-4" @click.self="open = false">
       <section role="dialog" aria-modal="true" aria-labelledby="generate-plan-heading" class="w-full mm-max-w-md rounded-xl bg-surface mm-p-5 shadow-xl">
         <div class="flex items-start justify-between mm-gap-4">
           <div>

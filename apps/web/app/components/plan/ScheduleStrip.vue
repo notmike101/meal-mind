@@ -16,12 +16,12 @@ function isSkipped(date: string) {
 </script>
 
 <template>
-  <nav aria-label="Planned meals" class="overflow-x-auto pb-2">
+  <nav aria-label="Planned meals" class="overflow-x-auto mm-pb-2">
     <div class="grid min-w-[1024px] grid-cols-7 mm-gap-3">
       <section v-for="date in dates" :key="date" class="rounded-lg mm-p-2 shadow-line" :class="isSkipped(date) ? 'bg-field text-ink/55' : 'bg-surface'">
         <div class="flex items-center justify-between mm-gap-2 mm-px-2 mm-pb-2">
           <h3 class="mm-text-sm font-semibold">{{ formatDisplayDate(date) }}</h3>
-          <button type="button" :disabled="busy" :aria-label="`${isSkipped(date) ? 'Restore' : 'Skip'} ${formatDisplayDate(date)}`" class="focus-ring rounded p-1 hover:bg-ink/5 disabled:opacity-50" @click="emit('toggleDay', date, !isSkipped(date))">
+          <button type="button" :disabled="busy" :aria-label="`${isSkipped(date) ? 'Restore' : 'Skip'} ${formatDisplayDate(date)}`" class="focus-ring rounded mm-p-1 hover:bg-ink/5 disabled:opacity-50" @click="emit('toggleDay', date, !isSkipped(date))">
             <CalendarPlus v-if="isSkipped(date)" :size="16" aria-hidden="true" />
             <CalendarMinus v-else :size="16" aria-hidden="true" />
           </button>
