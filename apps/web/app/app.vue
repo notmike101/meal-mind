@@ -8,7 +8,7 @@ const router = useRouter();
 const nuxtApp = useNuxtApp();
 const recipeModal = useRecipeModal();
 const displayedRoute = computed(() => {
-  if (!recipeModal.active.value || !recipeModal.navigation.value) return route;
+  if (!recipeModal.active.value || !recipeModal.navigation.value) return undefined;
   return recipeModal.originRoute.value ?? route;
 });
 const displayedLayout = computed(() => recipeModal.active.value
