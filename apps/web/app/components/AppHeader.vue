@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { CalendarDays, ChefHat, ListChecks, Settings, ShoppingBasket } from "@lucide/vue";
 
+defineProps<{
+  wide?: boolean;
+}>();
+
 const navItems = [
   { href: "/", label: "Dashboard", icon: CalendarDays },
   { href: "/plan", label: "Plan", icon: ListChecks },
@@ -12,7 +16,10 @@ const navItems = [
 
 <template>
   <header class="border-b border-ink/10 bg-surface">
-    <div class="mx-auto flex max-w-7xl flex-col mm-gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+    <div
+      class="mx-auto flex flex-col mm-gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8"
+      :class="wide ? 'max-w-[1600px]' : 'max-w-7xl'"
+    >
       <NuxtLink to="/" class="flex items-center mm-gap-3">
         <span class="flex mm-h-10 mm-w-10 items-center justify-center rounded-md bg-moss text-white">
           <ChefHat :size="22" aria-hidden="true" />
