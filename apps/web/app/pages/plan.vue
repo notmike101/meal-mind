@@ -47,10 +47,10 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
     <div v-if="(recipes.catalog?.invalidRecipes.length ?? 0) > 0" class="rounded-md border border-tomato/30 bg-tomato/5 mm-p-4 mm-text-sm text-tomato">
       {{ recipes.catalog?.invalidRecipes.length }} invalid recipe file{{ recipes.catalog?.invalidRecipes.length === 1 ? "" : "s" }} excluded from planning.
     </div>
-    <section v-if="plan" class="mm-space-y-4">
+    <section v-if="plan" data-testid="plan-content" class="mm-space-y-6">
       <PlanSummary :plan="plan" :locked="locked" />
-      <PlanLockedWeek v-if="locked" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
-      <PlanSelectionWorkspace v-else :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" @open-details="openRecipe" />
+      <PlanLockedWeek v-if="locked" data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
+      <PlanSelectionWorkspace v-else data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" @open-details="openRecipe" />
     </section>
     <section v-else class="rounded-md border border-dashed border-ink/20 bg-surface mm-p-6">
       <h2 class="mm-text-lg font-semibold">No plan yet</h2>

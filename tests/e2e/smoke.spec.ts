@@ -64,6 +64,16 @@ test("plan page exposes generation controls", async ({ page }) => {
   await page.goto("/plan");
   await expect(page.getByRole("heading", { name: /Choose next week's meals|Weekly meal plan/ })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/plan");
+  const planContent = page.getByTestId("plan-content");
+  const planWorkspace = page.getByTestId("plan-workspace");
+  await expect(planContent).toBeVisible();
+  await expect(planWorkspace).toBeVisible();
+  const [headerGap, workspaceGap] = await Promise.all([
+    planContent.evaluate((element) => Number.parseFloat(getComputedStyle(element).marginTop)),
+    planWorkspace.evaluate((element) => Number.parseFloat(getComputedStyle(element).marginTop)),
+  ]);
+  expect(headerGap).toBeGreaterThan(0);
+  expect(workspaceGap).toBeCloseTo(headerGap, 1);
   const generationButton = page.getByRole("button", { name: /Generate next week|Replace draft/ });
   await expect(generationButton).toBeVisible();
   await generationButton.click();
