@@ -41,17 +41,17 @@ async function regenerate() {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-center gap-2">
+  <div class="mm-space-y-4">
+    <div class="flex flex-col mm-gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center mm-gap-2">
         <ShoppingBasket :size="20" aria-hidden="true" />
-        <h2 class="text-xl font-semibold">Shopping list</h2>
+        <h2 class="mm-text-xl font-semibold">Shopping list</h2>
       </div>
       <button
         v-if="canRegenerate"
         type="button"
         :disabled="busy === 'regenerate'"
-        class="focus-ring inline-flex items-center gap-2 rounded-md border border-ink/15 px-3 py-2 text-sm font-medium hover:bg-field"
+        class="focus-ring inline-flex items-center mm-gap-2 rounded-md border border-ink/15 mm-px-3 mm-py-2 mm-text-sm font-medium hover:bg-field"
         @click="regenerate"
       >
         <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
@@ -65,9 +65,9 @@ async function regenerate() {
       :busy-item-id="busy"
       @update="updateItem"
     />
-    <div v-if="items.length === 0" class="rounded-md border border-dashed border-ink/20 bg-surface p-6 text-ink/70">
+    <div v-if="items.length === 0" class="rounded-md border border-dashed border-ink/20 bg-surface mm-p-6 text-ink/70">
       No shopping items have been generated yet.
     </div>
-    <p v-if="error" class="text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" class="mm-text-sm text-tomato">{{ error }}</p>
   </div>
 </template>

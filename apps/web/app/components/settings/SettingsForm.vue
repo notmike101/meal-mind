@@ -81,8 +81,8 @@ async function testAi() {
 </script>
 
 <template>
-  <div class="space-y-5 rounded-md bg-surface p-5 shadow-line">
-    <div class="grid gap-4 md:grid-cols-2">
+  <div class="mm-space-y-5 rounded-md bg-surface mm-p-5 shadow-line">
+    <div class="grid mm-gap-4 md:grid-cols-2">
       <SettingsConnectionFields
         v-model:ai-base-url="form.aiBaseUrl"
         v-model:ai-model="form.aiModel"
@@ -103,6 +103,6 @@ async function testAi() {
     <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
     <SettingsPantryField v-model="form.pantryStaples" />
     <SettingsFormActions :busy="busy" :can-save="canSave" @save="runSave" @test-ai="testAi" />
-    <p v-if="status" class="text-sm text-ink/70">{{ status }}</p>
+    <p v-if="status" class="mm-text-sm text-ink/70">{{ status }}</p>
   </div>
 </template>

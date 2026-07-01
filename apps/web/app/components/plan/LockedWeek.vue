@@ -17,13 +17,13 @@ function openDetails(event: globalThis.MouseEvent, recipeId: string) {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <section v-for="date in dates" :key="date" class="space-y-3">
-      <h2 class="border-b border-ink/10 pb-2 text-xl font-semibold">{{ formatDisplayDate(date) }}</h2>
-      <div v-if="plan.skippedDates.includes(date)" class="rounded-md border border-dashed border-ink/15 bg-field p-5 text-sm font-medium text-ink/60">
+  <div class="mm-space-y-6">
+    <section v-for="date in dates" :key="date" class="mm-space-y-3">
+      <h2 class="border-b border-ink/10 mm-pb-2 mm-text-xl font-semibold">{{ formatDisplayDate(date) }}</h2>
+      <div v-if="plan.skippedDates.includes(date)" class="rounded-md border border-dashed border-ink/15 bg-field mm-p-5 mm-text-sm font-medium text-ink/60">
         Skipped
       </div>
-      <div v-else class="grid gap-4 md:grid-cols-2">
+      <div v-else class="grid mm-gap-4 md:grid-cols-2">
         <article
           v-for="meal in plan.meals.filter((candidate) => candidate.date === date)"
           :key="meal.id"
@@ -36,29 +36,29 @@ function openDetails(event: globalThis.MouseEvent, recipeId: string) {
             @click.exact.left.prevent="openDetails($event, meal.recipeId)"
           >
             <PlanRecipePhoto :image-url="recipeFor(meal.recipeId)?.imageUrl ?? null" :title="meal.recipeTitleSnapshot" />
-            <div class="flex flex-col p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
-              <h3 class="mt-1 text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h3>
-              <p v-if="meal.notes" class="mt-2 line-clamp-2 text-sm text-ink/60">{{ meal.notes }}</p>
-              <div class="mt-4 flex flex-wrap gap-4 text-sm text-ink/65">
-                <span class="inline-flex items-center gap-1">
+            <div class="flex flex-col mm-p-4">
+              <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
+              <h3 class="mm-mt-1 mm-text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h3>
+              <p v-if="meal.notes" class="mm-mt-2 line-clamp-2 mm-text-sm text-ink/60">{{ meal.notes }}</p>
+              <div class="mm-mt-4 flex flex-wrap mm-gap-4 mm-text-sm text-ink/65">
+                <span class="inline-flex items-center mm-gap-1">
                   <Clock :size="15" aria-hidden="true" /> {{ recipeFor(meal.recipeId)?.totalTimeMinutes }} min
                 </span>
-                <span class="inline-flex items-center gap-1"><Users :size="15" aria-hidden="true" /> {{ meal.servings }} servings</span>
+                <span class="inline-flex items-center mm-gap-1"><Users :size="15" aria-hidden="true" /> {{ meal.servings }} servings</span>
               </div>
-              <span class="mt-auto self-start rounded-md py-2 text-sm font-semibold text-moss">Recipe details</span>
+              <span class="mt-auto self-start rounded-md mm-py-2 mm-text-sm font-semibold text-moss">Recipe details</span>
             </div>
           </a>
           <div v-else class="grid min-h-full sm:grid-cols-[180px_1fr]">
             <PlanRecipePhoto :image-url="null" :title="meal.recipeTitleSnapshot" />
-            <div class="flex flex-col p-4">
-              <p class="text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
-              <h3 class="mt-1 text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h3>
-              <p v-if="meal.notes" class="mt-2 line-clamp-2 text-sm text-ink/60">{{ meal.notes }}</p>
-              <div class="mt-4 flex flex-wrap gap-4 text-sm text-ink/65">
-                <span class="inline-flex items-center gap-1"><Users :size="15" aria-hidden="true" /> {{ meal.servings }} servings</span>
+            <div class="flex flex-col mm-p-4">
+              <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
+              <h3 class="mm-mt-1 mm-text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h3>
+              <p v-if="meal.notes" class="mm-mt-2 line-clamp-2 mm-text-sm text-ink/60">{{ meal.notes }}</p>
+              <div class="mm-mt-4 flex flex-wrap mm-gap-4 mm-text-sm text-ink/65">
+                <span class="inline-flex items-center mm-gap-1"><Users :size="15" aria-hidden="true" /> {{ meal.servings }} servings</span>
               </div>
-              <p class="mt-auto pt-3 text-xs text-ink/50">Recipe no longer in library</p>
+              <p class="mt-auto mm-pt-3 mm-text-xs text-ink/50">Recipe no longer in library</p>
             </div>
           </div>
         </article>
