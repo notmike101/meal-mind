@@ -1,5 +1,25 @@
 import { expect, test } from "@playwright/test";
 
+test("primary navigation renders each page on the first click", async ({ page }) => {
+  await page.goto("/");
+
+  const navigation = page.getByRole("navigation", { name: "Primary navigation" });
+  const destinations = [
+    { name: "Plan", path: "/plan", heading: /Choose next week's meals|Weekly meal plan/ },
+    { name: "Shopping", path: "/shopping", heading: "Consolidated grocery list" },
+    { name: "Recipes", path: "/recipes", heading: "CookLang recipe library" },
+    { name: "Settings", path: "/settings", heading: "Local planner settings" },
+    { name: "Dashboard", path: "/", heading: "Today's plan" },
+  ];
+
+  for (const destination of destinations) {
+    await navigation.getByRole("link", { name: destination.name, exact: true }).click();
+    await expect(page).toHaveURL(destination.path);
+    await expect(page.getByRole("heading", { name: destination.heading })).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", destination.path);
+  }
+});
+
 test("renders core MealMind pages", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
