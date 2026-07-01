@@ -147,6 +147,7 @@
 .mm-gap-3 { gap: var(--mm-space-3); }
 .mm-gap-4 { gap: var(--mm-space-4); }
 .mm-gap-5 { gap: var(--mm-space-5); }
+.mm-gap-6 { gap: var(--mm-space-6); }
 .mm-gap-x-2 { column-gap: var(--mm-space-2); }
 .mm-gap-x-4 { column-gap: var(--mm-space-4); }
 .mm-gap-y-1 { row-gap: var(--mm-space-1); }
