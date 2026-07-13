@@ -31,13 +31,10 @@ const todayMeals = computed(() => planning.activePlan?.skippedDates.includes(tod
       </div>
       <p class="mm-mt-2 text-ink/70">No committed meals are scheduled for today.</p>
     </section>
-    <section v-if="planning.nextWeek" class="grid mm-gap-4 md:grid-cols-2">
-      <DashboardNextWeekCard
-        :week="planning.nextWeek"
-        :replace-existing="planning.nextDraft?.status === 'draft'"
-        :default-meal-count="settings.data?.settings.defaultWeeklyMealCount ?? 14"
-      />
-      <DashboardDraftStatusCard :draft="planning.nextDraft" />
-    </section>
+    <DashboardThisWeekPreview
+      v-if="planning.activePlan && today < planning.activePlan.weekEnd"
+      :plan="planning.activePlan"
+      :today="today"
+    />
   </div>
 </template>
