@@ -19,7 +19,7 @@ const plan: MealPlanDto = {
   meals: [
     {
       id: "meal-1", planId: "plan-1", date: "2026-07-08", slot: "Lunch", recipeId: "recipe-1",
-      recipeTitleSnapshot: "Tomato Pasta", servings: 2, status: "planned", swapCount: 0, notes: "", sortOrder: 0,
+      recipeTitleSnapshot: "Tomato Pasta", servings: 3, status: "planned", swapCount: 0, notes: "", sortOrder: 0,
     },
     {
       id: "meal-2", planId: "plan-1", date: "2026-07-09", slot: "Dinner", recipeId: "recipe-2",
@@ -76,5 +76,14 @@ describe("ThisWeekPreview", () => {
     const wrapper = render(lastMealPlan, "2026-07-11");
 
     expect(wrapper.text()).toContain("1 meal across 1 remaining day");
+  });
+
+  it("opens recipe details with the meal's selected servings", async () => {
+    const wrapper = render();
+
+    await wrapper.get('a[href="/recipes/recipe-1"]').trigger("click");
+
+    expect(wrapper.emitted("openDetails")?.[0]?.[0]).toBe("recipe-1");
+    expect(wrapper.emitted("openDetails")?.[0]?.[1]).toBe(3);
   });
 });

@@ -55,5 +55,9 @@ useHead({
   <NuxtLayout :name="displayedLayout">
     <NuxtPage :route="displayedRoute" />
   </NuxtLayout>
-  <RecipesRecipeDetailModal v-if="recipeModal.activeRecipeId.value" :recipe-id="recipeModal.activeRecipeId.value" />
+  <RecipesRecipeDetailModal
+    v-if="recipeModal.activeRecipeId.value"
+    :recipe-id="recipeModal.activeRecipeId.value"
+    :servings="recipeModal.navigation.value?.servings ?? 2"
+  />
 </template>

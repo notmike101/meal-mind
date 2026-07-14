@@ -443,9 +443,9 @@ function groupedIngredientDisplayTexts(recipe: ParsedCooklangRecipe) {
     });
 }
 
-export function parseRecipeCooklang(content: string, filePath: string): Recipe {
+export function parseRecipeCooklang(content: string, filePath: string, scale = 1, defaultServingsOverride?: number): Recipe {
   const parser = new CooklangParser();
-  const [parsedRecipe, report] = parser.parse(content);
+  const [parsedRecipe, report] = parser.parse(content, scale === 1 ? undefined : scale);
   if (report.trim()) {
     throw new Error(report.trim());
   }
@@ -463,6 +463,7 @@ export function parseRecipeCooklang(content: string, filePath: string): Recipe {
 
   return {
     ...metadata,
+    defaultServings: defaultServingsOverride ?? metadata.defaultServings,
     format: "cooklang",
     filePath,
     ingredients: groupedIngredientDisplayTexts(parsedRecipe),
@@ -528,4 +529,21 @@ export function loadRecipes(): RecipeLoadResult {
 
 export function getRecipeById(recipeId: string) {
   return loadRecipes().recipes.find((recipe) => recipe.id === recipeId) ?? null;
+}
+
+export function getRecipeByIdAtServings(recipeId: string, servings: number) {
+  const recipe = getRecipeById(recipeId);
+  if (!recipe || recipe.defaultServings === servings) return recipe;
+
+  const recipeRoot = path.resolve(getRecipeRoot());
+  const filePath = path.resolve(recipeRoot, recipe.filePath);
+  const relative = path.relative(recipeRoot, filePath);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return null;
+
+  return parseRecipeCooklang(
+    fs.readFileSync(filePath, "utf8"),
+    recipe.filePath,
+    servings / recipe.defaultServings,
+    recipe.defaultServings,
+  );
 }

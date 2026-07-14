@@ -4,12 +4,16 @@ import { computed } from "vue";
 
 const props = withDefaults(defineProps<{
   recipe: RecipeDto;
+  servings: number;
+  disabled?: boolean;
   headingId?: string;
   embedded?: boolean;
 }>(), {
   headingId: undefined,
   embedded: false,
+  disabled: false,
 });
+const emit = defineEmits<{ updateServings: [servings: number] }>();
 
 const totalTime = computed(() => (props.recipe.prepTimeMinutes ?? 0) + (props.recipe.cookTimeMinutes ?? 0));
 </script>
@@ -24,8 +28,11 @@ const totalTime = computed(() => (props.recipe.prepTimeMinutes ?? 0) + (props.re
           <p class="mm-mt-3 mm-max-w-3xl text-ink/70">{{ recipe.description }}</p>
         </div>
         <span class="w-fit rounded-md bg-field mm-px-3 mm-py-2 mm-text-sm font-medium text-ink/70">
-          {{ recipe.defaultServings }} servings
+          {{ servings }} servings
         </span>
+      </div>
+      <div class="mm-mt-5 max-w-xs">
+        <PlanServingsStepper :servings="servings" :disabled="disabled" @update="emit('updateServings', $event)" />
       </div>
       <div class="mm-mt-5">
         <RecipesRecipeMeta :suggested-slots="recipe.suggestedSlots" :total-time="totalTime" :tags="recipe.tags" />

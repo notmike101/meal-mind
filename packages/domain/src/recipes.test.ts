@@ -92,4 +92,13 @@ Toss with @&butter{1%tbsp}.
     expect(recipe.instructions).toContain("Toss with 1 tbsp butter.");
     expect(recipe.cooklang.ingredients).toHaveLength(2);
   });
+
+  it("scales ingredient totals and instruction quantities", () => {
+    const recipe = parseRecipeCooklang(validRecipe, "recipes/test-recipe.cook", 1.5, 2);
+
+    expect(recipe.defaultServings).toBe(2);
+    expect(recipe.ingredients).toEqual(["1 1/2 c rice", "3 eggs", "salt"]);
+    expect(recipe.instructions).toContain("Cook 1 1/2 c rice");
+    expect(recipe.instructions).toContain("Add 3 eggs");
+  });
 });

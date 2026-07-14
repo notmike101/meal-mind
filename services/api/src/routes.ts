@@ -9,6 +9,7 @@ import {
   generatePlanRequestSchema,
   ok,
   recipeFilterRequestSchema,
+  recipeDetailRequestSchema,
   settingsUpdateRequestSchema,
   swapMealRequestSchema,
   toAppError,
@@ -53,8 +54,9 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
     return ok(listRecipes(query));
   });
 
-  app.get<{ Params: { recipeId: string } }>("/api/recipes/:recipeId", async (request, reply) => {
-    const recipe = getRecipeDetail(request.params.recipeId);
+  app.get<{ Params: { recipeId: string }; Querystring: { servings?: string } }>("/api/recipes/:recipeId", async (request, reply) => {
+    const query = recipeDetailRequestSchema.parse(request.query ?? {});
+    const recipe = getRecipeDetail(request.params.recipeId, query.servings);
     if (!recipe) {
       return reply.status(404).send(fail("NOT_FOUND", "Recipe not found."));
     }

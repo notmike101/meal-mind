@@ -8,6 +8,7 @@ const props = defineProps<{
   plan: MealPlanDto;
   today: string;
 }>();
+const emit = defineEmits<{ openDetails: [recipeId: string, servings: number, trigger: globalThis.HTMLElement] }>();
 
 const dates = computed(() => getDatesInWeek(props.plan.weekStart)
   .filter((date) => date > props.today && !props.plan.skippedDates.includes(date)));
@@ -23,6 +24,10 @@ const dateRange = computed(() => {
 
 function mealsForDate(date: string): MealDto[] {
   return remainingMeals.value.filter((meal) => meal.date === date);
+}
+
+function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
+  emit("openDetails", meal.recipeId, meal.servings, event.currentTarget as globalThis.HTMLElement);
 }
 </script>
 
@@ -57,7 +62,12 @@ function mealsForDate(date: string): MealDto[] {
         <div v-if="mealsForDate(date).length" class="grid grid-cols-2 mm-gap-3">
           <div v-for="meal in mealsForDate(date)" :key="meal.id" class="min-w-0">
             <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
-            <p class="mm-mt-1 line-clamp-2 mm-text-sm font-medium leading-snug">{{ meal.recipeTitleSnapshot }}</p>
+            <a
+              :href="`/recipes/${encodeURIComponent(meal.recipeId)}`"
+              class="focus-ring inline-block rounded-sm mm-mt-1 line-clamp-2 mm-text-sm font-medium leading-snug text-moss underline-offset-2 hover:underline"
+              @click.exact.left.prevent="openRecipe($event, meal)"
+            >{{ meal.recipeTitleSnapshot }}</a>
+            <p class="mm-mt-1 mm-text-xs text-ink/60">{{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}</p>
           </div>
         </div>
         <p v-else class="mm-text-sm text-ink/60">No meals planned.</p>

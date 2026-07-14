@@ -6,6 +6,7 @@ import { usePlanningStore } from "~/stores/planning";
 
 const props = defineProps<{ meals: MealDto[] }>();
 const planning = usePlanningStore();
+const emit = defineEmits<{ openDetails: [recipeId: string, servings: number, trigger: globalThis.HTMLElement] }>();
 const busyMealId = ref<string | null>(null);
 const plannedMeals = computed(() => props.meals.filter((meal) => meal.status === "planned"));
 
@@ -16,6 +17,10 @@ async function update(mealId: string, status: "done" | "skipped") {
   } finally {
     busyMealId.value = null;
   }
+}
+
+function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
+  emit("openDetails", meal.recipeId, meal.servings, event.currentTarget as globalThis.HTMLElement);
 }
 </script>
 
@@ -34,7 +39,13 @@ async function update(mealId: string, status: "done" | "skipped") {
     <div class="mm-mt-4 grid mm-gap-3 md:grid-cols-2">
       <div v-for="meal in meals" :key="meal.id" class="rounded-md border border-ink/10 mm-p-4">
         <p class="mm-text-xs font-semibold uppercase text-moss">{{ meal.slot || "Meal" }}</p>
-        <h3 class="mm-mt-1 font-semibold">{{ meal.recipeTitleSnapshot }}</h3>
+        <h3 class="mm-mt-1 font-semibold">
+          <a
+            :href="`/recipes/${encodeURIComponent(meal.recipeId)}`"
+            class="focus-ring rounded-sm text-moss underline-offset-2 hover:underline"
+            @click.exact.left.prevent="openRecipe($event, meal)"
+          >{{ meal.recipeTitleSnapshot }}</a>
+        </h3>
         <p class="mm-mt-1 mm-text-sm text-ink/60">
           {{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }} · {{ meal.status }}
         </p>
