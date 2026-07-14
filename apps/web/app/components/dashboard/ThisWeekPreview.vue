@@ -32,18 +32,18 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
 </script>
 
 <template>
-  <section class="overflow-hidden border border-line/30 bg-surface" aria-labelledby="dashboard-this-week-heading">
-    <div class="flex flex-col mm-gap-4 mm-p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <div class="flex items-center mm-gap-4">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center border border-ink bg-transparent text-ink">
+  <section class="overflow-hidden rounded-2xl border border-line/25 bg-surface shadow-sm" aria-labelledby="dashboard-this-week-heading">
+    <div class="flex flex-col gap-5 border-b border-line/20 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div class="flex items-center gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-field text-moss">
           <CalendarDays :size="20" aria-hidden="true" />
         </span>
         <div>
-          <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Service 02 · This week</p>
-          <h2 id="dashboard-this-week-heading" class="mm-display mm-mt-1 mm-text-2xl font-semibold tracking-tight">
-            {{ dateRange }}
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Coming up</p>
+          <h2 id="dashboard-this-week-heading" class="mt-1 text-xl font-semibold tracking-tight text-ink">
+            {{ dateRange || "The rest of this week" }}
           </h2>
-          <p class="mm-mt-1 mm-text-sm text-ink/60">
+          <p class="mt-1 text-sm text-ink/60">
             {{ remainingMeals.length }} meal{{ remainingMeals.length === 1 ? "" : "s" }} across
             {{ dates.length }} remaining day{{ dates.length === 1 ? "" : "s" }}
           </p>
@@ -51,32 +51,36 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
       </div>
       <NuxtLink
         to="/plan"
-        class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold"
+        class="focus-ring mm-button-secondary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold"
       >
         View full plan <ArrowRight :size="16" aria-hidden="true" />
       </NuxtLink>
     </div>
 
-    <div>
+    <div v-if="dates.length" class="divide-y divide-line/20">
       <article
         v-for="date in dates"
         :key="date"
-        class="grid border-t border-line/25 mm-p-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:p-6"
+        class="grid gap-4 p-5 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-6 sm:p-6"
       >
-        <h3 class="mm-display mm-text-xl font-semibold">{{ formatDisplayDate(date) }}</h3>
-        <div v-if="mealsForDate(date).length" class="grid mm-gap-5 sm:grid-cols-2">
-          <div v-for="meal in mealsForDate(date)" :key="meal.id" class="min-w-0">
-            <p class="mm-text-xs font-bold uppercase tracking-[0.16em] text-moss">{{ meal.slot || "Meal" }}</p>
+        <h3 class="text-base font-semibold text-ink">{{ formatDisplayDate(date) }}</h3>
+        <div v-if="mealsForDate(date).length" class="grid gap-4 md:grid-cols-2">
+          <div v-for="meal in mealsForDate(date)" :key="meal.id" class="min-w-0 rounded-xl bg-field/50 p-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.13em] text-moss">{{ meal.slot || "Meal" }}</p>
             <a
               :href="`/recipes/${encodeURIComponent(meal.recipeId)}`"
-              class="focus-ring mm-mt-1 inline-block rounded-sm line-clamp-2 font-semibold leading-snug text-ink decoration-tomato/50 underline-offset-4 hover:underline"
+              class="focus-ring mt-1.5 inline-block rounded-md line-clamp-2 font-semibold leading-snug text-ink decoration-moss/50 underline-offset-4 hover:underline"
               @click.exact.left.prevent="openRecipe($event, meal)"
             >{{ meal.recipeTitleSnapshot }}</a>
-            <p class="mm-mt-1 mm-text-xs text-ink/50">{{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}</p>
+            <p class="mt-1.5 text-xs text-ink/50">{{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}</p>
           </div>
         </div>
-        <p v-else class="mm-mt-3 mm-text-sm text-ink/55">No meals planned.</p>
+        <p v-else class="text-sm text-ink/55">No meals planned.</p>
       </article>
+    </div>
+    <div v-else class="flex items-center gap-3 p-6 text-sm text-ink/60 sm:p-8">
+      <CalendarDays :size="20" class="shrink-0 text-moss" aria-hidden="true" />
+      <p>No more meals are scheduled this week.</p>
     </div>
   </section>
 </template>

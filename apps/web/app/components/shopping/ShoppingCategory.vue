@@ -10,12 +10,12 @@ function update(itemId: string, checked: boolean) {
 </script>
 
 <template>
-  <section class="border-t-2 border-ink pt-4">
-    <div class="flex items-end justify-between mm-gap-3 border-b border-line/25 mm-pb-4">
-      <h3 class="mm-display mm-text-2xl font-semibold">{{ category }}</h3>
-      <span class="mm-display mm-text-xl font-semibold tabular-nums text-ink/45">{{ items.length }}</span>
+  <section class="overflow-hidden rounded-2xl border border-line/25 bg-surface shadow-sm">
+    <div class="flex items-center justify-between gap-3 border-b border-line/20 bg-field/40 px-5 py-4">
+      <h3 class="text-base font-semibold text-ink">{{ category }}</h3>
+      <span class="inline-flex min-w-7 items-center justify-center rounded-full bg-surface px-2.5 py-1 text-xs font-semibold tabular-nums text-ink/60">{{ items.length }}</span>
     </div>
-    <div class="divide-y divide-line/20">
+    <div class="divide-y divide-line/20 px-5">
       <ShoppingItem
         v-for="item in items"
         :key="item.id"

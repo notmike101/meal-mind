@@ -25,34 +25,38 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
 
 <template>
   <div class="mm-space-y-6">
-    <section class="flex flex-col mm-gap-8 border-b-2 border-ink pb-10 lg:flex-row lg:items-end lg:justify-between">
+    <section class="flex flex-col mm-gap-6 lg:flex-row lg:items-end lg:justify-between">
       <PageHeading eyebrow="Recipes" title="CookLang recipe library" description="Browse your trusted local collection and find the right meal in seconds." />
-      <div class="flex shrink-0 items-end mm-gap-3 border-l border-ink pl-5">
-        <BookOpen class="mb-2 text-moss" :size="22" aria-hidden="true" />
-        <span class="mm-display text-6xl font-semibold leading-none">{{ recipes.catalog?.recipes.length ?? 0 }}</span>
-        <span class="mb-1 mm-text-xs font-bold uppercase tracking-[0.18em] text-ink/50">Local<br>recipes</span>
+      <div class="flex w-fit shrink-0 items-center mm-gap-3 rounded-2xl border border-line/25 bg-surface px-4 py-3 shadow-sm">
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-moss/12 text-moss">
+          <BookOpen :size="20" aria-hidden="true" />
+        </span>
+        <div>
+          <span class="block text-2xl font-bold leading-none tabular-nums">{{ recipes.catalog?.recipes.length ?? 0 }}</span>
+          <span class="mt-1 block mm-text-xs font-semibold text-ink/65">recipes ready to cook</span>
+        </div>
       </div>
     </section>
     <RecipesInvalidRecipeNotice
       v-if="recipes.catalog?.invalidRecipes.length"
       :invalid-recipes="recipes.catalog.invalidRecipes"
     />
-    <section class="border-y border-line/35 bg-surface mm-p-4 sm:p-5" aria-label="Recipe filters">
+    <section class="mm-panel mm-p-4 sm:p-5" aria-label="Recipe filters">
       <label class="relative block">
         <span class="sr-only">Search recipes</span>
-        <Search class="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 text-ink/45" :size="19" aria-hidden="true" />
+        <Search class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink/50" :size="19" aria-hidden="true" />
         <input
           v-model="query"
           type="search"
-          class="focus-ring w-full border-0 border-b border-line/40 bg-transparent py-3 pl-9 pr-4 mm-text-lg text-ink outline-none transition-colors focus:border-moss"
+          class="focus-ring mm-field w-full py-3 pl-11 pr-4 mm-text-base text-ink"
           placeholder="Search by recipe name, description, or tag…"
         />
       </label>
-      <p class="mm-mt-3 mm-text-sm text-ink/55" aria-live="polite">
+      <p class="mm-mt-3 mm-text-sm font-medium text-ink/65" aria-live="polite">
         Showing {{ filteredRecipes.length }} of {{ recipes.catalog?.recipes.length ?? 0 }} recipes
       </p>
     </section>
-    <section class="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+    <section class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
       <RecipesRecipeCard
         v-for="recipe in filteredRecipes"
         :key="recipe.id"
@@ -62,7 +66,7 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
     </section>
     <div
       v-if="filteredRecipes.length === 0"
-      class="border-y border-dashed border-line/40 py-16 text-center text-ink/60"
+      class="mm-panel border-dashed py-16 text-center text-ink/65"
     >
       {{ query ? "No recipes match your search." : "No valid recipes found." }}
     </div>

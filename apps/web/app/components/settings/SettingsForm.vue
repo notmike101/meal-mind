@@ -80,63 +80,80 @@ async function testAi() {
 </script>
 
 <template>
-  <div class="mm-space-y-10">
-    <section class="grid gap-6 border-t-2 border-ink pt-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
-      <div>
-        <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">01 / Runtime</p>
-        <h2 class="mm-display mm-mt-2 mm-text-2xl font-semibold">Connection & defaults</h2>
-        <p class="mm-mt-2 mm-text-sm text-ink/55">Where MealMind thinks and how much it plans.</p>
-      </div>
-      <div class="grid mm-gap-4 md:grid-cols-2">
-        <SettingsConnectionFields
-          v-model:ai-base-url="form.aiBaseUrl"
-          v-model:ai-model="form.aiModel"
-          v-model:timezone="form.timezone"
-          :models="models"
-          :auth-configured="props.settings.aiAuthConfigured"
-          :models-loaded="modelsLoaded"
-        />
-        <SettingsServingFields
-          v-model:servings="form.defaultMealServings"
-          v-model:weekly-meal-count="form.defaultWeeklyMealCount"
-        />
-      </div>
-    </section>
-
-    <section class="grid gap-6 border-t-2 border-ink pt-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
-      <div>
-        <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">02 / Brief</p>
-        <h2 class="mm-display mm-mt-2 mm-text-2xl font-semibold">Planning direction</h2>
-        <p class="mm-mt-2 mm-text-sm text-ink/55">Give the planner taste, variety, and household context.</p>
-      </div>
-      <div class="mm-space-y-4">
-        <SettingsPlanningFields
-          v-model:preferences="form.planningPreferences"
-          v-model:variety-rules="form.planningVarietyRules"
-        />
+  <div class="space-y-6">
+    <section class="rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:p-6">
+      <div class="grid gap-6 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Runtime</p>
+          <h2 class="mt-2 text-xl font-semibold tracking-tight text-ink">Connection & defaults</h2>
+          <p class="mt-2 text-sm leading-6 text-ink/55">Configure the local AI endpoint and your everyday planning defaults.</p>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="grid content-start gap-4 rounded-xl bg-field/50 p-4 sm:p-5">
+            <h3 class="text-sm font-semibold text-ink">AI connection</h3>
+            <SettingsConnectionFields
+              v-model:ai-base-url="form.aiBaseUrl"
+              v-model:ai-model="form.aiModel"
+              v-model:timezone="form.timezone"
+              :models="models"
+              :auth-configured="props.settings.aiAuthConfigured"
+              :models-loaded="modelsLoaded"
+            />
+          </div>
+          <div class="content-start rounded-xl bg-field/50 p-4 sm:p-5">
+            <h3 class="mb-4 text-sm font-semibold text-ink">Planning defaults</h3>
+            <SettingsServingFields
+              v-model:servings="form.defaultMealServings"
+              v-model:weekly-meal-count="form.defaultWeeklyMealCount"
+            />
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="grid gap-6 border-t-2 border-ink pt-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
-      <div>
-        <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">03 / Routine</p>
-        <h2 class="mm-display mm-mt-2 mm-text-2xl font-semibold">Automation</h2>
+    <section class="rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:p-6">
+      <div class="grid gap-6 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Planning</p>
+          <h2 class="mt-2 text-xl font-semibold tracking-tight text-ink">Meal preferences</h2>
+          <p class="mt-2 text-sm leading-6 text-ink/55">Give the planner useful context about taste, variety, and your household.</p>
+        </div>
+        <div class="space-y-4 rounded-xl bg-field/50 p-4 sm:p-5">
+          <SettingsPlanningFields
+            v-model:preferences="form.planningPreferences"
+            v-model:variety-rules="form.planningVarietyRules"
+          />
+        </div>
       </div>
-      <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
     </section>
 
-    <section class="grid gap-6 border-t-2 border-ink pt-5 lg:grid-cols-[15rem_minmax(0,1fr)]">
-      <div>
-        <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">04 / Kitchen</p>
-        <h2 class="mm-display mm-mt-2 mm-text-2xl font-semibold">Pantry staples</h2>
-        <p class="mm-mt-2 mm-text-sm text-ink/55">Ingredients that should not appear on the shopping list.</p>
+    <section class="rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:p-6">
+      <div class="grid gap-6 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Workflow</p>
+          <h2 class="mt-2 text-xl font-semibold tracking-tight text-ink">Automation</h2>
+          <p class="mt-2 text-sm leading-6 text-ink/55">Let MealMind prepare the next plan in the background.</p>
+        </div>
+        <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
       </div>
-      <SettingsPantryField v-model="form.pantryStaples" />
     </section>
 
-    <div class="border-t border-line/40 pt-5">
+    <section class="rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:p-6">
+      <div class="grid gap-6 xl:grid-cols-[13rem_minmax(0,1fr)] xl:gap-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Kitchen</p>
+          <h2 class="mt-2 text-xl font-semibold tracking-tight text-ink">Pantry staples</h2>
+          <p class="mt-2 text-sm leading-6 text-ink/55">Keep ingredients you already stock off the shopping list.</p>
+        </div>
+        <div class="rounded-xl bg-field/50 p-4 sm:p-5">
+          <SettingsPantryField v-model="form.pantryStaples" />
+        </div>
+      </div>
+    </section>
+
+    <div class="rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:p-6">
       <SettingsFormActions :busy="busy" :can-save="canSave" @save="runSave" @test-ai="testAi" />
-      <p v-if="status" class="mm-mt-3 mm-text-sm text-ink/70">{{ status }}</p>
+      <p v-if="status" aria-live="polite" class="mt-4 rounded-xl bg-field px-4 py-3 text-sm text-ink/70">{{ status }}</p>
     </div>
   </div>
 </template>

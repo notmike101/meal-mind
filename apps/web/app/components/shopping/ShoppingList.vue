@@ -44,28 +44,28 @@ async function regenerate() {
 </script>
 
 <template>
-  <div class="mm-space-y-4">
-    <section class="border-y border-line/40 bg-surface px-5 py-6 sm:px-6">
-      <div class="grid mm-gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-        <div class="flex items-center mm-gap-4">
-          <span class="flex h-11 w-11 items-center justify-center border border-ink bg-ink text-canvas">
+  <div class="space-y-6">
+    <section class="rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:p-6">
+      <div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <div class="flex items-center gap-4">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-moss/10 text-moss">
             <ShoppingBasket :size="20" aria-hidden="true" />
           </span>
           <div>
-            <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Run status</p>
-            <h2 class="mm-display mm-mt-1 mm-text-2xl font-semibold">Shopping progress</h2>
-            <p class="mm-mt-1 mm-text-sm text-ink/55">
+            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Your list</p>
+            <h2 class="mt-1 text-xl font-semibold tracking-tight text-ink">Shopping progress</h2>
+            <p class="mt-1 text-sm text-ink/55">
               {{ remainingCount }} item{{ remainingCount === 1 ? "" : "s" }} left · {{ checkedCount }} complete
             </p>
           </div>
         </div>
-        <div class="flex items-end justify-between mm-gap-5 sm:justify-end">
-          <span class="mm-display text-5xl font-semibold leading-none tabular-nums">{{ progress }}%</span>
+        <div class="flex items-center justify-between gap-5 md:justify-end">
+          <span class="text-4xl font-semibold leading-none tracking-[-0.04em] tabular-nums text-ink">{{ progress }}%</span>
           <button
             v-if="canRegenerate"
             type="button"
             :disabled="busy === 'regenerate'"
-            class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold"
+            class="focus-ring mm-button-secondary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold"
             @click="regenerate"
           >
             <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
@@ -73,17 +73,17 @@ async function regenerate() {
         </div>
       </div>
       <div
-        class="mm-mt-6 h-1 overflow-hidden bg-field"
+        class="mt-6 h-2 overflow-hidden rounded-full bg-field"
         role="progressbar"
         aria-label="Shopping completion"
         aria-valuemin="0"
         aria-valuemax="100"
         :aria-valuenow="progress"
       >
-        <div class="h-full bg-tomato transition-[width] duration-500" :style="{ width: `${progress}%` }" />
+        <div class="h-full rounded-full bg-moss transition-[width] duration-500" :style="{ width: `${progress}%` }" />
       </div>
     </section>
-    <div class="grid items-start gap-x-10 gap-y-12 lg:grid-cols-2">
+    <div v-if="items.length" class="grid items-start gap-5 xl:grid-cols-2">
       <ShoppingCategory
         v-for="([category, categoryItems]) in grouped"
         :key="category"
@@ -93,9 +93,10 @@ async function regenerate() {
         @update="updateItem"
       />
     </div>
-    <div v-if="items.length === 0" class="border-y border-dashed border-line/40 py-16 text-center text-ink/60">
-      No shopping items have been generated yet.
+    <div v-else class="rounded-2xl border border-dashed border-line/35 bg-surface px-6 py-16 text-center text-ink/60">
+      <p class="font-medium text-ink">Your shopping list is empty</p>
+      <p class="mt-1 text-sm">Generate the list from an editable meal plan to get started.</p>
     </div>
-    <p v-if="error" class="mm-text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" role="alert" class="rounded-xl bg-tomato/10 px-4 py-3 text-sm font-medium text-tomato">{{ error }}</p>
   </div>
 </template>

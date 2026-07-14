@@ -27,25 +27,32 @@ function openRecipe(recipeId: string, servings: number, trigger: globalThis.HTML
 </script>
 
 <template>
-  <div class="mm-space-y-6">
-    <section class="flex flex-col mm-gap-8 border-b-2 border-ink pb-10 lg:flex-row lg:items-end lg:justify-between">
+  <div class="space-y-8">
+    <section class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
       <PageHeading eyebrow="Dashboard" title="Today's plan" :description="`${formatDisplayDate(today)} · Planning in ${timezone}`" />
-      <div class="flex shrink-0 flex-wrap mm-gap-3">
-        <NuxtLink to="/plan" class="focus-ring mm-button-primary inline-flex items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold">
+      <div class="flex shrink-0 flex-wrap gap-3">
+        <NuxtLink to="/plan" class="focus-ring mm-button-primary inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold">
           Open weekly plan <ArrowRight :size="16" aria-hidden="true" />
         </NuxtLink>
-        <NuxtLink to="/shopping" class="focus-ring mm-button-secondary inline-flex items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold">
+        <NuxtLink to="/shopping" class="focus-ring mm-button-secondary inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold">
           <ShoppingBasket :size="16" aria-hidden="true" /> Shopping list
         </NuxtLink>
       </div>
     </section>
     <DashboardDailyReminder v-if="planning.activePlan" :meals="todayMeals" @open-details="openRecipe" />
-    <section v-else class="border-y border-line/30 bg-surface mm-p-6">
-      <div class="flex items-center mm-gap-2 text-ink">
-        <CalendarClock :size="20" aria-hidden="true" />
-        <h2 class="mm-text-xl font-semibold">No active plan today</h2>
+    <section v-else class="rounded-2xl border border-line/25 bg-surface p-6 shadow-sm sm:p-8">
+      <div class="flex items-start gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-field text-moss">
+          <CalendarClock :size="21" aria-hidden="true" />
+        </span>
+        <div>
+          <h2 class="text-lg font-semibold text-ink">No active plan today</h2>
+          <p class="mt-1 text-sm leading-6 text-ink/60">Commit a weekly plan to see today's meals and stay on track.</p>
+          <NuxtLink to="/plan" class="focus-ring mt-4 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-moss hover:underline">
+            Build a plan <ArrowRight :size="15" aria-hidden="true" />
+          </NuxtLink>
+        </div>
       </div>
-      <p class="mm-mt-2 text-ink/70">No committed meals are scheduled for today.</p>
     </section>
     <DashboardThisWeekPreview
       v-if="planning.activePlan && today < planning.activePlan.weekEnd"

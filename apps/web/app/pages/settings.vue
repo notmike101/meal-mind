@@ -8,18 +8,18 @@ await callOnce("settings-data", () => settings.fetchSettings(), { mode: "navigat
 </script>
 
 <template>
-  <div class="mm-space-y-6">
-    <section class="border-b-2 border-ink pb-10">
+  <div class="space-y-8">
+    <section>
       <PageHeading eyebrow="Settings" title="Local planner settings" description="Tune your planning experience, AI connection, portions, and pantry defaults." />
     </section>
-    <section class="flex flex-col mm-gap-4 border-y border-line/40 bg-surface mm-p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <div class="flex items-center mm-gap-3">
-        <span class="flex h-11 w-11 items-center justify-center border border-ink text-ink">
+    <section class="flex flex-col gap-5 rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div class="flex items-center gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-field text-moss">
           <Palette :size="20" aria-hidden="true" />
         </span>
         <div>
-          <h2 class="mm-display mm-text-xl font-semibold">Appearance</h2>
-          <p class="mm-mt-1 mm-text-sm text-ink/60">Choose the theme that feels best.</p>
+          <h2 class="text-lg font-semibold text-ink">Appearance</h2>
+          <p class="mt-1 text-sm text-ink/60">Match your workspace or choose a fixed theme.</p>
         </div>
       </div>
       <SettingsThemeToggle />

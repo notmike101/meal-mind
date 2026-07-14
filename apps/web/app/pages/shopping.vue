@@ -10,8 +10,8 @@ const canRegenerate = computed(() => shopping.plan ? !isPlanLocked(shopping.plan
 </script>
 
 <template>
-  <div class="mm-space-y-6">
-    <section class="border-b-2 border-ink pb-10">
+  <div class="space-y-8">
+    <section>
       <PageHeading eyebrow="Shopping" title="Consolidated grocery list" description="Everything for your selected meal plan, grouped and ready to check off." />
     </section>
     <ShoppingList
@@ -19,8 +19,9 @@ const canRegenerate = computed(() => shopping.plan ? !isPlanLocked(shopping.plan
       :items="shopping.shoppingList?.items ?? []"
       :can-regenerate="canRegenerate"
     />
-    <div v-else class="border-y border-dashed border-line/40 py-16 text-center text-ink/60">
-      No meal plan selected.
+    <div v-else class="rounded-2xl border border-dashed border-line/35 bg-surface px-6 py-16 text-center text-ink/60">
+      <p class="font-medium text-ink">No meal plan selected</p>
+      <p class="mt-1 text-sm">Choose or generate a plan before building your grocery list.</p>
     </div>
   </div>
 </template>

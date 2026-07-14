@@ -178,9 +178,9 @@ function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
       @toggle-day="toggleDay"
     />
 
-    <section v-if="addingDate" class="border-y border-moss/50 bg-surface mm-p-4 sm:p-5">
-      <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Adding to {{ formatDisplayDate(addingDate) }}</p>
-      <h2 class="mm-display mm-mt-1 mm-text-2xl font-semibold">Choose a recipe</h2>
+    <section v-if="addingDate" class="mm-panel border-moss/30 bg-moss/5 mm-p-4 sm:p-5">
+      <p class="mm-text-xs font-bold text-moss">Adding to {{ formatDisplayDate(addingDate) }}</p>
+      <h2 class="mm-display mm-mt-1 mm-text-2xl font-bold">Choose a recipe</h2>
       <div class="mm-mt-4 grid mm-gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <label class="mm-space-y-2">
           <span class="mm-text-sm font-medium">Meal slot <span class="font-normal text-ink/50">(optional)</span></span>
@@ -190,11 +190,11 @@ function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
       </div>
     </section>
 
-    <section v-else-if="activeMeal" class="border-y border-line/40 bg-surface mm-p-4 sm:p-5">
+    <section v-else-if="activeMeal" class="mm-panel mm-p-4 sm:p-5">
       <div class="flex flex-col mm-gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div class="min-w-0 flex-1">
-          <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Editing {{ mealLabel(activeMeal) }}</p>
-          <h2 class="mm-display mm-mt-1 truncate mm-text-2xl font-semibold">{{ activeMeal.recipeTitleSnapshot }}</h2>
+          <p class="mm-text-xs font-bold text-moss">Editing {{ mealLabel(activeMeal) }}</p>
+          <h2 class="mm-display mm-mt-1 break-words mm-text-2xl font-bold leading-tight">{{ activeMeal.recipeTitleSnapshot }}</h2>
           <p v-if="activeMeal.notes" class="mm-mt-1 line-clamp-2 mm-text-sm text-ink/60">{{ activeMeal.notes }}</p>
           <p v-if="!currentRecipe" class="mm-mt-2 inline-flex items-center mm-gap-2 mm-text-sm text-tomato">
             <TriangleAlert :size="16" aria-hidden="true" /> This recipe is no longer in the library. Choose a replacement below.
@@ -220,34 +220,34 @@ function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
           <button type="button" :disabled="busy || recipes.length === 0" class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="chooseWithAi">
             <RefreshCw :size="16" :class="busy ? 'animate-spin' : ''" aria-hidden="true" /> AI pick
           </button>
-          <button type="button" :disabled="busy" class="focus-ring inline-flex min-h-11 items-center justify-center mm-gap-2 rounded-sm border border-tomato/50 mm-px-4 mm-py-2 mm-text-sm font-semibold text-tomato hover:bg-tomato/5" @click="removeActiveMeal">
+          <button type="button" :disabled="busy" class="focus-ring inline-flex min-h-11 items-center justify-center mm-gap-2 rounded-xl border border-tomato/35 mm-px-4 mm-py-2 mm-text-sm font-semibold text-tomato transition-colors hover:bg-tomato/10" @click="removeActiveMeal">
             <Trash2 :size="16" aria-hidden="true" /> Remove
           </button>
         </div>
       </div>
     </section>
 
-    <section v-else class="border-y border-dashed border-line/40 bg-surface mm-p-6 text-center text-ink/65">
+    <section v-else class="mm-panel border-dashed mm-p-6 text-center text-ink/65">
       Choose “Add meal” under any day to start planning.
     </section>
 
     <p v-if="error" role="alert" class="mm-text-sm text-tomato">{{ error }}</p>
 
-    <section v-if="addingDate || activeMeal" class="border-t-2 border-ink pt-5" aria-labelledby="recipe-catalog-heading">
+    <section v-if="addingDate || activeMeal" class="mm-pt-2" aria-labelledby="recipe-catalog-heading">
       <div class="flex flex-col mm-gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Recipe catalog</p>
-          <h2 id="recipe-catalog-heading" class="mm-display mm-mt-1 text-4xl font-semibold tracking-tight">{{ addingDate ? "Choose a meal" : "Change recipe" }}</h2>
+          <p class="mm-text-xs font-bold text-moss">Recipe catalog</p>
+          <h2 id="recipe-catalog-heading" class="mm-display mm-mt-1 text-3xl font-bold tracking-tight">{{ addingDate ? "Choose a meal" : "Change recipe" }}</h2>
         </div>
         <label class="relative block w-full lg:max-w-md">
           <span class="sr-only">Search recipes</span>
-          <Search class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/45" :size="19" aria-hidden="true" />
-          <input v-model="search" type="search" placeholder="Search recipes" class="focus-ring w-full border-0 border-b border-line/40 bg-transparent mm-py-3 pl-10 pr-4 mm-text-sm outline-none focus:border-moss" />
+          <Search class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/50" :size="19" aria-hidden="true" />
+          <input v-model="search" type="search" placeholder="Search recipes" class="focus-ring mm-field w-full mm-py-3 pl-10 pr-4 mm-text-sm" />
         </label>
       </div>
       <div v-if="availableTags.length" class="mm-mt-4 flex mm-gap-2 overflow-x-auto mm-pb-2" aria-label="Recipe tags">
-        <button type="button" :aria-pressed="activeTag === null" class="focus-ring shrink-0 rounded-sm border border-line/35 mm-px-4 mm-py-2 mm-text-sm font-medium" :class="activeTag === null ? 'bg-strong text-strong-foreground' : 'bg-transparent hover:bg-field'" @click="activeTag = null">All</button>
-        <button v-for="tag in availableTags" :key="tag" type="button" :aria-pressed="activeTag === tag" class="focus-ring shrink-0 rounded-sm border border-line/35 mm-px-4 mm-py-2 mm-text-sm font-medium" :class="activeTag === tag ? 'bg-strong text-strong-foreground' : 'bg-transparent hover:bg-field'" @click="activeTag = tag">{{ tag }}</button>
+        <button type="button" :aria-pressed="activeTag === null" class="focus-ring shrink-0 rounded-full border border-line/25 mm-px-4 mm-py-2 mm-text-sm font-semibold transition-colors" :class="activeTag === null ? 'border-moss bg-moss text-white' : 'bg-surface hover:border-moss/40 hover:bg-moss/5'" @click="activeTag = null">All</button>
+        <button v-for="tag in availableTags" :key="tag" type="button" :aria-pressed="activeTag === tag" class="focus-ring shrink-0 rounded-full border border-line/25 mm-px-4 mm-py-2 mm-text-sm font-semibold transition-colors" :class="activeTag === tag ? 'border-moss bg-moss text-white' : 'bg-surface hover:border-moss/40 hover:bg-moss/5'" @click="activeTag = tag">{{ tag }}</button>
       </div>
       <div v-if="filteredRecipes.length" class="mm-mt-6 grid gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
         <PlanRecipeSelectionCard
@@ -262,7 +262,7 @@ function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
           @open-details="openRecipeDetails"
         />
       </div>
-      <div v-else class="mm-mt-5 border-y border-dashed border-line/40 bg-surface mm-p-8 text-center text-ink/65">No recipes match the current search and tag filters.</div>
+      <div v-else class="mm-panel mm-mt-5 border-dashed mm-p-8 text-center text-ink/65">No recipes match the current search and tag filters.</div>
     </section>
 
     <datalist id="meal-slot-suggestions">

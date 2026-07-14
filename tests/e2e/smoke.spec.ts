@@ -45,10 +45,87 @@ test("uses a consistent workspace shell across primary pages", async ({ page }) 
     });
 
     expect(geometry.sidebarLeft).toBeCloseTo(0, 0);
-    expect(geometry.sidebarWidth).toBeCloseTo(272, 0);
+    expect(geometry.sidebarWidth).toBeCloseTo(248, 0);
     expect(geometry.mainLeft).toBeCloseTo(geometry.sidebarWidth, 0);
     expect(geometry.mainWidth + geometry.sidebarWidth).toBeCloseTo(1920, 0);
     expect(geometry.bodyWidth).toBe(1920);
+  }
+});
+
+test("recipe dialog keeps readable geometry across breakpoints", async ({ page }) => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/recipes");
+    await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/recipes");
+    const recipeCard = page.locator("article")
+      .filter({ hasText: "Adobo Loco Steak with a Poblano, Corn, and Crispy Potato Hash" });
+    await recipeCard.getByRole("link").click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByTestId("recipe-ingredients")).toBeVisible();
+    await expect(dialog.getByTestId("recipe-instructions")).toBeVisible();
+
+    const geometry = await dialog.evaluate((element) => {
+      const recipeBody = element.querySelector<HTMLElement>("[data-testid='recipe-body']");
+      const ingredients = element.querySelector<HTMLElement>("[data-testid='recipe-ingredients']");
+      const ingredientItem = ingredients?.querySelector<HTMLElement>("li");
+      const instructions = element.querySelector<HTMLElement>("[data-testid='recipe-instructions']");
+      const close = element.querySelector<HTMLElement>("[aria-label='Close recipe details']");
+      if (!recipeBody || !ingredients || !ingredientItem || !instructions || !close) {
+        throw new Error("Recipe dialog structure is incomplete");
+      }
+
+      const dialogBox = element.getBoundingClientRect();
+      const ingredientBox = ingredients.getBoundingClientRect();
+      const ingredientItemBox = ingredientItem.getBoundingClientRect();
+      const instructionBox = instructions.getBoundingClientRect();
+      const closeBox = close.getBoundingClientRect();
+      const bodyStyle = getComputedStyle(recipeBody);
+
+      return {
+        dialogLeft: dialogBox.left,
+        dialogRight: dialogBox.right,
+        dialogWidth: dialogBox.width,
+        bodyGap: Number.parseFloat(bodyStyle.columnGap || bodyStyle.gap),
+        bodyColumns: bodyStyle.gridTemplateColumns,
+        ingredientLeft: ingredientBox.left,
+        ingredientWidth: ingredientBox.width,
+        ingredientHeight: ingredientBox.height,
+        ingredientContentInset: ingredientItemBox.left - ingredientBox.left,
+        instructionLeft: instructionBox.left,
+        instructionWidth: instructionBox.width,
+        instructionHeight: instructionBox.height,
+        closeWidth: closeBox.width,
+        closeHeight: closeBox.height,
+        pageWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+      };
+    });
+
+    expect(geometry.dialogLeft).toBeGreaterThanOrEqual(0);
+    expect(geometry.dialogRight).toBeLessThanOrEqual(viewport.width);
+    expect(geometry.closeWidth).toBeGreaterThanOrEqual(44);
+    expect(geometry.closeHeight).toBeGreaterThanOrEqual(44);
+    expect(geometry.bodyGap).toBeGreaterThanOrEqual(24);
+    expect(geometry.ingredientContentInset).toBeGreaterThanOrEqual(16);
+    expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+
+    if (viewport.width < 1024) {
+      expect(geometry.dialogWidth).toBeCloseTo(viewport.width, 0);
+      expect(geometry.ingredientLeft).toBeCloseTo(geometry.instructionLeft, 0);
+      expect(geometry.ingredientWidth).toBeCloseTo(geometry.instructionWidth, 0);
+    } else {
+      expect(geometry.bodyColumns.split(" ")).toHaveLength(2);
+      expect(geometry.ingredientLeft).toBeLessThan(geometry.instructionLeft);
+      expect(geometry.ingredientHeight).toBeLessThan(geometry.instructionHeight);
+    }
+
+    await dialog.getByRole("button", { name: "Close recipe details" }).click();
+    await expect(dialog).toHaveCount(0);
   }
 });
 
