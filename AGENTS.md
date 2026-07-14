@@ -219,6 +219,8 @@ Branch naming convention:
 - Keep commits focused: one concern per commit.
 - Use direct, descriptive commit messages (imperative mood, no trailing period).
 - Before committing, always check `git status --short --branch` to confirm what will be included.
+- For any non-trivial task, make the first focused commit as soon as the initial implementation and its smallest useful verification pass; follow with additional focused commits when separate fixes, tests, or documentation become complete.
+- Push each focused commit promptly after it passes its relevant checks, using the branch's upstream tracking configuration. Do not wait until the entire task is finished to create the first remote backup.
 
 ### Pushing and Merging
 
@@ -227,6 +229,8 @@ Push branches frequently so work is backed up and reviewable:
 ```bash
 git push -u origin <branch-name>
 ```
+
+For every non-trivial change, open a draft pull request after the first verified push, then keep the same PR updated as later commits are pushed. Use the PR to record the scope, validation results, and any known limitations. Convert the draft to ready for review only when the relevant checks pass and the branch is complete.
 
 When the work on a branch is complete and verified:
 
