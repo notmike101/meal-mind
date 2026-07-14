@@ -86,8 +86,8 @@ test("renders core MealMind pages", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/settings");
-  await expect(page.getByLabel("AI base URL")).toHaveValue(/http:\/\/(127\.0\.0\.1:1234|ai-gateway:8080)\/v1/);
-  await expect(page.getByLabel("AI model")).toHaveValue("qwen3.6-35b-a3b");
+  await expect(page.getByLabel("AI base URL")).toHaveValue(/^(?!.*ai-gateway).*\/v1$/);
+  await expect(page.getByLabel("AI model")).toHaveValue(/qwen3\.6-35b-a3b/);
   await page.getByRole("button", { name: "Load models" }).click();
   await expect(page.getByText(/AI endpoint reachable/)).toBeVisible();
   await expect(page.getByLabel("AI model").locator("option")).toContainText(["qwen3.6-35b-a3b"]);

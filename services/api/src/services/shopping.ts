@@ -54,7 +54,10 @@ export async function generateShoppingList(planId: string) {
       user: messages.user,
       schema: shoppingListDraftSchema,
       logEvent: createAiEvent,
-      maxTokens: 2048,
+      // Reasoning-capable providers count hidden reasoning against the
+      // completion budget. A full multi-meal shopping list also needs room
+      // for a large final JSON payload.
+      maxTokens: 16384,
     }).catch((error: unknown) => {
       if (error instanceof AppError && error.code === "AI_VALIDATION_FAILED" && attempt === 0) {
         validationErrors = ["The prior response did not match the required JSON schema."];

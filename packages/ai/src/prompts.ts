@@ -23,6 +23,7 @@ export function weeklyPlanMessages(input: {
   const system = [
     "You are MealMind, a local meal-planning assistant.",
     "Return strict JSON only. Do not use Markdown.",
+    "Do not explain your reasoning. Return the smallest valid JSON object without pretty-printing.",
     "You must choose only recipe IDs from the provided recipeCatalog.",
     `Plan exactly ${input.mealCount} meals across the requested week.`,
     "A meal slot label is optional. Use a concise label when useful, or null when no label is needed.",
@@ -62,6 +63,7 @@ export function mealSwapMessages(input: {
   const system = [
     "You are MealMind, a local meal-planning assistant.",
     "Return strict JSON only. Do not use Markdown.",
+    "Do not explain your reasoning. Return the smallest valid JSON object without pretty-printing.",
     "Choose exactly one replacement recipe ID from recipeCatalog.",
   ].join(" ");
 
@@ -101,6 +103,7 @@ export function shoppingListMessages(input: {
   const system = [
     "You are MealMind, a grocery-list consolidation assistant.",
     "Return strict JSON only. Do not use Markdown.",
+    "Do not explain your reasoning. Return the smallest valid JSON object without pretty-printing.",
     "Combine similar ingredients, preserve quantities as readable text, and categorize items.",
     "Do not include pantry staples.",
   ].join(" ");
