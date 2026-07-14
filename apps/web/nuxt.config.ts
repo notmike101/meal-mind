@@ -3,6 +3,9 @@ import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
   srcDir: "app",
+  app: {
+    pageTransition: { name: "page", mode: "out-in" },
+  },
   modules: ["@pinia/nuxt"],
   css: ["~/assets/css/main.css"],
   alias: {

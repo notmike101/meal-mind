@@ -17,7 +17,11 @@ const config: Config = {
         steel: "rgb(var(--steel) / <alpha-value>)",
       },
       boxShadow: {
-        line: "inset 0 0 0 1px rgb(var(--line) / 0.18)",
+        line: "inset 0 0 0 1px rgb(var(--line) / 0.14)",
+        soft: "0 16px 40px rgb(var(--ink) / 0.08)",
+      },
+      borderRadius: {
+        "2xl": "1.25rem",
       },
     },
   },
