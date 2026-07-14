@@ -43,8 +43,8 @@ test("uses a consistent shell width across primary pages", async ({ page }) => {
       };
     });
 
-    expect(geometry.headerWidth).toBeCloseTo(1600, 0);
-    expect(geometry.mainWidth).toBeCloseTo(1600, 0);
+    expect(geometry.headerWidth).toBeCloseTo(1472, 0);
+    expect(geometry.mainWidth).toBeCloseTo(1472, 0);
     expect(geometry.headerLeft).toBeCloseTo(geometry.mainLeft, 0);
   }
 });
@@ -97,7 +97,7 @@ test("renders core MealMind pages", async ({ page }) => {
 
   await page.goto("/shopping");
   await expect(page.getByRole("heading", { name: "Consolidated grocery list" })).toBeVisible();
-  await expect(page.getByText(/No meal plan selected|Shopping list/)).toBeVisible();
+  await expect(page.getByText(/No meal plan selected|Shopping progress/)).toBeVisible();
 });
 
 test("supports direct recipe routes and missing recipe responses", async ({ page }) => {

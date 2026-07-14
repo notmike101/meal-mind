@@ -14,6 +14,9 @@ const grouped = computed(() => {
   for (const item of props.items) groups.set(item.category, [...(groups.get(item.category) ?? []), item]);
   return [...groups.entries()];
 });
+const checkedCount = computed(() => props.items.filter((item) => item.checked).length);
+const remainingCount = computed(() => props.items.length - checkedCount.value);
+const progress = computed(() => props.items.length ? Math.round((checkedCount.value / props.items.length) * 100) : 0);
 
 async function updateItem(itemId: string, checked: boolean) {
   busy.value = itemId;
@@ -42,30 +45,51 @@ async function regenerate() {
 
 <template>
   <div class="mm-space-y-4">
-    <div class="flex flex-col mm-gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-center mm-gap-2">
-        <ShoppingBasket :size="20" aria-hidden="true" />
-        <h2 class="mm-text-xl font-semibold">Shopping list</h2>
+    <section class="mm-panel mm-p-5 sm:p-6">
+      <div class="flex flex-col mm-gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="flex items-center mm-gap-3">
+          <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-moss/10 text-moss">
+            <ShoppingBasket :size="21" aria-hidden="true" />
+          </span>
+          <div>
+            <h2 class="mm-text-xl font-bold">Shopping progress</h2>
+            <p class="mm-mt-1 mm-text-sm text-ink/55">
+              {{ remainingCount }} item{{ remainingCount === 1 ? "" : "s" }} left · {{ checkedCount }} complete
+            </p>
+          </div>
+        </div>
+        <button
+          v-if="canRegenerate"
+          type="button"
+          :disabled="busy === 'regenerate'"
+          class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold"
+          @click="regenerate"
+        >
+          <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
+        </button>
       </div>
-      <button
-        v-if="canRegenerate"
-        type="button"
-        :disabled="busy === 'regenerate'"
-        class="focus-ring inline-flex items-center mm-gap-2 rounded-md border border-ink/15 mm-px-3 mm-py-2 mm-text-sm font-medium hover:bg-field"
-        @click="regenerate"
+      <div
+        class="mm-mt-5 h-2.5 overflow-hidden rounded-full bg-field"
+        role="progressbar"
+        aria-label="Shopping completion"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-valuenow="progress"
       >
-        <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
-      </button>
+        <div class="h-full rounded-full bg-gradient-to-r from-strong to-moss transition-[width] duration-500" :style="{ width: `${progress}%` }" />
+      </div>
+    </section>
+    <div class="grid items-start mm-gap-4 lg:grid-cols-2">
+      <ShoppingCategory
+        v-for="([category, categoryItems]) in grouped"
+        :key="category"
+        :category="category"
+        :items="categoryItems"
+        :busy-item-id="busy"
+        @update="updateItem"
+      />
     </div>
-    <ShoppingCategory
-      v-for="([category, categoryItems]) in grouped"
-      :key="category"
-      :category="category"
-      :items="categoryItems"
-      :busy-item-id="busy"
-      @update="updateItem"
-    />
-    <div v-if="items.length === 0" class="rounded-md border border-dashed border-ink/20 bg-surface mm-p-6 text-ink/70">
+    <div v-if="items.length === 0" class="mm-panel border-dashed mm-p-8 text-center text-ink/60">
       No shopping items have been generated yet.
     </div>
     <p v-if="error" class="mm-text-sm text-tomato">{{ error }}</p>

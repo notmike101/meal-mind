@@ -30,7 +30,7 @@ function isActive(href: string) {
             <span class="block mm-text-xs font-medium text-ink/55">Plan well. Eat easy.</span>
           </span>
         </NuxtLink>
-        <span class="hidden items-center mm-gap-2 rounded-full border border-moss/15 bg-moss/8 mm-px-3 mm-py-2 mm-text-xs font-semibold text-moss sm:inline-flex lg:hidden">
+        <span class="hidden items-center mm-gap-2 rounded-full border border-moss/15 bg-moss/10 mm-px-3 mm-py-2 mm-text-xs font-semibold text-moss sm:inline-flex lg:hidden">
           <ShieldCheck :size="14" aria-hidden="true" /> Local & private
         </span>
       </div>
@@ -43,7 +43,7 @@ function isActive(href: string) {
             :aria-current="isActive(item.href) ? 'page' : undefined"
             :class="isActive(item.href)
               ? 'bg-surface text-strong shadow-sm ring-1 ring-line/10'
-              : 'text-ink/62 hover:bg-surface/65 hover:text-ink'"
+              : 'text-ink/60 hover:bg-surface/70 hover:text-ink'"
             class="focus-ring inline-flex min-h-10 items-center mm-gap-2 rounded-xl mm-px-3 mm-py-2 mm-text-sm font-semibold transition duration-200"
           >
             <component :is="item.icon" :size="16" aria-hidden="true" />

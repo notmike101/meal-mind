@@ -10,9 +10,12 @@ function update(itemId: string, checked: boolean) {
 </script>
 
 <template>
-  <section class="rounded-md bg-surface mm-p-4 shadow-line">
-    <h3 class="font-semibold">{{ category }}</h3>
-    <div class="mm-mt-3 divide-y divide-ink/10">
+  <section class="mm-panel overflow-hidden mm-p-5">
+    <div class="flex items-center justify-between mm-gap-3 border-b border-line/10 mm-pb-3">
+      <h3 class="mm-text-lg font-bold">{{ category }}</h3>
+      <span class="rounded-full bg-field mm-px-3 mm-py-1 mm-text-xs font-bold text-ink/55">{{ items.length }}</span>
+    </div>
+    <div class="mm-mt-2 divide-y divide-line/10">
       <ShoppingItem
         v-for="item in items"
         :key="item.id"

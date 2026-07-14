@@ -80,7 +80,7 @@ async function testAi() {
 </script>
 
 <template>
-  <div class="mm-space-y-5 rounded-md bg-surface mm-p-5 shadow-line">
+  <div class="mm-panel mm-space-y-6 mm-p-5 sm:p-6">
     <div class="grid mm-gap-4 md:grid-cols-2">
       <SettingsConnectionFields
         v-model:ai-base-url="form.aiBaseUrl"
