@@ -1,5 +1,6 @@
 import {
   getRecipeById,
+  getRecipeByIdAtServings,
   getRecipeDescription,
   loadRecipes,
   type Recipe,
@@ -102,7 +103,7 @@ export function listRecipes(input: RecipeFilterRequest = {}) {
   };
 }
 
-export function getRecipeDetail(recipeId: string) {
-  const recipe = getRecipeById(recipeId);
+export function getRecipeDetail(recipeId: string, servings?: number) {
+  const recipe = servings === undefined ? getRecipeById(recipeId) : getRecipeByIdAtServings(recipeId, servings);
   return recipe ? detailedRecipe(recipe) : null;
 }

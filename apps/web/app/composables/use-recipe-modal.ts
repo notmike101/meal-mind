@@ -6,6 +6,7 @@ type AppLayout = "default" | "wide";
 
 type RecipeModalNavigation = {
   recipeId: string;
+  servings: number;
   originFullPath: string;
   originLayout: AppLayout;
   targetPath: string;
@@ -20,13 +21,14 @@ export function useRecipeModal() {
   const active = computed(() => navigation.value?.targetPath === router.currentRoute.value.path);
   const activeRecipeId = computed(() => active.value ? navigation.value?.recipeId ?? null : null);
 
-  async function openRecipe(recipeId: string, trigger?: globalThis.HTMLElement | null) {
+  async function openRecipe(recipeId: string, servings = 2, trigger?: globalThis.HTMLElement | null) {
     const targetPath = `/recipes/${encodeURIComponent(recipeId)}`;
     const currentRoute = router.currentRoute.value;
     triggerElement.value = trigger ?? null;
     originRoute.value = currentRoute;
     navigation.value = {
       recipeId,
+      servings,
       originFullPath: currentRoute.fullPath,
       originLayout: currentRoute.meta.layout === "wide" ? "wide" : "default",
       targetPath,

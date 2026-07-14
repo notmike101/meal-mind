@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { MealPlanDto, RecipeSummaryDto } from "@mealmind/contracts";
+import type { MealDto, MealPlanDto, RecipeSummaryDto } from "@mealmind/contracts";
 import { Clock, Users } from "@lucide/vue";
 import { computed } from "vue";
 import { formatDisplayDate, getDatesInWeek } from "~/utils/dates";
 
 const props = defineProps<{ plan: MealPlanDto; recipes: RecipeSummaryDto[] }>();
-const emit = defineEmits<{ openDetails: [recipeId: string, trigger: globalThis.HTMLElement] }>();
+const emit = defineEmits<{ openDetails: [recipeId: string, servings: number, trigger: globalThis.HTMLElement] }>();
 const dates = computed(() => getDatesInWeek(props.plan.weekStart));
 function recipeFor(recipeId: string) {
   return props.recipes.find((recipe) => recipe.id === recipeId) ?? null;
 }
 
-function openDetails(event: globalThis.MouseEvent, recipeId: string) {
-  emit("openDetails", recipeId, event.currentTarget as globalThis.HTMLElement);
+function openDetails(event: globalThis.MouseEvent, meal: MealDto) {
+  emit("openDetails", meal.recipeId, meal.servings, event.currentTarget as globalThis.HTMLElement);
 }
 </script>
 
@@ -33,7 +33,7 @@ function openDetails(event: globalThis.MouseEvent, recipeId: string) {
             v-if="recipeFor(meal.recipeId)"
             :href="`/recipes/${meal.recipeId}`"
             class="focus-ring grid min-h-full rounded-xl transition hover:bg-field/40 sm:grid-cols-[180px_1fr]"
-            @click.exact.left.prevent="openDetails($event, meal.recipeId)"
+            @click.exact.left.prevent="openDetails($event, meal)"
           >
             <PlanRecipePhoto :image-url="recipeFor(meal.recipeId)?.imageUrl ?? null" :title="meal.recipeTitleSnapshot" />
             <div class="flex flex-col mm-p-4">

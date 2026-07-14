@@ -8,7 +8,7 @@ const recipeModal = useRecipeModal();
 await callOnce("recipe-catalog", () => recipes.fetchCatalog(), { mode: "navigation" });
 
 function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
-  void recipeModal.openRecipe(recipeId, trigger);
+  void recipeModal.openRecipe(recipeId, 2, trigger);
 }
 </script>
 

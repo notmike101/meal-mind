@@ -7,7 +7,7 @@ import { usePlanningStore } from "~/stores/planning";
 import { formatDisplayDate, getDatesInWeek } from "~/utils/dates";
 
 const props = defineProps<{ plan: MealPlanDto; recipes: RecipeSummaryDto[]; defaultServings: number }>();
-const emit = defineEmits<{ openDetails: [recipeId: string, trigger: globalThis.HTMLElement] }>();
+const emit = defineEmits<{ openDetails: [recipeId: string, servings: number, trigger: globalThis.HTMLElement] }>();
 const planning = usePlanningStore();
 const dates = computed(() => getDatesInWeek(props.plan.weekStart));
 const availableMeals = computed(() => props.plan.meals.filter((meal) => !props.plan.skippedDates.includes(meal.date)));
@@ -162,7 +162,7 @@ function mealLabel(meal: MealDto) {
 }
 
 function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
-  emit("openDetails", recipeId, trigger);
+  emit("openDetails", recipeId, activeMeal.value?.servings ?? addServings.value, trigger);
 }
 </script>
 

@@ -73,6 +73,10 @@ export const recipeFilterRequestSchema = z.object({
   search: z.string().optional(),
 });
 
+export const recipeDetailRequestSchema = z.object({
+  servings: z.coerce.number().int().min(1).max(12).optional(),
+});
+
 export type GeneratePlanRequest = z.infer<typeof generatePlanRequestSchema>;
 export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;
 export type SettingsUpdateRequest = z.infer<typeof settingsUpdateRequestSchema>;

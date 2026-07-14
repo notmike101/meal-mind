@@ -29,8 +29,8 @@ const pageDescription = computed(() => locked.value
 const defaultServings = computed(() => settings.data?.settings.defaultMealServings ?? 1);
 const defaultMealCount = computed(() => settings.data?.settings.defaultWeeklyMealCount ?? 14);
 
-function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
-  void recipeModal.openRecipe(recipeId, trigger);
+function openRecipe(recipeId: string, servings: number, trigger: globalThis.HTMLElement) {
+  void recipeModal.openRecipe(recipeId, servings, trigger);
 }
 </script>
 

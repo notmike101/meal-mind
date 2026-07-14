@@ -11,8 +11,9 @@ export const useRecipesStore = defineStore("recipes", {
     async fetchCatalog() {
       this.catalog = await apiRequest<RecipeListDto>("/api/recipes");
     },
-    async fetchRecipe(recipeId: string) {
-      const recipe = await apiRequest<RecipeDto>(`/api/recipes/${encodeURIComponent(recipeId)}`);
+    async fetchRecipe(recipeId: string, servings?: number) {
+      const query = servings === undefined ? "" : `?servings=${encodeURIComponent(servings)}`;
+      const recipe = await apiRequest<RecipeDto>(`/api/recipes/${encodeURIComponent(recipeId)}${query}`);
       this.details[recipeId] = recipe;
       return recipe;
     },

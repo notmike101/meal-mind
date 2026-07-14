@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import Fastify from "fastify";
-import { getRecipeImage, listRecipes } from "./recipes";
+import { getRecipeDetail, getRecipeImage, listRecipes } from "./recipes";
 import { registerRoutes } from "./routes";
 
 const originalRecipeRoot = process.env.MEALMIND_RECIPE_ROOT;
@@ -54,6 +54,27 @@ describe("recipe images", () => {
     expect(response.headers["content-type"]).toContain("image/webp");
     expect(response.headers["cache-control"]).toBe("public, max-age=86400");
     expect(response.rawPayload).toEqual(Buffer.from("image"));
+    await app.close();
+  });
+
+  it("returns recipe details scaled to the requested servings", async () => {
+    createRecipeRoot(false);
+    const recipe = getRecipeDetail("photo-recipe", 4);
+
+    expect(recipe?.defaultServings).toBe(2);
+    expect(recipe?.ingredients).toEqual(["2 c rice"]);
+    expect(recipe?.instructions).toContain("Cook 2 c rice");
+  });
+
+  it("accepts servings on the recipe detail route", async () => {
+    createRecipeRoot(false);
+    const app = Fastify();
+    registerRoutes(app);
+
+    const response = await app.inject({ method: "GET", url: "/api/recipes/photo-recipe?servings=4" });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().data.ingredients).toEqual(["2 c rice"]);
     await app.close();
   });
 });

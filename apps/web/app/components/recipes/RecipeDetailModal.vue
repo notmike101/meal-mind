@@ -5,27 +5,42 @@ import { errorMessage } from "~/composables/use-api";
 import { useRecipeModal } from "~/composables/use-recipe-modal";
 import { useRecipesStore } from "~/stores/recipes";
 
-const props = defineProps<{ recipeId: string }>();
+const props = defineProps<{ recipeId: string; servings: number }>();
 const recipes = useRecipesStore();
 const modal = useRecipeModal();
 const dialog = ref<globalThis.HTMLDialogElement | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
+const selectedServings = ref(props.servings);
 const recipe = computed(() => recipes.details[props.recipeId]);
 let previousBodyOverflow = "";
 
-watch(() => props.recipeId, async (recipeId) => {
-  if (recipes.details[recipeId]) return;
+watch(() => [props.recipeId, props.servings] as const, async ([recipeId, servings]) => {
+  selectedServings.value = servings;
   loading.value = true;
   error.value = null;
   try {
-    await recipes.fetchRecipe(recipeId);
+    await recipes.fetchRecipe(recipeId, selectedServings.value);
   } catch (caught) {
     error.value = errorMessage(caught, "Recipe details could not be loaded.");
   } finally {
     loading.value = false;
   }
 }, { immediate: true });
+
+async function updateServings(servings: number) {
+  if (servings === selectedServings.value || loading.value) return;
+  loading.value = true;
+  error.value = null;
+  try {
+    await recipes.fetchRecipe(props.recipeId, servings);
+    selectedServings.value = servings;
+  } catch (caught) {
+    error.value = errorMessage(caught, "Recipe servings could not be updated.");
+  } finally {
+    loading.value = false;
+  }
+}
 
 function close() {
   modal.closeRecipe();
@@ -74,7 +89,15 @@ onBeforeUnmount(() => {
             <p role="alert" class="mm-mt-2 mm-text-sm text-tomato">{{ error }}</p>
             <button type="button" class="focus-ring mm-mt-5 rounded-md bg-strong mm-px-4 mm-py-2 mm-text-sm font-semibold text-strong-foreground" @click="close">Close</button>
           </div>
-          <RecipesRecipeDetails v-else-if="recipe" :recipe="recipe" heading-id="recipe-modal-heading" embedded />
+          <RecipesRecipeDetails
+            v-else-if="recipe"
+            :recipe="recipe"
+            :servings="selectedServings"
+            :disabled="loading"
+            heading-id="recipe-modal-heading"
+            embedded
+            @update-servings="updateServings"
+          />
         </div>
       </div>
     </dialog>
