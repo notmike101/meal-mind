@@ -45,41 +45,45 @@ async function regenerate() {
 
 <template>
   <div class="mm-space-y-4">
-    <section class="mm-panel mm-p-5 sm:p-6">
-      <div class="flex flex-col mm-gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div class="flex items-center mm-gap-3">
-          <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-moss/10 text-moss">
-            <ShoppingBasket :size="21" aria-hidden="true" />
+    <section class="border-y border-line/40 bg-surface px-5 py-6 sm:px-6">
+      <div class="grid mm-gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div class="flex items-center mm-gap-4">
+          <span class="flex h-11 w-11 items-center justify-center border border-ink bg-ink text-canvas">
+            <ShoppingBasket :size="20" aria-hidden="true" />
           </span>
           <div>
-            <h2 class="mm-text-xl font-bold">Shopping progress</h2>
+            <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Run status</p>
+            <h2 class="mm-display mm-mt-1 mm-text-2xl font-semibold">Shopping progress</h2>
             <p class="mm-mt-1 mm-text-sm text-ink/55">
               {{ remainingCount }} item{{ remainingCount === 1 ? "" : "s" }} left · {{ checkedCount }} complete
             </p>
           </div>
         </div>
-        <button
-          v-if="canRegenerate"
-          type="button"
-          :disabled="busy === 'regenerate'"
-          class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold"
-          @click="regenerate"
-        >
-          <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
-        </button>
+        <div class="flex items-end justify-between mm-gap-5 sm:justify-end">
+          <span class="mm-display text-5xl font-semibold leading-none tabular-nums">{{ progress }}%</span>
+          <button
+            v-if="canRegenerate"
+            type="button"
+            :disabled="busy === 'regenerate'"
+            class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold"
+            @click="regenerate"
+          >
+            <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
+          </button>
+        </div>
       </div>
       <div
-        class="mm-mt-5 h-2.5 overflow-hidden rounded-full bg-field"
+        class="mm-mt-6 h-1 overflow-hidden bg-field"
         role="progressbar"
         aria-label="Shopping completion"
         aria-valuemin="0"
         aria-valuemax="100"
         :aria-valuenow="progress"
       >
-        <div class="h-full rounded-full bg-gradient-to-r from-strong to-moss transition-[width] duration-500" :style="{ width: `${progress}%` }" />
+        <div class="h-full bg-tomato transition-[width] duration-500" :style="{ width: `${progress}%` }" />
       </div>
     </section>
-    <div class="grid items-start mm-gap-4 lg:grid-cols-2">
+    <div class="grid items-start gap-x-10 gap-y-12 lg:grid-cols-2">
       <ShoppingCategory
         v-for="([category, categoryItems]) in grouped"
         :key="category"
@@ -89,7 +93,7 @@ async function regenerate() {
         @update="updateItem"
       />
     </div>
-    <div v-if="items.length === 0" class="mm-panel border-dashed mm-p-8 text-center text-ink/60">
+    <div v-if="items.length === 0" class="border-y border-dashed border-line/40 py-16 text-center text-ink/60">
       No shopping items have been generated yet.
     </div>
     <p v-if="error" class="mm-text-sm text-tomato">{{ error }}</p>

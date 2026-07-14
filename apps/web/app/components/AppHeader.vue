@@ -18,39 +18,51 @@ function isActive(href: string) {
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 border-b border-line/10 bg-surface/80 backdrop-blur-xl">
-    <div class="mm-shell-container flex flex-col mm-gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-      <div class="flex items-center justify-between mm-gap-4">
-        <NuxtLink to="/" class="focus-ring group flex items-center mm-gap-3 rounded-xl" aria-label="MealMind dashboard">
-          <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-strong to-moss text-strong-foreground shadow-lg shadow-moss/20 transition duration-200 group-hover:-rotate-3 group-hover:scale-105">
-            <ChefHat :size="23" :stroke-width="2.2" aria-hidden="true" />
+  <aside class="relative z-40 border-b border-rail-foreground/10 bg-rail text-rail-foreground lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
+    <div class="flex min-h-full flex-col">
+      <div class="flex items-center justify-between border-b border-rail-foreground/15 px-4 py-4 sm:px-6 lg:block lg:px-7 lg:py-8">
+        <NuxtLink to="/" class="focus-ring group flex items-center mm-gap-3 rounded-sm" aria-label="MealMind dashboard">
+          <span class="flex h-10 w-10 items-center justify-center border border-rail-foreground/30 bg-rail-foreground text-rail transition-transform duration-200 group-hover:-rotate-3">
+            <ChefHat :size="21" :stroke-width="2" aria-hidden="true" />
           </span>
           <span>
-            <span class="block mm-text-lg font-bold tracking-tight">MealMind</span>
-            <span class="block mm-text-xs font-medium text-ink/55">Plan well. Eat easy.</span>
+            <span class="mm-display block mm-text-xl font-semibold tracking-[-0.03em]">MealMind</span>
+            <span class="block mm-text-xs uppercase tracking-[0.14em] text-rail-foreground/55">Weekly kitchen desk</span>
           </span>
         </NuxtLink>
-        <span class="hidden items-center mm-gap-2 rounded-full border border-moss/15 bg-moss/10 mm-px-3 mm-py-2 mm-text-xs font-semibold text-moss sm:inline-flex lg:hidden">
-          <ShieldCheck :size="14" aria-hidden="true" /> Local & private
-        </span>
+        <ShieldCheck class="text-rail-foreground/60 lg:hidden" :size="18" aria-label="Local and private" />
       </div>
-      <nav class="-mx-1 flex overflow-x-auto px-1 pb-1 lg:mx-0 lg:overflow-visible lg:p-0" aria-label="Primary navigation">
-        <div class="flex min-w-max items-center mm-gap-1 rounded-2xl border border-line/10 bg-field/70 mm-p-1">
+
+      <nav class="mm-scrollbar-none overflow-x-auto p-2 sm:px-4 lg:overflow-visible lg:px-4 lg:py-8" aria-label="Primary navigation">
+        <p class="hidden px-3 pb-3 mm-text-xs font-bold uppercase tracking-[0.18em] text-rail-foreground/40 lg:block">Workspace</p>
+        <div class="flex min-w-max mm-gap-1 lg:min-w-0 lg:flex-col lg:gap-2">
           <NuxtLink
-            v-for="item in navItems"
+            v-for="(item, index) in navItems"
             :key="item.href"
             :to="item.href"
+            :aria-label="item.label"
             :aria-current="isActive(item.href) ? 'page' : undefined"
             :class="isActive(item.href)
-              ? 'bg-surface text-strong shadow-sm ring-1 ring-line/10'
-              : 'text-ink/60 hover:bg-surface/70 hover:text-ink'"
-            class="focus-ring inline-flex min-h-10 items-center mm-gap-2 rounded-xl mm-px-3 mm-py-2 mm-text-sm font-semibold transition duration-200"
+              ? 'bg-rail-foreground text-rail'
+              : 'text-rail-foreground/65 hover:bg-rail-foreground/10 hover:text-rail-foreground'"
+            class="focus-ring group inline-flex min-h-11 items-center mm-gap-3 rounded-sm px-3 py-2.5 mm-text-sm font-semibold transition-colors lg:w-full"
           >
-            <component :is="item.icon" :size="16" aria-hidden="true" />
+            <span class="hidden w-5 mm-text-xs font-medium tabular-nums opacity-45 lg:inline">0{{ index + 1 }}</span>
+            <component :is="item.icon" :size="17" aria-hidden="true" />
             {{ item.label }}
           </NuxtLink>
         </div>
       </nav>
+
+      <div class="mt-auto hidden border-t border-rail-foreground/15 px-7 py-7 lg:block">
+        <div class="flex items-start mm-gap-3">
+          <ShieldCheck class="mt-0.5 shrink-0 text-moss" :size="18" aria-hidden="true" />
+          <div>
+            <p class="mm-text-sm font-semibold">Local workspace</p>
+            <p class="mm-mt-1 mm-text-xs leading-relaxed text-rail-foreground/50">Your recipes and plans stay on this machine.</p>
+          </div>
+        </div>
+      </div>
     </div>
-  </header>
+  </aside>
 </template>

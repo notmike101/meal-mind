@@ -25,25 +25,26 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
 
 <template>
   <div class="mm-space-y-6">
-    <section class="mm-panel flex flex-col mm-gap-6 mm-p-6 lg:flex-row lg:items-end lg:justify-between sm:p-8">
+    <section class="flex flex-col mm-gap-8 border-b-2 border-ink pb-10 lg:flex-row lg:items-end lg:justify-between">
       <PageHeading eyebrow="Recipes" title="CookLang recipe library" description="Browse your trusted local collection and find the right meal in seconds." />
-      <div class="flex items-center mm-gap-3 rounded-2xl border border-moss/15 bg-moss/10 mm-px-4 mm-py-3 text-moss">
-        <BookOpen :size="20" aria-hidden="true" />
-        <span class="mm-text-sm font-bold">{{ recipes.catalog?.recipes.length ?? 0 }} recipes</span>
+      <div class="flex shrink-0 items-end mm-gap-3 border-l border-ink pl-5">
+        <BookOpen class="mb-2 text-moss" :size="22" aria-hidden="true" />
+        <span class="mm-display text-6xl font-semibold leading-none">{{ recipes.catalog?.recipes.length ?? 0 }}</span>
+        <span class="mb-1 mm-text-xs font-bold uppercase tracking-[0.18em] text-ink/50">Local<br>recipes</span>
       </div>
     </section>
     <RecipesInvalidRecipeNotice
       v-if="recipes.catalog?.invalidRecipes.length"
       :invalid-recipes="recipes.catalog.invalidRecipes"
     />
-    <section class="mm-panel mm-p-4 sm:p-5" aria-label="Recipe filters">
+    <section class="border-y border-line/35 bg-surface mm-p-4 sm:p-5" aria-label="Recipe filters">
       <label class="relative block">
         <span class="sr-only">Search recipes</span>
-        <Search class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink/45" :size="19" aria-hidden="true" />
+        <Search class="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2 text-ink/45" :size="19" aria-hidden="true" />
         <input
           v-model="query"
           type="search"
-          class="focus-ring mm-field w-full py-3 pl-12 pr-4 text-ink"
+          class="focus-ring w-full border-0 border-b border-line/40 bg-transparent py-3 pl-9 pr-4 mm-text-lg text-ink outline-none transition-colors focus:border-moss"
           placeholder="Search by recipe name, description, or tag…"
         />
       </label>
@@ -51,7 +52,7 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
         Showing {{ filteredRecipes.length }} of {{ recipes.catalog?.recipes.length ?? 0 }} recipes
       </p>
     </section>
-    <section class="grid mm-gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <section class="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
       <RecipesRecipeCard
         v-for="recipe in filteredRecipes"
         :key="recipe.id"
@@ -61,7 +62,7 @@ function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
     </section>
     <div
       v-if="filteredRecipes.length === 0"
-      class="mm-panel border-dashed mm-p-8 text-center text-ink/60"
+      class="border-y border-dashed border-line/40 py-16 text-center text-ink/60"
     >
       {{ query ? "No recipes match your search." : "No valid recipes found." }}
     </div>

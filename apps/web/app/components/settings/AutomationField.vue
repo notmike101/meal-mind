@@ -3,7 +3,7 @@ const model = defineModel<boolean>({ required: true });
 </script>
 
 <template>
-  <label class="mm-card flex cursor-pointer items-start justify-between mm-gap-4 mm-p-4 transition-colors hover:border-moss/30">
+  <label class="flex cursor-pointer items-start justify-between mm-gap-4 border-y border-line/35 bg-surface mm-p-4 transition-colors hover:bg-field/60">
     <span>
       <span class="block mm-text-sm font-medium">Automatically generate next week's plan</span>
       <span class="mm-mt-1 block mm-text-sm text-ink/60">

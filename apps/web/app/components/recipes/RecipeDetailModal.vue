@@ -72,7 +72,7 @@ onBeforeUnmount(() => {
     <dialog
       ref="dialog"
       aria-labelledby="recipe-modal-heading"
-      class="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] mm-max-w-6xl overflow-hidden rounded-xl bg-surface p-0 text-ink shadow-xl backdrop:bg-ink/55"
+      class="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] mm-max-w-6xl overflow-hidden rounded-sm border border-line/40 bg-surface p-0 text-ink shadow-none backdrop:bg-ink/70"
       @cancel.prevent="close"
       @click="closeFromBackdrop"
     >

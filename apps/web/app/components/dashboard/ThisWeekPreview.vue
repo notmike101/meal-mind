@@ -32,15 +32,15 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
 </script>
 
 <template>
-  <section class="mm-panel overflow-hidden" aria-labelledby="dashboard-this-week-heading">
-    <div class="flex flex-col mm-gap-4 border-b border-line/10 mm-p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <div class="flex items-center mm-gap-3">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-steel/10 text-steel">
-          <CalendarDays :size="21" aria-hidden="true" />
+  <section class="overflow-hidden border border-line/30 bg-surface" aria-labelledby="dashboard-this-week-heading">
+    <div class="flex flex-col mm-gap-4 mm-p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div class="flex items-center mm-gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center border border-ink bg-transparent text-ink">
+          <CalendarDays :size="20" aria-hidden="true" />
         </span>
         <div>
-          <p class="mm-text-xs font-bold uppercase tracking-[0.14em] text-moss">This week</p>
-          <h2 id="dashboard-this-week-heading" class="mm-mt-1 mm-text-xl font-bold">
+          <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Service 02 · This week</p>
+          <h2 id="dashboard-this-week-heading" class="mm-display mm-mt-1 mm-text-2xl font-semibold tracking-tight">
             {{ dateRange }}
           </h2>
           <p class="mm-mt-1 mm-text-sm text-ink/60">
@@ -57,19 +57,19 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
       </NuxtLink>
     </div>
 
-    <div class="grid mm-gap-4 mm-p-5 sm:grid-cols-2 sm:p-6 xl:grid-cols-3">
+    <div>
       <article
         v-for="date in dates"
         :key="date"
-        class="mm-card mm-interactive mm-p-4"
+        class="grid border-t border-line/25 mm-p-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:p-6"
       >
-        <h3 class="border-b border-line/10 mm-pb-2 font-bold">{{ formatDisplayDate(date) }}</h3>
-        <div v-if="mealsForDate(date).length" class="mm-mt-3 mm-space-y-4">
+        <h3 class="mm-display mm-text-xl font-semibold">{{ formatDisplayDate(date) }}</h3>
+        <div v-if="mealsForDate(date).length" class="grid mm-gap-5 sm:grid-cols-2">
           <div v-for="meal in mealsForDate(date)" :key="meal.id" class="min-w-0">
-            <p class="mm-text-xs font-bold uppercase tracking-[0.12em] text-moss">{{ meal.slot || "Meal" }}</p>
+            <p class="mm-text-xs font-bold uppercase tracking-[0.16em] text-moss">{{ meal.slot || "Meal" }}</p>
             <a
               :href="`/recipes/${encodeURIComponent(meal.recipeId)}`"
-              class="focus-ring mm-mt-1 inline-block rounded-sm line-clamp-2 mm-text-sm font-semibold leading-snug text-ink decoration-moss/50 underline-offset-4 hover:text-moss hover:underline"
+              class="focus-ring mm-mt-1 inline-block rounded-sm line-clamp-2 font-semibold leading-snug text-ink decoration-tomato/50 underline-offset-4 hover:underline"
               @click.exact.left.prevent="openRecipe($event, meal)"
             >{{ meal.recipeTitleSnapshot }}</a>
             <p class="mm-mt-1 mm-text-xs text-ink/50">{{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}</p>

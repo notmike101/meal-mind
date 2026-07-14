@@ -25,38 +25,38 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
 </script>
 
 <template>
-  <section class="mm-panel overflow-hidden mm-p-5 sm:p-6">
-    <div class="flex flex-col mm-gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-center mm-gap-3">
-        <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-moss/10 text-moss">
-          <Utensils :size="21" aria-hidden="true" />
+  <section class="overflow-hidden border border-line/30 bg-surface">
+    <div class="flex flex-col mm-gap-3 border-b border-line/25 mm-p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div class="flex items-center mm-gap-4">
+        <span class="flex h-11 w-11 items-center justify-center border border-ink bg-ink text-canvas">
+          <Utensils :size="20" aria-hidden="true" />
         </span>
         <div>
-          <p class="mm-text-xs font-bold uppercase tracking-[0.14em] text-moss">Today</p>
-          <h2 class="mm-mt-1 mm-text-xl font-bold">Active meals</h2>
+          <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">Service 01 · Today</p>
+          <h2 class="mm-display mm-mt-1 mm-text-2xl font-semibold tracking-tight">Active meals</h2>
         </div>
       </div>
-      <span v-if="plannedMeals.length" class="rounded-full border border-tomato/15 bg-tomato/10 mm-px-3 mm-py-2 mm-text-sm font-bold text-tomato">
+      <span v-if="plannedMeals.length" class="border-l-2 border-tomato mm-px-3 mm-py-1 mm-text-sm font-bold text-tomato">
         {{ plannedMeals.length }} meal{{ plannedMeals.length === 1 ? "" : "s" }} still planned
       </span>
-      <span v-else class="inline-flex items-center mm-gap-2 rounded-full border border-moss/15 bg-moss/10 mm-px-3 mm-py-2 mm-text-sm font-bold text-moss">
+      <span v-else class="inline-flex items-center mm-gap-2 border-l-2 border-moss mm-px-3 mm-py-1 mm-text-sm font-bold text-moss">
         <CircleCheckBig :size="16" aria-hidden="true" /> All handled
       </span>
     </div>
-    <div class="mm-mt-5 grid mm-gap-4 md:grid-cols-2">
-      <div v-for="meal in meals" :key="meal.id" class="mm-card mm-interactive flex flex-col mm-p-5">
-        <p class="mm-text-xs font-bold uppercase tracking-[0.14em] text-moss">{{ meal.slot || "Meal" }}</p>
-        <h3 class="mm-mt-2 mm-text-lg font-bold leading-snug">
+    <div class="grid md:grid-cols-2 md:divide-x md:divide-line/25">
+      <div v-for="meal in meals" :key="meal.id" class="flex min-h-56 flex-col border-b border-line/20 mm-p-5 last:border-b-0 md:border-b-0 sm:p-6">
+        <p class="mm-text-xs font-bold uppercase tracking-[0.18em] text-moss">{{ meal.slot || "Meal" }}</p>
+        <h3 class="mm-display mm-mt-3 mm-text-2xl font-semibold leading-tight tracking-[-0.025em]">
           <a
             :href="`/recipes/${encodeURIComponent(meal.recipeId)}`"
-            class="focus-ring rounded-sm text-ink decoration-moss/50 underline-offset-4 hover:text-moss hover:underline"
+            class="focus-ring rounded-sm text-ink decoration-tomato/60 decoration-2 underline-offset-4 hover:underline"
             @click.exact.left.prevent="openRecipe($event, meal)"
           >{{ meal.recipeTitleSnapshot }}</a>
         </h3>
-        <p class="mm-mt-2 mm-text-sm text-ink/55">
+        <p class="mm-mt-3 mm-text-sm text-ink/55">
           {{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }} · {{ meal.status }}
         </p>
-        <div class="mt-auto flex mm-gap-2 mm-pt-4">
+        <div class="mt-auto flex mm-gap-3 mm-pt-6">
           <button
             type="button"
             :disabled="busyMealId === meal.id"

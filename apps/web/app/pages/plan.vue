@@ -36,7 +36,7 @@ function openRecipe(recipeId: string, servings: number, trigger: globalThis.HTML
 
 <template>
   <div class="mm-space-y-6">
-    <section class="mm-panel flex flex-col mm-gap-6 mm-p-6 lg:flex-row lg:items-end lg:justify-between sm:p-8">
+    <section class="flex flex-col mm-gap-8 border-b-2 border-ink pb-10 lg:flex-row lg:items-end lg:justify-between">
       <PageHeading eyebrow="Plan" :title="pageTitle" :description="pageDescription" />
       <div class="flex flex-wrap mm-gap-2">
         <PlanGeneratePlanButton :replace-existing="planning.nextDraft?.status === 'draft'" :default-meal-count="defaultMealCount" />
@@ -44,7 +44,7 @@ function openRecipe(recipeId: string, servings: number, trigger: globalThis.HTML
         <PlanCommitPlanButton v-if="plan?.status === 'draft'" :plan-id="plan.id" />
       </div>
     </section>
-    <div v-if="(recipes.catalog?.invalidRecipes.length ?? 0) > 0" class="rounded-2xl border border-tomato/25 bg-tomato/10 mm-p-4 mm-text-sm font-medium text-tomato">
+    <div v-if="(recipes.catalog?.invalidRecipes.length ?? 0) > 0" class="border-l-4 border-tomato bg-surface mm-p-4 mm-text-sm font-medium text-tomato">
       {{ recipes.catalog?.invalidRecipes.length }} invalid recipe file{{ recipes.catalog?.invalidRecipes.length === 1 ? "" : "s" }} excluded from planning.
     </div>
     <section v-if="plan" data-testid="plan-content" class="mm-space-y-6">
@@ -52,8 +52,8 @@ function openRecipe(recipeId: string, servings: number, trigger: globalThis.HTML
       <PlanLockedWeek v-if="locked" data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
       <PlanSelectionWorkspace v-else data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" @open-details="openRecipe" />
     </section>
-    <section v-else class="mm-panel border-dashed mm-p-8 text-center">
-      <h2 class="mm-text-xl font-bold">No plan yet</h2>
+    <section v-else class="border-y border-dashed border-line/40 py-16 text-center">
+      <h2 class="mm-display mm-text-2xl font-semibold">No plan yet</h2>
       <p v-if="planning.nextWeek" class="mm-mt-2 text-ink/70">
         {{ planning.nextWeek.weekStart }} through {{ planning.nextWeek.weekEnd }}
       </p>

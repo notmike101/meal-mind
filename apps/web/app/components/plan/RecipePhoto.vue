@@ -8,12 +8,12 @@ watch(() => props.imageUrl, () => { failed.value = false; });
 </script>
 
 <template>
-  <div class="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-moss/20 via-field to-steel/15">
+  <div class="relative aspect-[4/3] overflow-hidden border border-line/25 bg-field">
     <img
       v-if="imageUrl && !failed"
       :src="imageUrl"
       :alt="`${title} plated meal`"
-      class="h-full w-full object-cover"
+      class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025]"
       loading="lazy"
       @error="failed = true"
     >

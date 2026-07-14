@@ -20,7 +20,7 @@ test("primary navigation renders each page on the first click", async ({ page })
   }
 });
 
-test("uses a consistent shell width across primary pages", async ({ page }) => {
+test("uses a consistent workspace shell across primary pages", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 900 });
   const paths = ["/", "/plan", "/shopping", "/recipes", "/settings"];
 
@@ -29,23 +29,26 @@ test("uses a consistent shell width across primary pages", async ({ page }) => {
     await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", path);
 
     const geometry = await page.evaluate(() => {
-      const header = document.querySelector<HTMLElement>("header > div");
+      const sidebar = document.querySelector<HTMLElement>("aside");
       const main = document.querySelector<HTMLElement>("main");
-      if (!header || !main) throw new Error("App shell containers were not rendered");
+      if (!sidebar || !main) throw new Error("App shell containers were not rendered");
 
-      const headerBox = header.getBoundingClientRect();
+      const sidebarBox = sidebar.getBoundingClientRect();
       const mainBox = main.getBoundingClientRect();
       return {
-        headerLeft: headerBox.left,
-        headerWidth: headerBox.width,
+        sidebarLeft: sidebarBox.left,
+        sidebarWidth: sidebarBox.width,
         mainLeft: mainBox.left,
         mainWidth: mainBox.width,
+        bodyWidth: document.body.scrollWidth,
       };
     });
 
-    expect(geometry.headerWidth).toBeCloseTo(1472, 0);
-    expect(geometry.mainWidth).toBeCloseTo(1472, 0);
-    expect(geometry.headerLeft).toBeCloseTo(geometry.mainLeft, 0);
+    expect(geometry.sidebarLeft).toBeCloseTo(0, 0);
+    expect(geometry.sidebarWidth).toBeCloseTo(272, 0);
+    expect(geometry.mainLeft).toBeCloseTo(geometry.sidebarWidth, 0);
+    expect(geometry.mainWidth + geometry.sidebarWidth).toBeCloseTo(1920, 0);
+    expect(geometry.bodyWidth).toBe(1920);
   }
 });
 

@@ -1,8 +1,8 @@
 <template>
   <div class="mm-app-shell min-h-screen mm-scaled">
     <AppHeader />
-    <main class="mm-shell-container px-4 py-7 sm:px-6 sm:py-9 lg:px-8 lg:py-10">
-      <div class="mm-page">
+    <main class="min-w-0 px-4 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12 xl:px-14">
+      <div class="mm-page mx-auto max-w-[86rem]">
         <slot />
       </div>
     </main>

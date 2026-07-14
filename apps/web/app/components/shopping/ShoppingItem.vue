@@ -10,7 +10,7 @@ function sourceCount(item: ShoppingItemDto) {
 </script>
 
 <template>
-  <label class="group -mx-2 flex cursor-pointer mm-gap-3 rounded-xl px-2 mm-py-3 transition-colors hover:bg-field/70">
+  <label class="group flex cursor-pointer mm-gap-3 mm-py-3 transition-colors hover:bg-field/60">
     <input
       type="checkbox"
       :checked="item.checked"

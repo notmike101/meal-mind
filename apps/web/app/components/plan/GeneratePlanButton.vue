@@ -50,14 +50,14 @@ async function generate() {
       {{ busy ? "Generating" : label ?? (replaceExisting ? "Replace draft" : "Generate next week") }}
     </button>
 
-    <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 mm-p-4 backdrop-blur-sm" @click.self="open = false">
-      <section role="dialog" aria-modal="true" aria-labelledby="generate-plan-heading" class="mm-panel w-full mm-max-w-md mm-p-6 shadow-xl">
+    <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 mm-p-4" @click.self="open = false">
+      <section role="dialog" aria-modal="true" aria-labelledby="generate-plan-heading" class="mm-panel w-full mm-max-w-md mm-p-6">
         <div class="flex items-start justify-between mm-gap-4">
           <div>
             <h2 id="generate-plan-heading" class="mm-text-xl font-bold">{{ replaceExisting ? "Replace draft plan" : "Generate next week" }}</h2>
             <p class="mm-mt-1 mm-text-sm text-ink/65">Choose how many meals the AI should plan across the week.</p>
           </div>
-          <button type="button" aria-label="Close generation dialog" class="focus-ring rounded-xl mm-p-2 transition-colors hover:bg-field" @click="open = false">
+          <button type="button" aria-label="Close generation dialog" class="focus-ring rounded-sm mm-p-2 transition-colors hover:bg-field" @click="open = false">
             <X :size="18" aria-hidden="true" />
           </button>
         </div>

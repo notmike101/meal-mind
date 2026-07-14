@@ -4,67 +4,75 @@
 
 :root {
   color-scheme: light;
-  --canvas: 245 248 244;
-  --surface: 255 255 252;
-  --field: 237 243 238;
-  --ink: 28 38 32;
-  --line: 66 91 74;
-  --strong: 30 97 68;
-  --strong-foreground: 255 255 255;
-  --moss: 39 119 82;
-  --tomato: 199 76 55;
-  --steel: 55 91 116;
-  --glow: 196 229 205;
-  --warm: 247 193 128;
+  --canvas: 239 235 225;
+  --surface: 249 247 240;
+  --field: 229 227 216;
+  --ink: 29 33 28;
+  --line: 52 59 49;
+  --strong: 27 34 28;
+  --strong-foreground: 246 242 232;
+  --moss: 82 105 65;
+  --tomato: 211 78 48;
+  --steel: 72 86 92;
+  --glow: 164 181 141;
+  --warm: 231 163 89;
+  --rail: 27 34 28;
+  --rail-foreground: 246 242 232;
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --canvas: 245 248 244;
-  --surface: 255 255 252;
-  --field: 237 243 238;
-  --ink: 28 38 32;
-  --line: 66 91 74;
-  --strong: 30 97 68;
-  --strong-foreground: 255 255 255;
-  --moss: 39 119 82;
-  --tomato: 199 76 55;
-  --steel: 55 91 116;
-  --glow: 196 229 205;
-  --warm: 247 193 128;
+  --canvas: 239 235 225;
+  --surface: 249 247 240;
+  --field: 229 227 216;
+  --ink: 29 33 28;
+  --line: 52 59 49;
+  --strong: 27 34 28;
+  --strong-foreground: 246 242 232;
+  --moss: 82 105 65;
+  --tomato: 211 78 48;
+  --steel: 72 86 92;
+  --glow: 164 181 141;
+  --warm: 231 163 89;
+  --rail: 27 34 28;
+  --rail-foreground: 246 242 232;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --canvas: 13 22 18;
-  --surface: 21 34 28;
-  --field: 29 45 37;
-  --ink: 235 244 238;
-  --line: 116 153 130;
-  --strong: 79 191 130;
-  --strong-foreground: 9 25 17;
-  --moss: 91 207 143;
-  --tomato: 255 136 111;
-  --steel: 139 195 224;
-  --glow: 47 104 72;
-  --warm: 178 117 57;
+  --canvas: 20 23 20;
+  --surface: 28 32 28;
+  --field: 39 43 37;
+  --ink: 239 236 226;
+  --line: 188 192 176;
+  --strong: 231 227 215;
+  --strong-foreground: 22 25 21;
+  --moss: 166 190 139;
+  --tomato: 241 116 80;
+  --steel: 160 177 184;
+  --glow: 91 111 74;
+  --warm: 198 137 73;
+  --rail: 13 16 13;
+  --rail-foreground: 239 236 226;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --canvas: 13 22 18;
-    --surface: 21 34 28;
-    --field: 29 45 37;
-    --ink: 235 244 238;
-    --line: 116 153 130;
-    --strong: 79 191 130;
-    --strong-foreground: 9 25 17;
-    --moss: 91 207 143;
-    --tomato: 255 136 111;
-    --steel: 139 195 224;
-    --glow: 47 104 72;
-    --warm: 178 117 57;
+    --canvas: 20 23 20;
+    --surface: 28 32 28;
+    --field: 39 43 37;
+    --ink: 239 236 226;
+    --line: 188 192 176;
+    --strong: 231 227 215;
+    --strong-foreground: 22 25 21;
+    --moss: 166 190 139;
+    --tomato: 241 116 80;
+    --steel: 160 177 184;
+    --glow: 91 111 74;
+    --warm: 198 137 73;
+    --rail: 13 16 13;
+    --rail-foreground: 239 236 226;
   }
 }
 
@@ -77,7 +85,7 @@
   --mm-text-lg: 1.125rem;
   --mm-text-xl: 1.25rem;
   --mm-text-2xl: 1.5rem;
-  --mm-text-3xl: clamp(2rem, 4vw, 2.75rem);
+  --mm-text-3xl: clamp(2.75rem, 5vw, 4.75rem);
 
   /* Spacing */
   --mm-space-px: 0.25rem;
@@ -183,7 +191,7 @@
 .mm-min-w-10 { min-width: var(--mm-min-w-10); }
 
 /* Container-width utilities */
-.mm-shell-container { width: 100%; max-width: 92rem; margin-inline: auto; }
+.mm-shell-container { width: 100%; max-width: 86rem; margin-inline: auto; }
 .mm-max-w-md { max-width: 22.4rem; }      /* 28rem * 0.8 = 22.4rem */
 .mm-max-w-lg { max-width: 25.6rem; }      /* 32rem * 0.8 = 25.6rem */
 .mm-max-w-xl { max-width: 28.8rem; }      /* 36rem * 0.8 = 28.8rem */
@@ -210,8 +218,9 @@ body {
   font-size: 1rem;
   line-height: 1.55;
   background-image:
-    radial-gradient(circle at 12% -10%, rgb(var(--glow) / 0.42), transparent 32rem),
-    radial-gradient(circle at 92% 8%, rgb(var(--warm) / 0.14), transparent 28rem);
+    linear-gradient(rgb(var(--line) / 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--line) / 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
   background-attachment: fixed;
 }
 button, input, textarea, select { font: inherit; }
@@ -226,8 +235,28 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   isolation: isolate;
 }
 
+@media (min-width: 1024px) {
+  .mm-app-shell {
+    display: grid;
+    grid-template-columns: 17rem minmax(0, 1fr);
+  }
+}
+
+.mm-display {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-kerning: normal;
+}
+
+.mm-scrollbar-none {
+  scrollbar-width: none;
+}
+
+.mm-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .mm-page {
-  animation: mm-page-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: mm-page-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .page-enter-active,
@@ -242,82 +271,78 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 .mm-panel {
-  border: 1px solid rgb(var(--line) / 0.13);
-  border-radius: 1.25rem;
-  background: linear-gradient(145deg, rgb(var(--surface) / 0.98), rgb(var(--surface) / 0.9));
-  box-shadow: 0 1px 2px rgb(var(--ink) / 0.04), 0 16px 40px rgb(var(--ink) / 0.06);
+  border: 1px solid rgb(var(--line) / 0.26);
+  border-radius: 0.25rem;
+  background: rgb(var(--surface));
 }
 
 .mm-card {
-  border: 1px solid rgb(var(--line) / 0.12);
-  border-radius: 1rem;
-  background: rgb(var(--surface) / 0.78);
-  box-shadow: 0 8px 24px rgb(var(--ink) / 0.045);
+  border: 1px solid rgb(var(--line) / 0.22);
+  border-radius: 0.25rem;
+  background: rgb(var(--surface));
 }
 
 .mm-interactive {
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
 .mm-interactive:hover {
-  transform: translateY(-2px);
-  border-color: rgb(var(--moss) / 0.3);
-  box-shadow: 0 16px 36px rgb(var(--ink) / 0.09);
+  border-color: rgb(var(--ink) / 0.7);
 }
 
 .mm-button-primary,
 .mm-button-secondary {
   min-height: 2.75rem;
-  border-radius: 0.875rem;
-  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  border-radius: 0.25rem;
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, border-color 120ms ease;
 }
 
 .mm-button-primary {
-  background: linear-gradient(135deg, rgb(var(--strong)), rgb(var(--moss)));
+  border: 1px solid rgb(var(--strong));
+  background: rgb(var(--strong));
   color: rgb(var(--strong-foreground));
-  box-shadow: 0 8px 20px rgb(var(--moss) / 0.22);
+  box-shadow: 3px 3px 0 rgb(var(--moss) / 0.34);
 }
 
 .mm-button-secondary {
-  border: 1px solid rgb(var(--line) / 0.18);
-  background: rgb(var(--surface) / 0.72);
+  border: 1px solid rgb(var(--ink) / 0.5);
+  background: transparent;
 }
 
 .mm-button-primary:hover:not(:disabled),
 .mm-button-secondary:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translate(-1px, -1px);
 }
 
 .mm-button-primary:hover:not(:disabled) {
-  box-shadow: 0 12px 26px rgb(var(--moss) / 0.3);
+  box-shadow: 5px 5px 0 rgb(var(--moss) / 0.34);
 }
 
 .mm-button-secondary:hover:not(:disabled) {
-  border-color: rgb(var(--moss) / 0.34);
-  background: rgb(var(--field) / 0.9);
+  border-color: rgb(var(--ink));
+  background: rgb(var(--field));
 }
 
 .mm-field {
   min-height: 2.75rem;
-  border: 1px solid rgb(var(--line) / 0.18);
-  border-radius: 0.875rem;
-  background: rgb(var(--surface) / 0.84);
-  box-shadow: inset 0 1px 1px rgb(var(--ink) / 0.025);
+  border: 1px solid rgb(var(--line) / 0.4);
+  border-radius: 0.25rem;
+  background: rgb(var(--surface));
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .mm-field:hover {
-  border-color: rgb(var(--line) / 0.32);
+  border-color: rgb(var(--ink) / 0.7);
 }
 
 .mm-field:focus {
-  border-color: rgb(var(--moss) / 0.65);
-  box-shadow: 0 0 0 4px rgb(var(--moss) / 0.12);
+  border-color: rgb(var(--moss));
+  box-shadow: 0 0 0 3px rgb(var(--moss) / 0.16);
   outline: none;
 }
 
 @keyframes mm-page-enter {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
