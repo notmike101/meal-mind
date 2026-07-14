@@ -7,15 +7,18 @@ withDefaults(defineProps<{ suggestedSlots: string[]; totalTime: number; tags: st
 </script>
 
 <template>
-  <div class="flex flex-wrap mm-gap-2 mm-text-sm text-ink/65">
-    <span v-if="suggestedSlots.length" class="inline-flex items-center mm-gap-1 rounded-md bg-field mm-px-2 mm-py-1">
-      <Utensils :size="14" aria-hidden="true" /> {{ suggestedSlots.join(", ") }}
+  <div class="flex flex-wrap items-center gap-2 text-sm text-ink/70" aria-label="Recipe details">
+    <span v-if="suggestedSlots.length" class="inline-flex min-h-9 items-center gap-2 rounded-full border border-line/20 bg-field px-3 py-1.5 font-medium">
+      <Utensils :size="15" class="shrink-0 text-moss" aria-hidden="true" />
+      <span>{{ suggestedSlots.join(", ") }}</span>
     </span>
-    <span class="inline-flex items-center mm-gap-1 rounded-md bg-field mm-px-2 mm-py-1">
-      <Clock :size="14" aria-hidden="true" /> {{ totalTime }} min
+    <span class="inline-flex min-h-9 items-center gap-2 rounded-full border border-line/20 bg-field px-3 py-1.5 font-medium">
+      <Clock :size="15" class="shrink-0 text-moss" aria-hidden="true" />
+      <span>{{ totalTime > 0 ? `${totalTime} min` : "Time not listed" }}</span>
     </span>
-    <span v-for="tag in showTags ? tags : []" :key="tag" class="inline-flex items-center mm-gap-1 rounded-md bg-field mm-px-2 mm-py-1">
-      <Tags :size="14" aria-hidden="true" /> {{ tag }}
+    <span v-for="tag in showTags ? tags : []" :key="tag" class="inline-flex min-h-9 items-center gap-2 rounded-full border border-line/20 bg-surface px-3 py-1.5 font-medium">
+      <Tags :size="15" class="shrink-0 text-tomato" aria-hidden="true" />
+      <span>{{ tag }}</span>
     </span>
   </div>
 </template>

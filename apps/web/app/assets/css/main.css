@@ -4,104 +4,98 @@
 
 :root {
   color-scheme: light;
-  --canvas: 251 250 246;
-  --surface: 255 253 248;
-  --field: 246 244 237;
-  --ink: 23 32 27;
-  --line: 23 32 27;
-  --strong: 23 32 27;
+  --canvas: 244 247 245;
+  --surface: 255 255 255;
+  --field: 238 243 240;
+  --ink: 20 29 25;
+  --line: 207 218 212;
+  --strong: 20 103 76;
   --strong-foreground: 255 255 255;
-  --moss: 93 123 99;
-  --tomato: 169 77 61;
-  --steel: 66 84 102;
+  --moss: 22 112 82;
+  --tomato: 184 58 43;
+  --steel: 78 94 87;
+  --glow: 164 226 201;
+  --warm: 239 157 88;
+  --rail: 16 31 26;
+  --rail-foreground: 241 248 245;
+
+  /* Global application sizing. These live on :root so teleported UI inherits them. */
+  --mm-text-xs: 0.75rem;
+  --mm-text-sm: 0.875rem;
+  --mm-text-base: 1rem;
+  --mm-text-lg: 1.125rem;
+  --mm-text-xl: 1.25rem;
+  --mm-text-2xl: 1.5rem;
+  --mm-text-3xl: clamp(2rem, 3vw, 2.75rem);
+
+  --mm-space-px: 0.0625rem;
+  --mm-space-0: 0rem;
+  --mm-space-0\.5: 0.125rem;
+  --mm-space-1: 0.25rem;
+  --mm-space-1\.5: 0.375rem;
+  --mm-space-2: 0.5rem;
+  --mm-space-2\.5: 0.625rem;
+  --mm-space-3: 0.75rem;
+  --mm-space-4: 1rem;
+  --mm-space-5: 1.25rem;
+  --mm-space-6: 1.5rem;
+  --mm-space-8: 2rem;
+  --mm-space-10: 2.5rem;
+  --mm-space-16: 4rem;
+
+  --mm-h-8: 2rem;
+  --mm-h-9: 2.25rem;
+  --mm-h-10: 2.5rem;
+  --mm-w-8: 2rem;
+  --mm-w-9: 2.25rem;
+  --mm-w-10: 2.5rem;
+  --mm-min-w-10: 2.5rem;
+
+  --mm-leading-tight: 1.2;
+  --mm-leading-snug: 1.35;
+  --mm-leading-5: 1.375rem;
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --canvas: 251 250 246;
-  --surface: 255 253 248;
-  --field: 246 244 237;
-  --ink: 23 32 27;
-  --line: 23 32 27;
-  --strong: 23 32 27;
-  --strong-foreground: 255 255 255;
-  --moss: 93 123 99;
-  --tomato: 169 77 61;
-  --steel: 66 84 102;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --canvas: 40 42 54;
-  --surface: 66 68 80;
-  --field: 52 55 70;
-  --ink: 248 248 242;
-  --line: 98 114 164;
-  --strong: 248 248 242;
-  --strong-foreground: 40 42 54;
-  --moss: 8 145 8;
-  --tomato: 222 87 53;
-  --steel: 139 233 253;
+  --canvas: 13 19 16;
+  --surface: 22 30 26;
+  --field: 31 42 36;
+  --ink: 237 245 241;
+  --line: 76 96 87;
+  --strong: 91 205 162;
+  --strong-foreground: 9 28 21;
+  --moss: 105 218 175;
+  --tomato: 255 137 111;
+  --steel: 165 185 176;
+  --glow: 52 104 83;
+  --warm: 220 151 90;
+  --rail: 8 14 12;
+  --rail-foreground: 239 247 243;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --canvas: 40 42 54;
-    --surface: 66 68 80;
-    --field: 52 55 70;
-    --ink: 248 248 242;
-    --line: 98 114 164;
-    --strong: 248 248 242;
-    --strong-foreground: 40 42 54;
-    --moss: 8 145 8;
-    --tomato: 222 87 53;
-    --steel: 139 233 253;
+    --canvas: 13 19 16;
+    --surface: 22 30 26;
+    --field: 31 42 36;
+    --ink: 237 245 241;
+    --line: 76 96 87;
+    --strong: 91 205 162;
+    --strong-foreground: 9 28 21;
+    --moss: 105 218 175;
+    --tomato: 255 137 111;
+    --steel: 165 185 176;
+    --glow: 52 104 83;
+    --warm: 220 151 90;
+    --rail: 8 14 12;
+    --rail-foreground: 239 247 243;
   }
-}
-
-/* Scaled sizing tokens — activate via .mm-scaled on a container */
-.mm-scaled {
-  /* Text sizes (Tailwind * 0.8) */
-  --mm-text-xs: 0.6rem;      /* text-xs: 0.75rem → 0.6rem */
-  --mm-text-sm: 0.7rem;      /* text-sm: 0.875rem → 0.7rem */
-  --mm-text-base: 0.8rem;    /* text-base: 1rem → 0.8rem */
-  --mm-text-lg: 0.9rem;      /* text-lg: 1.125rem → 0.9rem */
-  --mm-text-xl: 1rem;        /* text-xl: 1.25rem → 1rem */
-  --mm-text-2xl: 1.2rem;     /* text-2xl: 1.5rem → 1.2rem */
-  --mm-text-3xl: 1.5rem;     /* text-3xl: 1.875rem → 1.5rem */
-
-  /* Spacing (Tailwind rem * 0.8) */
-  --mm-space-px: 0.2rem;         /* px: 0.25rem → 0.2rem */
-  --mm-space-0: 0rem;
-  --mm-space-0\.5: 0.1rem;       /* 0.5: 0.125rem → 0.1rem */
-  --mm-space-1: 0.2rem;          /* 1: 0.25rem → 0.2rem */
-  --mm-space-1\.5: 0.3rem;       /* 1.5: 0.375rem → 0.3rem */
-  --mm-space-2: 0.4rem;          /* 2: 0.5rem → 0.4rem */
-  --mm-space-2\.5: 0.5rem;       /* 2.5: 0.625rem → 0.5rem */
-  --mm-space-3: 0.6rem;          /* 3: 0.75rem → 0.6rem */
-  --mm-space-4: 0.8rem;          /* 4: 1rem → 0.8rem */
-  --mm-space-5: 1rem;            /* 5: 1.25rem → 1rem */
-  --mm-space-6: 1.2rem;          /* 6: 1.5rem → 1.2rem */
-  --mm-space-8: 1.6rem;          /* 8: 2rem → 1.6rem */
-  --mm-space-10: 2rem;           /* 10: 2.5rem → 2rem */
-  --mm-space-16: 3.2rem;         /* 16: 4rem → 3.2rem */
-
-  /* Heights (Tailwind * 0.8) */
-  --mm-h-8: 1.6rem;      /* h-8: 2rem → 1.6rem */
-  --mm-h-9: 1.8rem;      /* h-9: 2.25rem → 1.8rem */
-  --mm-h-10: 2rem;       /* h-10: 2.5rem → 2rem */
-
-  /* Widths (Tailwind * 0.8) */
-  --mm-w-8: 1.6rem;      /* w-8: 2rem → 1.6rem */
-  --mm-w-9: 1.8rem;      /* w-9: 2.25rem → 1.8rem */
-  --mm-w-10: 2rem;       /* w-10: 2.5rem → 2rem */
-  --mm-min-w-10: 2rem;   /* min-w-10: 2.5rem → 2rem */
-
-  /* Line heights */
-  --mm-leading-tight: 1.15;
-  --mm-leading-snug: 1.3;
-  --mm-leading-5: 1.25rem;
 }
 
 /* Text-size utilities */
@@ -123,23 +117,29 @@
 .mm-p-8 { padding: var(--mm-space-8); }
 
 .mm-px-2 { padding-left: var(--mm-space-2); padding-right: var(--mm-space-2); }
+.mm-px-1 { padding-left: var(--mm-space-1); padding-right: var(--mm-space-1); }
 .mm-px-2\.5 { padding-left: var(--mm-space-2\.5); padding-right: var(--mm-space-2\.5); }
 .mm-px-3 { padding-left: var(--mm-space-3); padding-right: var(--mm-space-3); }
 .mm-px-4 { padding-left: var(--mm-space-4); padding-right: var(--mm-space-4); }
 .mm-px-5 { padding-left: var(--mm-space-5); padding-right: var(--mm-space-5); }
 
 .mm-py-1 { padding-top: var(--mm-space-1); padding-bottom: var(--mm-space-1); }
+.mm-py-1\.5 { padding-top: var(--mm-space-1\.5); padding-bottom: var(--mm-space-1\.5); }
 .mm-py-2 { padding-top: var(--mm-space-2); padding-bottom: var(--mm-space-2); }
+.mm-py-2\.5 { padding-top: var(--mm-space-2\.5); padding-bottom: var(--mm-space-2\.5); }
 .mm-py-3 { padding-top: var(--mm-space-3); padding-bottom: var(--mm-space-3); }
 .mm-py-4 { padding-top: var(--mm-space-4); padding-bottom: var(--mm-space-4); }
 .mm-py-5 { padding-top: var(--mm-space-5); padding-bottom: var(--mm-space-5); }
 .mm-py-6 { padding-top: var(--mm-space-6); padding-bottom: var(--mm-space-6); }
 .mm-py-16 { padding-top: var(--mm-space-16); padding-bottom: var(--mm-space-16); }
 
+.mm-pt-2 { padding-top: var(--mm-space-2); }
 .mm-pt-3 { padding-top: var(--mm-space-3); }
 .mm-pt-4 { padding-top: var(--mm-space-4); }
 .mm-pt-5 { padding-top: var(--mm-space-5); }
+.mm-pt-6 { padding-top: var(--mm-space-6); }
 .mm-pb-2 { padding-bottom: var(--mm-space-2); }
+.mm-pb-4 { padding-bottom: var(--mm-space-4); }
 .mm-pl-5 { padding-left: var(--mm-space-5); }
 
 .mm-gap-1 { gap: var(--mm-space-1); }
@@ -148,6 +148,7 @@
 .mm-gap-4 { gap: var(--mm-space-4); }
 .mm-gap-5 { gap: var(--mm-space-5); }
 .mm-gap-6 { gap: var(--mm-space-6); }
+.mm-gap-8 { gap: var(--mm-space-8); }
 .mm-gap-x-2 { column-gap: var(--mm-space-2); }
 .mm-gap-x-4 { column-gap: var(--mm-space-4); }
 .mm-gap-y-1 { row-gap: var(--mm-space-1); }
@@ -158,12 +159,14 @@
 .mm-mt-3 { margin-top: var(--mm-space-3); }
 .mm-mt-4 { margin-top: var(--mm-space-4); }
 .mm-mt-5 { margin-top: var(--mm-space-5); }
+.mm-mt-6 { margin-top: var(--mm-space-6); }
 
 .mm-space-y-2 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(var(--mm-space-2) * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(var(--mm-space-2) * var(--tw-space-y-reverse)); }
 .mm-space-y-3 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(var(--mm-space-3) * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(var(--mm-space-3) * var(--tw-space-y-reverse)); }
 .mm-space-y-4 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(var(--mm-space-4) * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(var(--mm-space-4) * var(--tw-space-y-reverse)); }
 .mm-space-y-5 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(var(--mm-space-5) * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(var(--mm-space-5) * var(--tw-space-y-reverse)); }
 .mm-space-y-6 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(var(--mm-space-6) * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(var(--mm-space-6) * var(--tw-space-y-reverse)); }
+.mm-space-y-10 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(var(--mm-space-10) * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(var(--mm-space-10) * var(--tw-space-y-reverse)); }
 
 /* Size utilities */
 .mm-h-8 { height: var(--mm-h-8); }
@@ -175,16 +178,16 @@
 .mm-min-w-10 { min-width: var(--mm-min-w-10); }
 
 /* Container-width utilities */
-.mm-shell-container { width: 100%; max-width: 100rem; margin-inline: auto; }
-.mm-max-w-md { max-width: 22.4rem; }      /* 28rem * 0.8 = 22.4rem */
-.mm-max-w-lg { max-width: 25.6rem; }      /* 32rem * 0.8 = 25.6rem */
-.mm-max-w-xl { max-width: 28.8rem; }      /* 36rem * 0.8 = 28.8rem */
-.mm-max-w-2xl { max-width: 33.6rem; }     /* 42rem * 0.8 = 33.6rem */
-.mm-max-w-3xl { max-width: 38.4rem; }     /* 48rem * 0.8 = 38.4rem */
-.mm-max-w-4xl { max-width: 44.8rem; }     /* 56rem * 0.8 = 44.8rem */
-.mm-max-w-5xl { max-width: 51.2rem; }     /* 64rem * 0.8 = 51.2rem */
-.mm-max-w-6xl { max-width: 57.6rem; }     /* 72rem * 0.8 = 57.6rem */
-.mm-max-w-7xl { max-width: 64rem; }       /* 80rem * 0.8 = 64rem */
+.mm-shell-container { width: 100%; max-width: 86rem; margin-inline: auto; }
+.mm-max-w-md { max-width: 28rem; }
+.mm-max-w-lg { max-width: 32rem; }
+.mm-max-w-xl { max-width: 36rem; }
+.mm-max-w-2xl { max-width: 42rem; }
+.mm-max-w-3xl { max-width: 48rem; }
+.mm-max-w-4xl { max-width: 56rem; }
+.mm-max-w-5xl { max-width: 64rem; }
+.mm-max-w-6xl { max-width: 72rem; }
+.mm-max-w-7xl { max-width: 80rem; }
 .mm-max-w-full { max-width: 100%; }
 
 /* Line-height utilities */
@@ -198,8 +201,189 @@ body {
   margin: 0;
   background: rgb(var(--canvas));
   color: rgb(var(--ink));
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Inter Variable", Inter, "Segoe UI Variable", "SF Pro Text", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
-button, input, textarea, select { font: inherit; }
+button, input, textarea, select { color: inherit; font: inherit; }
 button:disabled { cursor: not-allowed; opacity: 0.55; }
-.focus-ring { @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-moss; }
+.focus-ring:focus-visible {
+  outline: 3px solid rgb(var(--moss) / 0.3);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgb(var(--moss) / 0.22);
+}
+
+/* Keep muted supporting copy readable at normal text sizes in both themes. */
+.text-ink\/50,
+.text-ink\/55,
+.text-ink\/60 {
+  color: rgb(var(--ink) / 0.68);
+}
+
+.mm-app-shell {
+  isolation: isolate;
+  min-height: 100vh;
+  background: rgb(var(--canvas));
+}
+
+@media (min-width: 1024px) {
+  .mm-app-shell {
+    display: grid;
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+  }
+}
+
+.mm-display {
+  font-family: "Inter Variable", Inter, "Segoe UI Variable", "SF Pro Display", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-kerning: normal;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  letter-spacing: -0.025em;
+}
+
+.mm-scrollbar-none {
+  scrollbar-width: none;
+}
+
+.mm-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.mm-page {
+  width: 100%;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 170ms ease, transform 170ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.mm-panel {
+  border: 1px solid rgb(var(--line) / 0.9);
+  border-radius: 1rem;
+  background: rgb(var(--surface));
+  box-shadow: 0 1px 2px rgb(var(--ink) / 0.05), 0 12px 32px rgb(var(--ink) / 0.06);
+}
+
+.mm-card {
+  border: 1px solid rgb(var(--line) / 0.82);
+  border-radius: 1rem;
+  background: rgb(var(--surface));
+  box-shadow: 0 1px 2px rgb(var(--ink) / 0.04), 0 8px 24px rgb(var(--ink) / 0.05);
+}
+
+.mm-interactive {
+  transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.mm-interactive:hover {
+  border-color: rgb(var(--moss) / 0.45);
+  box-shadow: 0 10px 28px rgb(var(--ink) / 0.08);
+  transform: translateY(-1px);
+}
+
+.mm-button-primary,
+.mm-button-secondary {
+  min-height: 2.75rem;
+  border-radius: 0.875rem;
+  letter-spacing: -0.01em;
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.mm-button-primary {
+  border: 1px solid rgb(var(--strong));
+  background: rgb(var(--strong));
+  color: rgb(var(--strong-foreground));
+  box-shadow: 0 1px 2px rgb(var(--ink) / 0.14), 0 7px 18px rgb(var(--strong) / 0.2);
+}
+
+.mm-button-secondary {
+  border: 1px solid rgb(var(--line));
+  background: rgb(var(--surface));
+  color: rgb(var(--ink));
+  box-shadow: 0 1px 2px rgb(var(--ink) / 0.05);
+}
+
+.mm-button-primary:hover:not(:disabled),
+.mm-button-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.mm-button-primary:hover:not(:disabled) {
+  background: rgb(var(--moss));
+  border-color: rgb(var(--moss));
+  box-shadow: 0 2px 4px rgb(var(--ink) / 0.14), 0 10px 24px rgb(var(--strong) / 0.24);
+}
+
+.mm-button-secondary:hover:not(:disabled) {
+  border-color: rgb(var(--moss) / 0.45);
+  background: rgb(var(--field));
+  box-shadow: 0 4px 12px rgb(var(--ink) / 0.07);
+}
+
+.mm-button-primary:active:not(:disabled),
+.mm-button-secondary:active:not(:disabled) {
+  box-shadow: 0 1px 2px rgb(var(--ink) / 0.08);
+  transform: translateY(0) scale(0.99);
+}
+
+.mm-field {
+  min-height: 2.75rem;
+  border: 1px solid rgb(var(--line));
+  border-radius: 0.875rem;
+  background: rgb(var(--surface));
+  box-shadow: 0 1px 2px rgb(var(--ink) / 0.025);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.mm-field:hover {
+  border-color: rgb(var(--steel) / 0.7);
+}
+
+.mm-field:focus {
+  border-color: rgb(var(--moss));
+  box-shadow: 0 0 0 4px rgb(var(--moss) / 0.14), 0 1px 2px rgb(var(--ink) / 0.04);
+  outline: none;
+}
+
+.mm-field::placeholder {
+  color: rgb(var(--steel) / 0.72);
+}
+
+dialog[open] {
+  animation: mm-dialog-enter 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+dialog::backdrop {
+  animation: mm-backdrop-enter 180ms ease both;
+}
+
+@keyframes mm-dialog-enter {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes mm-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

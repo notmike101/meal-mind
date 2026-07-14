@@ -27,7 +27,7 @@ async function commit() {
     <button
       type="button"
       :disabled="busy"
-      class="focus-ring inline-flex items-center mm-gap-2 rounded-md bg-strong mm-px-4 mm-py-2 mm-text-sm font-semibold text-strong-foreground hover:bg-strong/90"
+      class="focus-ring mm-button-primary inline-flex items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold"
       @click="commit"
     >
       <RefreshCw v-if="busy" :size="16" class="animate-spin" aria-hidden="true" />

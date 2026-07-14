@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { callOnce } from "#app";
+import { Palette } from "@lucide/vue";
 import { useSettingsStore } from "~/stores/settings";
 
 const settings = useSettingsStore();
@@ -7,12 +8,19 @@ await callOnce("settings-data", () => settings.fetchSettings(), { mode: "navigat
 </script>
 
 <template>
-  <div class="mm-space-y-6">
-    <PageHeading eyebrow="Settings" title="Local planner settings" description="Automation, AI access, preferences, portions, and pantry staples." />
-    <section class="flex flex-col mm-gap-3 rounded-md bg-surface mm-p-5 shadow-line sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 class="font-semibold">Appearance</h2>
-        <p class="mm-mt-1 mm-text-sm text-ink/65">Theme</p>
+  <div class="space-y-8">
+    <section>
+      <PageHeading eyebrow="Settings" title="Local planner settings" description="Tune your planning experience, AI connection, portions, and pantry defaults." />
+    </section>
+    <section class="flex flex-col gap-5 rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div class="flex items-center gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-field text-moss">
+          <Palette :size="20" aria-hidden="true" />
+        </span>
+        <div>
+          <h2 class="text-lg font-semibold text-ink">Appearance</h2>
+          <p class="mt-1 text-sm text-ink/60">Match your workspace or choose a fixed theme.</p>
+        </div>
       </div>
       <SettingsThemeToggle />
     </section>

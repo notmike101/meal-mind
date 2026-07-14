@@ -19,26 +19,26 @@ function openDetails(event: globalThis.MouseEvent, meal: MealDto) {
 <template>
   <div class="mm-space-y-6">
     <section v-for="date in dates" :key="date" class="mm-space-y-3">
-      <h2 class="border-b border-ink/10 mm-pb-2 mm-text-xl font-semibold">{{ formatDisplayDate(date) }}</h2>
-      <div v-if="plan.skippedDates.includes(date)" class="rounded-md border border-dashed border-ink/15 bg-field mm-p-5 mm-text-sm font-medium text-ink/60">
+      <h2 class="mm-text-lg font-bold">{{ formatDisplayDate(date) }}</h2>
+      <div v-if="plan.skippedDates.includes(date)" class="rounded-2xl border border-dashed border-line/25 bg-field mm-p-5 mm-text-sm font-medium text-ink/60">
         Skipped
       </div>
       <div v-else class="grid mm-gap-4 md:grid-cols-2">
         <article
           v-for="meal in plan.meals.filter((candidate) => candidate.date === date)"
           :key="meal.id"
-          class="overflow-hidden rounded-xl border border-ink/10 bg-surface shadow-sm"
+          class="overflow-hidden rounded-2xl border border-line/20 bg-surface shadow-sm transition-shadow hover:shadow-lg"
         >
           <a
             v-if="recipeFor(meal.recipeId)"
             :href="`/recipes/${meal.recipeId}`"
-            class="focus-ring grid min-h-full rounded-xl transition hover:bg-field/40 sm:grid-cols-[180px_1fr]"
+            class="focus-ring group grid min-h-full rounded-2xl transition-colors hover:bg-field/40 sm:grid-cols-[180px_1fr]"
             @click.exact.left.prevent="openDetails($event, meal)"
           >
             <PlanRecipePhoto :image-url="recipeFor(meal.recipeId)?.imageUrl ?? null" :title="meal.recipeTitleSnapshot" />
             <div class="flex flex-col mm-p-4">
               <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
-              <h3 class="mm-mt-1 mm-text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h3>
+              <h3 class="mm-display mm-mt-1 mm-text-xl font-bold leading-tight transition-colors group-hover:text-moss">{{ meal.recipeTitleSnapshot }}</h3>
               <p v-if="meal.notes" class="mm-mt-2 line-clamp-2 mm-text-sm text-ink/60">{{ meal.notes }}</p>
               <div class="mm-mt-4 flex flex-wrap mm-gap-4 mm-text-sm text-ink/65">
                 <span class="inline-flex items-center mm-gap-1">

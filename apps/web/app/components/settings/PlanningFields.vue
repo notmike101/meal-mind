@@ -6,10 +6,10 @@ const varietyRules = defineModel<string>("varietyRules", { required: true });
 <template>
   <label class="block mm-space-y-2">
     <span class="mm-text-sm font-medium">Planning preferences</span>
-    <textarea v-model="preferences" rows="4" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2 text-ink" />
+    <textarea v-model="preferences" rows="4" class="focus-ring mm-field w-full mm-px-3 mm-py-2 text-ink" />
   </label>
   <label class="block mm-space-y-2">
     <span class="mm-text-sm font-medium">Variety rules</span>
-    <textarea v-model="varietyRules" rows="3" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2 text-ink" />
+    <textarea v-model="varietyRules" rows="3" class="focus-ring mm-field w-full mm-px-3 mm-py-2 text-ink" />
   </label>
 </template>

@@ -8,13 +8,13 @@ defineProps<{ models: string[]; authConfigured: boolean; modelsLoaded: boolean }
 <template>
   <label class="mm-space-y-2">
     <span class="mm-text-sm font-medium">AI base URL</span>
-    <input v-model="aiBaseUrl" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2 text-ink" />
+    <input v-model="aiBaseUrl" class="focus-ring mm-field w-full mm-px-3 mm-py-2 text-ink" />
   </label>
   <label class="mm-space-y-2">
     <span class="mm-text-sm font-medium">AI model</span>
     <select
       v-model="aiModel"
-      class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2 text-ink"
+      class="focus-ring mm-field w-full mm-px-3 mm-py-2 text-ink"
     >
       <option value="" disabled>{{ modelsLoaded ? "Select a reported model" : "Load models to change selection" }}</option>
       <option v-for="model in models" :key="model" :value="model">{{ model }}</option>
@@ -25,6 +25,6 @@ defineProps<{ models: string[]; authConfigured: boolean; modelsLoaded: boolean }
   </label>
   <label class="mm-space-y-2">
     <span class="mm-text-sm font-medium">Timezone</span>
-    <input v-model="timezone" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2 text-ink" />
+    <input v-model="timezone" class="focus-ring mm-field w-full mm-px-3 mm-py-2 text-ink" />
   </label>
 </template>

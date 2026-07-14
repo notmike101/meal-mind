@@ -42,7 +42,7 @@ describe("RecipeCard", () => {
 
     expect(image.attributes("src")).toBe(recipe.imageUrl);
     expect(image.attributes("loading")).toBe("lazy");
-    expect(wrapper.get("p").classes()).toContain("line-clamp-3");
+    expect(wrapper.get("p").classes()).toContain("line-clamp-2");
   });
 
   it("uses the photo fallback when an image is unavailable", () => {
