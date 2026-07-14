@@ -88,6 +88,7 @@ export async function runJsonPrompt<T>(input: {
   user: string;
   schema: z.ZodType<T>;
   logEvent: AiEventLogger;
+  maxTokens?: number;
 }) {
   const requestJson = JSON.stringify({
     system: input.system,
@@ -101,6 +102,7 @@ export async function runJsonPrompt<T>(input: {
       model: input.settings.aiModel,
       temperature: 0.2,
       response_format: { type: "text" },
+      ...(input.maxTokens === undefined ? {} : { max_tokens: input.maxTokens }),
       messages: [
         { role: "system", content: input.system },
         { role: "user", content: input.user },

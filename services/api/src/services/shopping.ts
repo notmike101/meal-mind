@@ -54,6 +54,7 @@ export async function generateShoppingList(planId: string) {
       user: messages.user,
       schema: shoppingListDraftSchema,
       logEvent: createAiEvent,
+      maxTokens: 2048,
     }).catch((error: unknown) => {
       if (error instanceof AppError && error.code === "AI_VALIDATION_FAILED" && attempt === 0) {
         validationErrors = ["The prior response did not match the required JSON schema."];
