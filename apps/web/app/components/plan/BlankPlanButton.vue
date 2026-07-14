@@ -22,10 +22,10 @@ async function createBlank() {
 </script>
 
 <template>
-  <div class="space-y-2">
-    <button type="button" :disabled="busy" class="focus-ring inline-flex items-center gap-2 rounded-md border border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-field" @click="createBlank">
+  <div class="mm-space-y-2">
+    <button type="button" :disabled="busy" class="focus-ring inline-flex items-center mm-gap-2 rounded-md border border-ink/15 mm-px-4 mm-py-2 mm-text-sm font-semibold hover:bg-field" @click="createBlank">
       <Plus :size="16" aria-hidden="true" /> {{ busy ? "Creating" : "Start blank plan" }}
     </button>
-    <p v-if="error" role="alert" class="text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" role="alert" class="mm-text-sm text-tomato">{{ error }}</p>
   </div>
 </template>

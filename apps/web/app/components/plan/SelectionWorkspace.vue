@@ -7,6 +7,7 @@ import { usePlanningStore } from "~/stores/planning";
 import { formatDisplayDate, getDatesInWeek } from "~/utils/dates";
 
 const props = defineProps<{ plan: MealPlanDto; recipes: RecipeSummaryDto[]; defaultServings: number }>();
+const emit = defineEmits<{ openDetails: [recipeId: string, trigger: globalThis.HTMLElement] }>();
 const planning = usePlanningStore();
 const dates = computed(() => getDatesInWeek(props.plan.weekStart));
 const availableMeals = computed(() => props.plan.meals.filter((meal) => !props.plan.skippedDates.includes(meal.date)));
@@ -159,10 +160,14 @@ async function removeActiveMeal() {
 function mealLabel(meal: MealDto) {
   return `${formatDisplayDate(meal.date)} ${meal.slot || "Meal"}`;
 }
+
+function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
+  emit("openDetails", recipeId, trigger);
+}
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="mm-space-y-6">
     <PlanScheduleStrip
       :plan="plan"
       :active-meal-id="activeMealId"
@@ -173,78 +178,78 @@ function mealLabel(meal: MealDto) {
       @toggle-day="toggleDay"
     />
 
-    <section v-if="addingDate" class="rounded-xl border border-moss/25 bg-surface p-4 shadow-sm sm:p-5">
-      <p class="text-xs font-semibold uppercase tracking-wide text-moss">Adding to {{ formatDisplayDate(addingDate) }}</p>
-      <h2 class="mt-1 text-xl font-semibold">Choose a recipe</h2>
-      <div class="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-        <label class="space-y-2">
-          <span class="text-sm font-medium">Meal slot <span class="font-normal text-ink/50">(optional)</span></span>
-          <input v-model="addSlot" list="meal-slot-suggestions" maxlength="50" placeholder="Breakfast, Dinner, Post-workout…" class="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2" />
+    <section v-if="addingDate" class="rounded-xl border border-moss/25 bg-surface mm-p-4 shadow-sm sm:p-5">
+      <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">Adding to {{ formatDisplayDate(addingDate) }}</p>
+      <h2 class="mm-mt-1 mm-text-xl font-semibold">Choose a recipe</h2>
+      <div class="mm-mt-4 grid mm-gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <label class="mm-space-y-2">
+          <span class="mm-text-sm font-medium">Meal slot <span class="font-normal text-ink/50">(optional)</span></span>
+          <input v-model="addSlot" list="meal-slot-suggestions" maxlength="50" placeholder="Breakfast, Dinner, Post-workout…" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2" />
         </label>
         <PlanServingsStepper :servings="addServings" :disabled="busy" @update="addServings = $event" />
       </div>
     </section>
 
-    <section v-else-if="activeMeal" class="rounded-xl border border-ink/10 bg-surface p-4 shadow-sm sm:p-5">
-      <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+    <section v-else-if="activeMeal" class="rounded-xl border border-ink/10 bg-surface mm-p-4 shadow-sm sm:p-5">
+      <div class="flex flex-col mm-gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-semibold uppercase tracking-wide text-moss">Editing {{ mealLabel(activeMeal) }}</p>
-          <h2 class="mt-1 truncate text-xl font-semibold">{{ activeMeal.recipeTitleSnapshot }}</h2>
-          <p v-if="activeMeal.notes" class="mt-1 line-clamp-2 text-sm text-ink/60">{{ activeMeal.notes }}</p>
-          <p v-if="!currentRecipe" class="mt-2 inline-flex items-center gap-2 text-sm text-tomato">
+          <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">Editing {{ mealLabel(activeMeal) }}</p>
+          <h2 class="mm-mt-1 truncate mm-text-xl font-semibold">{{ activeMeal.recipeTitleSnapshot }}</h2>
+          <p v-if="activeMeal.notes" class="mm-mt-1 line-clamp-2 mm-text-sm text-ink/60">{{ activeMeal.notes }}</p>
+          <p v-if="!currentRecipe" class="mm-mt-2 inline-flex items-center mm-gap-2 mm-text-sm text-tomato">
             <TriangleAlert :size="16" aria-hidden="true" /> This recipe is no longer in the library. Choose a replacement below.
           </p>
-          <div class="mt-4 grid gap-3 sm:grid-cols-2">
-            <label class="space-y-2">
-              <span class="text-sm font-medium">Date</span>
-              <select v-model="editDate" class="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2">
+          <div class="mm-mt-4 grid mm-gap-3 sm:grid-cols-2">
+            <label class="mm-space-y-2">
+              <span class="mm-text-sm font-medium">Date</span>
+              <select v-model="editDate" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2">
                 <option v-for="date in dates" :key="date" :value="date">{{ formatDisplayDate(date) }}</option>
               </select>
             </label>
-            <label class="space-y-2">
-              <span class="text-sm font-medium">Meal slot <span class="font-normal text-ink/50">(optional)</span></span>
-              <input v-model="editSlot" list="meal-slot-suggestions" maxlength="50" placeholder="No slot" class="focus-ring w-full rounded-md border border-ink/15 bg-surface px-3 py-2" />
+            <label class="mm-space-y-2">
+              <span class="mm-text-sm font-medium">Meal slot <span class="font-normal text-ink/50">(optional)</span></span>
+              <input v-model="editSlot" list="meal-slot-suggestions" maxlength="50" placeholder="No slot" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-px-3 mm-py-2" />
             </label>
           </div>
         </div>
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div class="flex flex-col mm-gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <PlanServingsStepper :servings="activeMeal.servings" :disabled="busy" @update="updateServings" />
-          <button type="button" :disabled="busy" class="focus-ring inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-field" @click="saveDetails">
+          <button type="button" :disabled="busy" class="focus-ring inline-flex min-h-10 items-center justify-center mm-gap-2 rounded-md border border-ink/15 mm-px-4 mm-py-2 mm-text-sm font-semibold hover:bg-field" @click="saveDetails">
             <Save :size="16" aria-hidden="true" /> Save details
           </button>
-          <button type="button" :disabled="busy || recipes.length === 0" class="focus-ring inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-ink/15 px-4 py-2 text-sm font-semibold hover:bg-field" @click="chooseWithAi">
+          <button type="button" :disabled="busy || recipes.length === 0" class="focus-ring inline-flex min-h-10 items-center justify-center mm-gap-2 rounded-md border border-ink/15 mm-px-4 mm-py-2 mm-text-sm font-semibold hover:bg-field" @click="chooseWithAi">
             <RefreshCw :size="16" :class="busy ? 'animate-spin' : ''" aria-hidden="true" /> AI pick
           </button>
-          <button type="button" :disabled="busy" class="focus-ring inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-tomato/30 px-4 py-2 text-sm font-semibold text-tomato hover:bg-tomato/5" @click="removeActiveMeal">
+          <button type="button" :disabled="busy" class="focus-ring inline-flex min-h-10 items-center justify-center mm-gap-2 rounded-md border border-tomato/30 mm-px-4 mm-py-2 mm-text-sm font-semibold text-tomato hover:bg-tomato/5" @click="removeActiveMeal">
             <Trash2 :size="16" aria-hidden="true" /> Remove
           </button>
         </div>
       </div>
     </section>
 
-    <section v-else class="rounded-md border border-dashed border-ink/20 bg-surface p-6 text-center text-ink/65">
+    <section v-else class="rounded-md border border-dashed border-ink/20 bg-surface mm-p-6 text-center text-ink/65">
       Choose “Add meal” under any day to start planning.
     </section>
 
-    <p v-if="error" role="alert" class="text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" role="alert" class="mm-text-sm text-tomato">{{ error }}</p>
 
     <section v-if="addingDate || activeMeal" aria-labelledby="recipe-catalog-heading">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="flex flex-col mm-gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-sm font-medium uppercase tracking-wide text-moss">Recipe catalog</p>
-          <h2 id="recipe-catalog-heading" class="mt-1 text-2xl font-semibold">{{ addingDate ? "Choose a meal" : "Change recipe" }}</h2>
+          <p class="mm-text-sm font-medium uppercase tracking-wide text-moss">Recipe catalog</p>
+          <h2 id="recipe-catalog-heading" class="mm-mt-1 mm-text-2xl font-semibold">{{ addingDate ? "Choose a meal" : "Change recipe" }}</h2>
         </div>
         <label class="relative block w-full lg:max-w-md">
           <span class="sr-only">Search recipes</span>
           <Search class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/45" :size="19" aria-hidden="true" />
-          <input v-model="search" type="search" placeholder="Search recipes" class="focus-ring w-full rounded-md border border-ink/15 bg-surface py-3 pl-10 pr-4 text-sm" />
+          <input v-model="search" type="search" placeholder="Search recipes" class="focus-ring w-full rounded-md border border-ink/15 bg-surface mm-py-3 pl-10 pr-4 mm-text-sm" />
         </label>
       </div>
-      <div v-if="availableTags.length" class="mt-4 flex gap-2 overflow-x-auto pb-2" aria-label="Recipe tags">
-        <button type="button" :aria-pressed="activeTag === null" class="focus-ring shrink-0 rounded-full px-4 py-2 text-sm font-medium" :class="activeTag === null ? 'bg-strong text-strong-foreground' : 'bg-field hover:bg-moss/10'" @click="activeTag = null">All</button>
-        <button v-for="tag in availableTags" :key="tag" type="button" :aria-pressed="activeTag === tag" class="focus-ring shrink-0 rounded-full px-4 py-2 text-sm font-medium" :class="activeTag === tag ? 'bg-strong text-strong-foreground' : 'bg-field hover:bg-moss/10'" @click="activeTag = tag">{{ tag }}</button>
+      <div v-if="availableTags.length" class="mm-mt-4 flex mm-gap-2 overflow-x-auto mm-pb-2" aria-label="Recipe tags">
+        <button type="button" :aria-pressed="activeTag === null" class="focus-ring shrink-0 rounded-full mm-px-4 mm-py-2 mm-text-sm font-medium" :class="activeTag === null ? 'bg-strong text-strong-foreground' : 'bg-field hover:bg-moss/10'" @click="activeTag = null">All</button>
+        <button v-for="tag in availableTags" :key="tag" type="button" :aria-pressed="activeTag === tag" class="focus-ring shrink-0 rounded-full mm-px-4 mm-py-2 mm-text-sm font-medium" :class="activeTag === tag ? 'bg-strong text-strong-foreground' : 'bg-field hover:bg-moss/10'" @click="activeTag = tag">{{ tag }}</button>
       </div>
-      <div v-if="filteredRecipes.length" class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <div v-if="filteredRecipes.length" class="mm-mt-5 grid mm-gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         <PlanRecipeSelectionCard
           v-for="recipe in filteredRecipes"
           :key="recipe.id"
@@ -254,9 +259,10 @@ function mealLabel(meal: MealDto) {
           :action-label="addingDate ? `Add to ${formatDisplayDate(addingDate)}` : 'Choose recipe'"
           :disabled="busy"
           @choose="chooseRecipe(recipe.id)"
+          @open-details="openRecipeDetails"
         />
       </div>
-      <div v-else class="mt-5 rounded-xl border border-dashed border-ink/20 bg-surface p-8 text-center text-ink/65">No recipes match the current search and tag filters.</div>
+      <div v-else class="mm-mt-5 rounded-xl border border-dashed border-ink/20 bg-surface mm-p-8 text-center text-ink/65">No recipes match the current search and tag filters.</div>
     </section>
 
     <datalist id="meal-slot-suggestions">

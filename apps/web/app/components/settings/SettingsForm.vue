@@ -22,12 +22,11 @@ const status = ref<string | null>(null);
 const busy = ref(false);
 const models = ref<string[]>([props.settings.aiModel]);
 const catalogUrl = ref<string | null>(null);
-const initialAiBaseUrl = props.settings.aiBaseUrl;
 
 const modelsLoaded = computed(() => catalogUrl.value === form.aiBaseUrl);
 const canSave = computed(() => {
-  if (form.aiBaseUrl === initialAiBaseUrl && !modelsLoaded.value) return Boolean(form.aiModel);
-  return modelsLoaded.value && models.value.includes(form.aiModel);
+  if (!form.aiBaseUrl.trim() || !form.aiModel.trim()) return false;
+  return !modelsLoaded.value || models.value.includes(form.aiModel);
 });
 
 function payload(): SettingsUpdateRequest {
@@ -44,7 +43,7 @@ async function save(showMessage = true) {
 
 async function runSave() {
   if (!canSave.value) {
-    status.value = "Load models and select one before saving this AI endpoint.";
+    status.value = "Enter an AI base URL and model, or select a model reported by the endpoint.";
     return;
   }
   busy.value = true;
@@ -81,8 +80,8 @@ async function testAi() {
 </script>
 
 <template>
-  <div class="space-y-5 rounded-md bg-surface p-5 shadow-line">
-    <div class="grid gap-4 md:grid-cols-2">
+  <div class="mm-space-y-5 rounded-md bg-surface mm-p-5 shadow-line">
+    <div class="grid mm-gap-4 md:grid-cols-2">
       <SettingsConnectionFields
         v-model:ai-base-url="form.aiBaseUrl"
         v-model:ai-model="form.aiModel"
@@ -103,6 +102,6 @@ async function testAi() {
     <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
     <SettingsPantryField v-model="form.pantryStaples" />
     <SettingsFormActions :busy="busy" :can-save="canSave" @save="runSave" @test-ai="testAi" />
-    <p v-if="status" class="text-sm text-ink/70">{{ status }}</p>
+    <p v-if="status" class="mm-text-sm text-ink/70">{{ status }}</p>
   </div>
 </template>

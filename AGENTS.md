@@ -11,7 +11,6 @@ The repo is an npm workspace monorepo:
 - `apps/web`: Nuxt 4/Vue app. User-facing SSR UI and Nitro `/api/*` proxies.
 - `services/api`: Fastify REST API. Owns writes, workflows, DB initialization, and AI calls.
 - `services/mcp`: MCP stdio/HTTP server. Uses the API instead of importing DB/domain write logic directly.
-- `services/ai-gateway`: Fastify proxy from containers to LM Studio/OpenAI-compatible local model.
 - `packages/contracts`: Shared DTOs, schemas, API response types, and app errors.
 - `packages/domain`: Pure domain logic: recipes, weeks, locks, pantry, portions, shopping helpers.
 - `packages/db`: Drizzle/Postgres schema, DB client, and repositories.
@@ -29,7 +28,6 @@ Standard local ports:
 - Web: `http://127.0.0.1:3100`
 - API: `http://127.0.0.1:3101`
 - MCP HTTP: `http://127.0.0.1:3102/api/mcp`
-- AI gateway: `http://127.0.0.1:3103`
 - Postgres host port: `54320`
 
 Docker Compose service names:
@@ -38,7 +36,6 @@ Docker Compose service names:
 - `api`
 - `mcp`
 - `web`
-- `ai-gateway`
 
 Container names may still include the old directory-derived Compose project prefix if the checkout folder is named `HelloQwen`. Treat that as a Compose naming artifact, not an application name.
 
@@ -99,10 +96,9 @@ Copy `.env.example` for Docker/local env defaults when needed. Key variables:
 - `MEALMIND_RECIPE_ROOT`
 - `MEALMIND_DOCS_ROOT`
 - `MEALMIND_AI_BASE_URL`
-- `OPENAI_COMPATIBLE_UPSTREAM_URL`
 - `OPENAI_COMPATIBLE_API_KEY` (optional bearer token; never commit a real value)
 
-For Docker, a host provider such as LM Studio may need a LAN-reachable URL rather than `host.docker.internal`. Check `docs/AI_CONFIGURATION.md` and `docs/HANDOFF.md` before changing AI connectivity assumptions.
+For Docker, a host provider such as LM Studio may need a LAN-reachable direct URL rather than `host.docker.internal`. Check `docs/AI_CONFIGURATION.md` and `docs/HANDOFF.md` before changing AI connectivity assumptions.
 
 Do not commit local `.env`, `apps/web/.env.local`, SQLite data, build output, test output, `node_modules`, or other ignored local artifacts.
 

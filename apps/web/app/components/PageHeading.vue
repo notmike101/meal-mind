@@ -8,8 +8,8 @@ defineProps<{
 
 <template>
   <section>
-    <p class="text-sm font-medium uppercase tracking-wide text-moss">{{ eyebrow }}</p>
-    <h1 class="mt-2 text-3xl font-semibold tracking-normal text-ink">{{ title }}</h1>
-    <p class="mt-2 max-w-3xl text-ink/70">{{ description }}</p>
+    <p class="mm-text-sm font-medium uppercase tracking-wide text-moss">{{ eyebrow }}</p>
+    <h1 class="mm-mt-2 mm-text-3xl font-semibold tracking-normal text-ink">{{ title }}</h1>
+    <p class="mm-mt-2 mm-max-w-3xl text-ink/70">{{ description }}</p>
   </section>
 </template>

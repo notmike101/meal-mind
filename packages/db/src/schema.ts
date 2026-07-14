@@ -14,7 +14,7 @@ import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 export const settings = pgTable("settings", {
   id: integer("id").primaryKey(),
   timezone: text("timezone").notNull().default("America/Chicago"),
-  aiBaseUrl: text("ai_base_url").notNull().default("http://ai-gateway:8080/v1"),
+  aiBaseUrl: text("ai_base_url").notNull().default("http://host.docker.internal:1234/v1"),
   aiModel: text("ai_model").notNull().default("qwen3.6-35b-a3b"),
   planningPreferences: text("planning_preferences").notNull().default(""),
   planningVarietyRules: text("planning_variety_rules")

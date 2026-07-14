@@ -11,7 +11,7 @@ const preferences: Array<{ value: ThemePreference; label: string; icon: typeof M
 </script>
 
 <template>
-  <div class="flex h-10 items-center rounded-md border border-ink/10 bg-field p-1" aria-label="Theme preference">
+  <div class="flex mm-h-10 items-center rounded-md border border-ink/10 bg-field mm-p-1" aria-label="Theme preference">
     <button
       v-for="item in preferences"
       :key="item.value"
@@ -19,9 +19,9 @@ const preferences: Array<{ value: ThemePreference; label: string; icon: typeof M
       :aria-label="item.label"
       :aria-pressed="theme.preference === item.value"
       :title="item.label"
-      :class="theme.preference === item.value
-        ? 'focus-ring flex h-8 w-8 items-center justify-center rounded-md bg-surface text-ink shadow-line'
-        : 'focus-ring flex h-8 w-8 items-center justify-center rounded-md text-ink/60 hover:bg-surface hover:text-ink'"
+        :class="theme.preference === item.value
+          ? 'focus-ring flex mm-h-8 mm-w-8 items-center justify-center rounded-md bg-surface text-ink shadow-line'
+          : 'focus-ring flex mm-h-8 mm-w-8 items-center justify-center rounded-md text-ink/60 hover:bg-surface hover:text-ink'"
       @click="theme.update(item.value)"
     >
       <component :is="item.icon" :size="16" aria-hidden="true" />

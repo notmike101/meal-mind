@@ -23,17 +23,17 @@ async function commit() {
 </script>
 
 <template>
-  <div class="space-y-2">
+  <div class="mm-space-y-2">
     <button
       type="button"
       :disabled="busy"
-      class="focus-ring inline-flex items-center gap-2 rounded-md bg-strong px-4 py-2 text-sm font-semibold text-strong-foreground hover:bg-strong/90"
+      class="focus-ring inline-flex items-center mm-gap-2 rounded-md bg-strong mm-px-4 mm-py-2 mm-text-sm font-semibold text-strong-foreground hover:bg-strong/90"
       @click="commit"
     >
       <RefreshCw v-if="busy" :size="16" class="animate-spin" aria-hidden="true" />
       <Lock v-else :size="16" aria-hidden="true" />
       {{ busy ? "Committing" : "Commit plan" }}
     </button>
-    <p v-if="error" class="text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" class="mm-text-sm text-tomato">{{ error }}</p>
   </div>
 </template>

@@ -6,11 +6,11 @@ const emit = defineEmits<{ save: []; testAi: [] }>();
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-2">
+  <div class="flex flex-wrap mm-gap-2">
     <button
       type="button"
       :disabled="busy || !canSave"
-      class="focus-ring inline-flex items-center gap-2 rounded-md bg-moss px-4 py-2 text-sm font-semibold text-white"
+      class="focus-ring inline-flex items-center mm-gap-2 rounded-md bg-moss mm-px-4 mm-py-2 mm-text-sm font-semibold text-white"
       @click="emit('save')"
     >
       <Save :size="16" aria-hidden="true" /> Save
@@ -18,7 +18,7 @@ const emit = defineEmits<{ save: []; testAi: [] }>();
     <button
       type="button"
       :disabled="busy"
-      class="focus-ring inline-flex items-center gap-2 rounded-md border border-ink/15 px-4 py-2 text-sm font-medium"
+      class="focus-ring inline-flex items-center mm-gap-2 rounded-md border border-ink/15 mm-px-4 mm-py-2 mm-text-sm font-medium"
       @click="emit('testAi')"
     >
       <PlugZap :size="16" aria-hidden="true" /> Load models

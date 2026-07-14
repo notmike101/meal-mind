@@ -10,9 +10,9 @@ function update(itemId: string, checked: boolean) {
 </script>
 
 <template>
-  <section class="rounded-md bg-surface p-4 shadow-line">
+  <section class="rounded-md bg-surface mm-p-4 shadow-line">
     <h3 class="font-semibold">{{ category }}</h3>
-    <div class="mt-3 divide-y divide-ink/10">
+    <div class="mm-mt-3 divide-y divide-ink/10">
       <ShoppingItem
         v-for="item in items"
         :key="item.id"

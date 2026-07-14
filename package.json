@@ -1,6 +1,6 @@
 {
   "name": "mealmind",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -12,7 +12,7 @@
     "dev": "concurrently -n api,web -c cyan,green \"npm run dev -w @mealmind/api\" \"npm run dev -w @mealmind/web\"",
     "dev:web": "npm run dev -w @mealmind/web",
     "dev:api": "npm run dev -w @mealmind/api",
-    "build": "npm run build -w @mealmind/contracts && npm run build -w @mealmind/domain && npm run build -w @mealmind/db && npm run build -w @mealmind/ai && npm run build -w @mealmind/api && npm run build -w @mealmind/mcp && npm run build -w @mealmind/ai-gateway && npm run build -w @mealmind/web",
+    "build": "npm run build -w @mealmind/contracts && npm run build -w @mealmind/domain && npm run build -w @mealmind/db && npm run build -w @mealmind/ai && npm run build -w @mealmind/api && npm run build -w @mealmind/mcp && npm run build -w @mealmind/web",
     "start": "npm run start -w @mealmind/web",
     "lint": "eslint .",
     "test": "vitest run",

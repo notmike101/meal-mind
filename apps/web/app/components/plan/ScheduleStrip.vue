@@ -16,24 +16,24 @@ function isSkipped(date: string) {
 </script>
 
 <template>
-  <nav aria-label="Planned meals" class="overflow-x-auto pb-2">
-    <div class="grid min-w-[1024px] grid-cols-7 gap-3">
-      <section v-for="date in dates" :key="date" class="rounded-lg p-2 shadow-line" :class="isSkipped(date) ? 'bg-field text-ink/55' : 'bg-surface'">
-        <div class="flex items-center justify-between gap-2 px-2 pb-2">
-          <h3 class="text-sm font-semibold">{{ formatDisplayDate(date) }}</h3>
-          <button type="button" :disabled="busy" :aria-label="`${isSkipped(date) ? 'Restore' : 'Skip'} ${formatDisplayDate(date)}`" class="focus-ring rounded p-1 hover:bg-ink/5 disabled:opacity-50" @click="emit('toggleDay', date, !isSkipped(date))">
+  <nav aria-label="Planned meals" class="overflow-x-auto mm-pb-2">
+    <div class="grid min-w-[1024px] grid-cols-7 mm-gap-3">
+      <section v-for="date in dates" :key="date" class="rounded-lg mm-p-2 shadow-line" :class="isSkipped(date) ? 'bg-field text-ink/55' : 'bg-surface'">
+        <div class="flex items-center justify-between mm-gap-2 mm-px-2 mm-pb-2">
+          <h3 class="mm-text-sm font-semibold">{{ formatDisplayDate(date) }}</h3>
+          <button type="button" :disabled="busy" :aria-label="`${isSkipped(date) ? 'Restore' : 'Skip'} ${formatDisplayDate(date)}`" class="focus-ring rounded mm-p-1 hover:bg-ink/5 disabled:opacity-50" @click="emit('toggleDay', date, !isSkipped(date))">
             <CalendarPlus v-if="isSkipped(date)" :size="16" aria-hidden="true" />
             <CalendarMinus v-else :size="16" aria-hidden="true" />
           </button>
         </div>
-        <div v-if="isSkipped(date)" class="rounded-md border border-dashed border-ink/15 px-3 py-6 text-center text-sm font-medium">Skipped</div>
-        <div v-else class="space-y-2">
+        <div v-if="isSkipped(date)" class="rounded-md border border-dashed border-ink/15 mm-px-3 mm-py-6 text-center mm-text-sm font-medium">Skipped</div>
+        <div v-else class="mm-space-y-2">
           <button
             v-for="meal in mealsForDate(date)"
             :key="meal.id"
             type="button"
             :aria-pressed="meal.id === activeMealId"
-            class="focus-ring w-full rounded-md border px-3 py-2 text-left transition"
+            class="focus-ring w-full rounded-md border mm-px-3 mm-py-2 text-left transition"
             :class="meal.id === activeMealId
               ? 'border-moss bg-moss text-white'
               : 'border-ink/10 bg-field hover:border-moss/50 hover:bg-moss/5'"
@@ -42,12 +42,12 @@ function isSkipped(date: string) {
             <span class="block text-[11px] font-semibold uppercase tracking-wide" :class="meal.id === activeMealId ? 'text-white/75' : 'text-ink/55'">
               {{ meal.slot || "Meal" }}
             </span>
-            <span class="mt-1 block truncate text-sm font-medium">{{ meal.recipeTitleSnapshot }}</span>
+            <span class="mm-mt-1 block truncate mm-text-sm font-medium">{{ meal.recipeTitleSnapshot }}</span>
           </button>
           <button
             type="button"
             :aria-pressed="addingDate === date"
-            class="focus-ring inline-flex w-full items-center justify-center gap-1 rounded-md border border-dashed px-3 py-2 text-xs font-semibold"
+            class="focus-ring inline-flex w-full items-center justify-center mm-gap-1 rounded-md border border-dashed mm-px-3 mm-py-2 mm-text-xs font-semibold"
             :class="addingDate === date ? 'border-moss bg-moss/10 text-moss' : 'border-ink/20 text-ink/60 hover:border-moss/50'"
             @click="emit('add', date)"
           >

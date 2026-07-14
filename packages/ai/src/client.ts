@@ -69,6 +69,12 @@ function messageContentToString(content: unknown) {
   return "";
 }
 
+function finalMessageContent(content: unknown) {
+  return messageContentToString(content)
+    .replace(/<think(?:ing)?\b[^>]*>[\s\S]*?(?:<\/think(?:ing)?>|$)/gi, "")
+    .trim();
+}
+
 function parseJsonObject(content: string) {
   try {
     return JSON.parse(content);
@@ -88,6 +94,7 @@ export async function runJsonPrompt<T>(input: {
   user: string;
   schema: z.ZodType<T>;
   logEvent: AiEventLogger;
+  maxTokens?: number;
 }) {
   const requestJson = JSON.stringify({
     system: input.system,
@@ -101,13 +108,24 @@ export async function runJsonPrompt<T>(input: {
       model: input.settings.aiModel,
       temperature: 0.2,
       response_format: { type: "text" },
+      // Qwen reasoning-capable backends can put the entire structured answer
+      // in reasoning_content unless their chat template is told to disable
+      // thinking. This is provider-compatible and keeps content final-only.
+      chat_template_kwargs: { enable_thinking: false },
+      ...(input.maxTokens === undefined ? {} : { max_tokens: input.maxTokens }),
       messages: [
         { role: "system", content: input.system },
         { role: "user", content: input.user },
+        // Qwen-family chat templates reliably enter final-answer mode when
+        // the assistant turn closes the optional thinking block explicitly.
+        { role: "assistant", content: "<think>\n\n</think>\n\n" },
       ],
-    });
+    } as unknown as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
 
-    const content = messageContentToString(completion.choices[0]?.message?.content);
+    // Reasoning-capable providers may expose chain-of-thought separately as
+    // `reasoning_content`. Only the assistant's final `content` is allowed
+    // into MealMind's structured-response parser.
+    const content = finalMessageContent(completion.choices[0]?.message?.content);
     const parsed = parseJsonObject(content);
     const validation = input.schema.safeParse(parsed);
 

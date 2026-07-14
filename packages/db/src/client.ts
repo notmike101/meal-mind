@@ -40,7 +40,7 @@ export async function ensureDatabase() {
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY,
       timezone TEXT NOT NULL DEFAULT 'America/Chicago',
-      ai_base_url TEXT NOT NULL DEFAULT 'http://ai-gateway:8080/v1',
+      ai_base_url TEXT NOT NULL DEFAULT 'http://host.docker.internal:1234/v1',
       ai_model TEXT NOT NULL DEFAULT 'qwen3.6-35b-a3b',
       planning_preferences TEXT NOT NULL DEFAULT '',
       planning_variety_rules TEXT NOT NULL DEFAULT 'Avoid repeating the same recipe in a week unless no alternatives exist.',
@@ -187,6 +187,12 @@ export async function ensureDatabase() {
     END $$;
   `);
 
+  const directAiBaseUrl = process.env.MEALMIND_AI_BASE_URL || "http://host.docker.internal:1234/v1";
+  await pool.query(
+    `UPDATE settings SET ai_base_url = $1 WHERE id = 1 AND ai_base_url = 'http://ai-gateway:8080/v1'`,
+    [directAiBaseUrl],
+  );
+
   const now = new Date().toISOString();
   await pool.query(
     `
@@ -215,7 +221,7 @@ export async function ensureDatabase() {
     )
     ON CONFLICT (id) DO NOTHING
     `,
-    [process.env.MEALMIND_AI_BASE_URL || "http://ai-gateway:8080/v1", now],
+    [directAiBaseUrl, now],
   );
 
   const pantrySeeds = ["salt", "black pepper", "water", "olive oil", "vegetable oil", "sugar"];
