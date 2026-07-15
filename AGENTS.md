@@ -2,93 +2,89 @@
 
 Guidance for agents contributing to MealMind.
 
+## Sources Of Truth
+
+Use the live repository before historical notes:
+
+1. `AGENTS.md` for contribution policy.
+2. Root and workspace `package.json` files for available commands.
+3. `compose.yaml` and the service Dockerfiles for the container runtime.
+4. Current source and tests for behavior and contracts.
+5. `docs/AI_CONFIGURATION.md` for OpenAI-compatible provider setup.
+
+`docs/HANDOFF.md`, `docs/WORK_LOG.md`, and implementation-plan documents are historical snapshots. They may explain why something exists, but do not treat their ports, paths, branch names, commands, or status statements as current without checking the live repository.
+
 ## Project Overview
 
-MealMind is a local meal-planning app for trusted CookLang recipes. It generates weekly lunch/dinner plans with a local OpenAI-compatible model, lets the user adjust or commit the plan, creates shopping lists, and exposes both web and MCP interfaces.
+MealMind is a local meal-planning app for trusted CookLang recipes. It generates weekly lunch/dinner plans with a configured OpenAI-compatible provider, lets the user adjust or commit the plan, creates shopping lists, and exposes web and MCP interfaces.
 
-The repo is an npm workspace monorepo:
+The npm workspace monorepo contains:
 
-- `apps/web`: Nuxt 4/Vue app. User-facing SSR UI and Nitro `/api/*` proxies.
-- `services/api`: Fastify REST API. Owns writes, workflows, DB initialization, and AI calls.
-- `services/mcp`: MCP stdio/HTTP server. Uses the API instead of importing DB/domain write logic directly.
-- `packages/contracts`: Shared DTOs, schemas, API response types, and app errors.
-- `packages/domain`: Pure domain logic: recipes, weeks, locks, pantry, portions, shopping helpers.
-- `packages/db`: Drizzle/Postgres schema, DB client, and repositories.
+- `apps/web`: Nuxt 4/Vue SSR app and same-origin Nitro `/api/*` proxies.
+- `services/api`: Fastify REST API. Owns writes, workflows, database initialization, and AI calls.
+- `services/mcp`: MCP stdio and HTTP adapters over the API.
+- `packages/contracts`: Shared DTOs, schemas, response types, and app errors.
+- `packages/domain`: Pure domain logic for recipes, weeks, locks, pantry, portions, and shopping.
+- `packages/db`: Drizzle/Postgres schema, database client, and repositories.
 - `packages/ai`: OpenAI-compatible client, prompts, and response schemas.
-- `recipes`: Trusted CookLang `.cook` recipe fixtures/data.
-- `docs`: Implementation, handoff, MCP, and work-log notes.
-- `tests`: Playwright e2e and MCP smoke tests.
+- `recipes`: The user's local CookLang library. Recipe files are intentionally ignored by Git; only `recipes/.gitkeep` is tracked.
+- `docs`: Current focused references plus historical design/handoff notes.
+- `tests`: Playwright, MCP smoke, and Python recipe-generation tests.
 
 Use the package scope `@mealmind/*`. Do not reintroduce `HelloQwen`, `helloqwen`, or `@helloqwen/*`.
 
-## Local Ports And Services
+## User Data And Security
 
-Standard local ports:
+- Treat `recipes/**`, recipe images, Postgres data, `.env`, and `apps/web/.env.local` as local user data.
+- Never commit credentials, API keys, local environment files, database files, build/test output, `node_modules`, or ignored runtime artifacts.
+- Do not delete, reset, overwrite, or stage local recipes or the Postgres volume unless the user explicitly asks.
+- Never run `docker compose down -v` or otherwise remove `pg_data` without explicit approval for a data reset.
+- Use explicit paths when staging in a mixed worktree. Preserve unrelated user changes and untracked files.
+
+## Local Runtime And Ports
+
+Standard host endpoints:
 
 - Web: `http://127.0.0.1:3100`
 - API: `http://127.0.0.1:3101`
+- API health: `http://127.0.0.1:3101/healthz`
 - MCP HTTP: `http://127.0.0.1:3102/api/mcp`
-- Postgres host port: `54320`
+- MCP health: `http://127.0.0.1:3102/healthz`
+- Postgres: `127.0.0.1:54320`
 
-Docker Compose service names:
+Compose services are `postgres`, `api`, `mcp`, and `web`. The Docker-backed app at port 3100 is the canonical final local QA runtime.
 
-- `postgres`
-- `api`
-- `mcp`
-- `web`
+Do not run host development servers and the Compose app simultaneously: both use ports 3100 and 3101.
 
-Container names may still include the old directory-derived Compose project prefix if the checkout folder is named `HelloQwen`. Treat that as a Compose naming artifact, not an application name.
+### Host Development
 
-## Common Commands
+`npm run dev` starts only the API and web workspaces. It does not start Postgres or the MCP HTTP server. Start dependencies separately and supply host-resolvable environment variables.
 
-Install/update workspace links:
+The root `.env.example` contains container DNS names such as `postgres`, `api`, and `mcp`; those names work inside Compose, not from host processes. The API package does not automatically load the root `.env` for `npm run dev`.
 
-```bash
-npm install
-```
+Typical PowerShell host values are:
 
-Run the full local dev pair:
-
-```bash
+```powershell
+$env:DATABASE_URL = "postgres://mealmind:mealmind@127.0.0.1:54320/mealmind"
+$env:MEALMIND_AI_BASE_URL = "http://127.0.0.1:1234/v1"
 npm run dev
 ```
 
-Run individual services:
+Useful host commands:
 
 ```bash
+npm run dev
 npm run dev:api
 npm run dev:web
 npm run mcp
+npm run dev -w @mealmind/mcp
 ```
 
-Build and verify:
+`npm run mcp` starts the stdio MCP server and requires a reachable API. `npm run dev -w @mealmind/mcp` starts MCP HTTP on port 3102 and also requires the API.
 
-```bash
-npm run lint
-npm run test
-npm run build
-npm run mcp:smoke
-npm run mcp:http-smoke
-npm run test:e2e
-```
+## Environment And Provider Configuration
 
-Run the Docker stack:
-
-```bash
-docker compose up --build
-```
-
-If ports are occupied by an old app stack, stop it first:
-
-```bash
-docker compose down
-```
-
-The user has explicitly approved killing existing local connections when rebuilding is needed so standard ports can be reused.
-
-## Environment
-
-Copy `.env.example` for Docker/local env defaults when needed. Key variables:
+Compose reads `.env` overrides and otherwise uses defaults from `compose.yaml`. Important variables include:
 
 - `DATABASE_URL`
 - `MEALMIND_API_BASE_URL`
@@ -96,193 +92,26 @@ Copy `.env.example` for Docker/local env defaults when needed. Key variables:
 - `MEALMIND_RECIPE_ROOT`
 - `MEALMIND_DOCS_ROOT`
 - `MEALMIND_AI_BASE_URL`
-- `OPENAI_COMPATIBLE_API_KEY` (optional bearer token; never commit a real value)
+- `OPENAI_COMPATIBLE_API_KEY` (optional; never commit a real value)
 
-For Docker, a host provider such as LM Studio may need a LAN-reachable direct URL rather than `host.docker.internal`. Check `docs/AI_CONFIGURATION.md` and `docs/HANDOFF.md` before changing AI connectivity assumptions.
+For Docker, the configured provider must be reachable from the container. `host.docker.internal` is the default; some providers may require a LAN-reachable URL. Verify assumptions against `docs/AI_CONFIGURATION.md` and the live container, not historical handoff notes.
 
-Do not commit local `.env`, `apps/web/.env.local`, SQLite data, build output, test output, `node_modules`, or other ignored local artifacts.
+## Database And Startup Side Effects
 
-## Security
+Postgres is the default database. The API runs `ensureDatabase()` at startup.
 
-- Never commit `.env`, `apps/web/.env.local`, API keys, or credentials.
-- Copy from `.env.example` for Docker/local env defaults.
+- Preserve the named `pg_data` volume during rebuilds.
+- A runtime schema change must update both `packages/db/src/schema.ts` and the idempotent startup DDL/migration logic in `packages/db/src/client.ts`.
+- `npm run db:migrate` invokes the application's current database initialization path; generated Drizzle files alone do not change startup behavior.
+- `npm run db:migrate:sqlite` remains available for legacy SQLite migration.
+- Starting the API is not always a read-only probe. If automatic planning is enabled, startup triggers a planning check immediately and then every 15 minutes; it may write a plan and call the configured provider.
 
-## Database Notes
+Prefer preserving existing data over deleting or recreating the volume.
 
-Postgres is the default runtime database. The API calls `ensureDatabase()` at startup.
-
-The default Compose DB is `mealmind` with user/password `mealmind`. If an old persistent volume was initialized before the app rename, the DB/role may need migration to the `mealmind` role/database before the API can start. Prefer preserving data over deleting volumes unless the user explicitly asks for a reset.
-
-SQLite migration support remains in:
-
-```bash
-npm run db:migrate:sqlite
-```
-
-The default legacy SQLite path is `data/mealmind.sqlite`.
-
-## MCP Contract
-
-MCP is available both as stdio and HTTP:
+## Common Build And Test Commands
 
 ```bash
-npm run mcp
-npm run mcp:http-smoke
-```
-
-Primary HTTP endpoint when the app stack is running:
-
-```text
-http://127.0.0.1:3102/api/mcp
-```
-
-Important conventions:
-
-- MCP resources use the `mealmind://` scheme.
-- `services/mcp` should call the REST API for app state and mutations.
-- Keep MCP schemas Zod-based and compatible with `@modelcontextprotocol/sdk`.
-- MCP mutating tools can change local app state and may call LM Studio/Qwen. Read resources first unless the user explicitly asks for mutation.
-
-## Code Organization Rules
-
-- Put shared request/response types and validation in `packages/contracts`.
-- Keep pure business logic in `packages/domain`; avoid DB, Fastify, Vue, or Node server concerns there.
-- Keep DB access in `packages/db` repositories.
-- Keep AI prompting/client behavior in `packages/ai`.
-- Keep workflow orchestration in `services/api/src/services`.
-- Keep user-facing rendering in `apps/web`.
-- Keep MCP as a protocol adapter over the API, not a second workflow implementation.
-
-Prefer existing patterns before adding new abstractions. Keep changes scoped to the request.
-
-## Frontend Guidance
-
-The app is a work-focused planning tool. Keep UI quiet, dense, and usable rather than marketing-like.
-
-- Use existing Tailwind styles and component patterns.
-- Use `@lucide/vue` icons where appropriate.
-- Do not create a landing page for app work; keep the first screen useful.
-- Avoid nested cards and large decorative sections.
-- Ensure text does not overflow on mobile or desktop.
-- For visual changes, inspect the page at `http://127.0.0.1:3100`.
-
-## Browser And Verification Tooling
-
-Use the Browser plugin for quick visual inspection of localhost or public pages that do not require sign-in.
-
-Use Playwright MCP or Playwright tests when the task needs deterministic browser interaction, assertions, screenshots, or repeatable repro/verification steps.
-
-Use the Chrome extension only for flows that depend on login state, cookies, extensions, or an existing browser profile.
-
-When testing localhost after code or build changes, reload the page and verify current rendered output. If a stale container owns the port, stop it and rebuild rather than inspecting the old page.
-
-## Testing Expectations
-
-Run the smallest useful checks during development, then broaden before finalizing:
-
-- Shared logic changes: `npm run test`
-- Type/import/workspace changes: `npm run build`
-- Formatting/lint-sensitive edits: `npm run lint`
-- Web-visible changes: Browser plugin or `npm run test:e2e`
-- MCP changes: `npm run mcp:smoke` and/or `npm run mcp:http-smoke`
-- Docker/port/env changes: `docker compose up --build -d` and `docker compose ps`
-
-If you cannot run a relevant check, state why in the final response.
-
-## Git Practices
-
-### Branching
-
-All development must branch off `dev`. Never commit directly to `dev` or `main`:
-
-```bash
-# From dev, create a new feature, fix, docs, or chore branch
-git checkout dev
-git pull origin dev
-git checkout -b <type>/<short-description>
-```
-
-The `main` branch is reserved for releases. Do not branch ordinary development work from it or merge feature, bugfix, docs, or chore branches directly into it.
-
-Branch naming convention:
-
-| Type | Examples |
-|------|----------|
-| `feature/` | `feature/dark-mode`, `feature/shopping-list` |
-| `bugfix/` | `bugfix/theme-setting-location` |
-| `docs/` | `docs/git-practices` |
-| `chore/` | `chore/update-deps` |
-
-### Committing
-
-- Commit regularly at natural milestones — after a passing test, a working feature, or a logical unit of work. Do not let changes accumulate for hours without a commit.
-- Keep commits focused: one concern per commit.
-- Use direct, descriptive commit messages (imperative mood, no trailing period).
-- Before committing, always check `git status --short --branch` to confirm what will be included.
-- For any non-trivial task, make the first focused commit as soon as the initial implementation and its smallest useful verification pass; follow with additional focused commits when separate fixes, tests, or documentation become complete.
-- Push each focused commit promptly after it passes its relevant checks, using the branch's upstream tracking configuration. Do not wait until the entire task is finished to create the first remote backup.
-
-### Pushing and Merging
-
-Push branches frequently so work is backed up and reviewable:
-
-```bash
-git push -u origin <branch-name>
-```
-
-For every non-trivial change, open a draft pull request after the first verified push, then keep the same PR updated as later commits are pushed. Use the PR to record the scope, validation results, and any known limitations. Convert the draft to ready for review only when the relevant checks pass and the branch is complete.
-
-When the work on a branch is complete and verified:
-
-1. Rebase onto latest `dev` if needed: `git rebase dev`.
-2. Push: `git push origin <branch-name> --force-with-lease` (after rebase).
-3. Merge back into `dev` via a PR or, for local-only work:
-
-```bash
-git checkout dev
-git pull origin dev
-git merge --no-ff <branch-name> -m "Merge branch '<branch-name>' into dev"
-git push origin dev
-```
-
-### Releases
-
-Merges into `main` are reserved for releases:
-
-1. Confirm `dev` contains the complete, verified release candidate.
-2. Choose the next [Semantic Versioning](https://semver.org/) version: increment `MAJOR` for incompatible changes, `MINOR` for backward-compatible features, or `PATCH` for backward-compatible fixes.
-3. Open and merge a release PR from `dev` into `main`. Do not merge individual development branches into `main`.
-4. Create an annotated `vMAJOR.MINOR.PATCH` tag on the resulting `main` merge commit and push it:
-
-```bash
-git checkout main
-git pull origin main
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin main
-git push origin vX.Y.Z
-```
-
-### Safety Rules
-
-- Do not use destructive git commands (`git reset --hard`, `git checkout --`, `git rebase --force`) without explicit instruction.
-- Do not revert user changes unless explicitly asked.
-- If committing, include only intended files and verify the worktree afterward.
-
-## Importing recipes from URLs
-
-To convert external recipe pages into CookLang `.cook` files, use the import skill:
-
-    cd D:\meal-mind && uv run .agents/skills/import-cooklang/scripts/import-recipe.py "https://example.com/recipe" recipes
-
-The script extracts Recipe JSON-LD (90%+ of sites), falls back to DOM scraping, and writes valid `.cook` files with metadata. See the skill for details: `.agents/skills/import-cooklang/SKILL.md`.
-
----
-
-## Current Known Good Verification Set
-
-After the MealMind rename, these checks passed:
-
-```bash
+npm install
 npm run lint
 npm run test
 npm run build
@@ -291,4 +120,184 @@ npm run mcp:http-smoke
 npm run test:e2e
 ```
 
-The rebuilt Compose stack also served `MealMind` at `http://127.0.0.1:3100` with no visible `HelloQwen` text.
+Run the smallest useful checks while developing, then the checks appropriate to the changed surfaces before finalizing.
+
+## Docker Rebuild And Runtime Verification
+
+Rebuilding the affected production image is mandatory before final browser or runtime verification. The Compose services do not bind-mount application source, so `docker compose restart web` does not pick up UI edits.
+
+### Choose The Rebuild Scope
+
+| Changed area | Required rebuild |
+|---|---|
+| `apps/web/**`, web config, UI assets | `web` |
+| `services/api/**`, `packages/domain`, `packages/db`, `packages/ai` | `api` |
+| `services/mcp/**` | `mcp` |
+| `packages/contracts`, root dependencies/lockfile, shared build config | `api`, `mcp`, and `web` |
+| `compose.yaml`, Dockerfiles, environment/topology, cross-cutting or uncertain changes | full stack |
+
+`recipes` and `docs` are mounted read-only into the relevant containers, so content-only changes normally do not require an image rebuild. Coupled application-code changes still do.
+
+For a full-stack rebuild:
+
+```bash
+docker compose up -d --build --wait
+docker compose ps
+```
+
+For the strongest relevant-service rebuild when its dependencies are already healthy:
+
+```bash
+docker compose build web
+docker compose up -d --no-deps --force-recreate --wait web
+```
+
+Replace `web` with `api` or `mcp` as appropriate. For shared contracts or dependencies, rebuild all affected app services instead of guessing that one image is sufficient.
+
+After every rebuild:
+
+1. Run `docker compose ps` and confirm every expected service is running; `postgres`, `api`, and `mcp` should be healthy.
+2. Check API and MCP health endpoints and load `/` on port 3100. The web service has no Compose healthcheck, so an HTTP and browser check is required.
+3. Reload the page in the Browser after the new container is running. Confirm the current UI, affected routes, and interactions—not only an HTTP 200.
+4. For UI work, inspect at least a representative desktop and mobile viewport, check light/dark behavior when relevant, and confirm no overflow, clipping, broken dialogs, or undersized controls.
+5. Run Playwright when deterministic workflow or responsive assertions are relevant.
+
+`playwright.config.ts` uses `reuseExistingServer: true`. Playwright will test whatever already owns port 3100, including a stale container. Rebuild and verify the Docker runtime before `npm run test:e2e`; do not treat a green run against an unidentified server as proof of the current code.
+
+If old code still appears or another process owns a standard port:
+
+```bash
+docker compose down
+docker compose up -d --build --wait
+```
+
+Identify and stop the actual stale container/process if needed. Do not add `-v`.
+
+The user has approved stopping existing local connections when rebuilding is needed so the standard ports can be reused.
+
+## Testing Expectations
+
+- Pure/shared logic: targeted Vitest tests, then `npm run test` when appropriate.
+- Type/import/workspace changes: `npm run build`.
+- Formatting/lint-sensitive changes: `npm run lint`.
+- Web-visible changes: rebuild `web`, verify in the Browser, and run `npm run test:e2e` for repeatable coverage.
+- API or database changes: rebuild `api`, verify `/healthz`, and test the affected workflow.
+- MCP changes: rebuild `mcp`; run `npm run mcp:smoke` and/or `npm run mcp:http-smoke` as applicable.
+- Docker, port, or environment changes: rebuild the full stack, run `docker compose ps`, check 3100/3101/3102, and inspect logs for unhealthy services.
+- Recipe generation/schema work: run `uv run tests/python/test_recipe_generation.py` plus targeted `packages/domain/src/recipes.test.ts` coverage.
+- Documentation-only changes: at minimum run `git diff --check` and verify every documented command/path against the repository.
+
+Test prerequisites matter:
+
+- MCP smoke tests require a live API and the expected local recipe catalog; HTTP smoke also requires MCP HTTP.
+- Playwright may reuse an existing port 3100 server and workflows can require Postgres, local recipes, and a reachable configured provider.
+- If a required check cannot run, state the concrete reason and what was verified instead.
+
+## MCP Contract
+
+- Resources use the `mealmind://` scheme.
+- `services/mcp` calls the REST API for state and mutations; do not create a second workflow implementation inside MCP.
+- Keep schemas Zod-based and compatible with `@modelcontextprotocol/sdk`.
+- MCP mutating tools can change local state and may call the configured OpenAI-compatible provider. Read resources first unless the user explicitly asks for mutation.
+
+## Code Organization Rules
+
+- Put shared request/response types and validation in `packages/contracts`.
+- Keep pure business logic in `packages/domain`; avoid DB, Fastify, Vue, or Node server concerns there.
+- Keep database access in `packages/db` repositories.
+- Keep AI prompting/client behavior in `packages/ai`.
+- Keep workflow orchestration in `services/api/src/services`.
+- Keep user-facing rendering in `apps/web`.
+- Keep MCP as a protocol adapter over the API.
+
+Prefer existing patterns before adding abstractions. Keep changes scoped to the request.
+
+## Frontend Guidance
+
+MealMind is a focused planning workspace, not a marketing site.
+
+- Reuse semantic colors, design tokens, and `mm-*` utilities from `apps/web/app/assets/css/main.css` and `apps/web/tailwind.config.ts`.
+- Reuse current component patterns and `@lucide/vue` icons.
+- Preserve both light and dark themes, visible focus states through `.focus-ring`, reduced-motion behavior, and accessible labels.
+- Keep primary touch targets at least 44px where practical.
+- Avoid nested-card clutter, decorative landing-page sections, and copy that displaces useful planning information.
+- Ensure long recipe names, metadata, form controls, dialogs, and planner columns do not overflow at mobile, laptop, or desktop widths.
+- Use Pinia stores, existing composables, and same-origin `/api/*` proxies; do not make components call ports 3101 or 3102 directly.
+- Route-backed dialogs must retain keyboard dismissal, focus restoration, body-scroll locking, and responsive behavior.
+- Never judge a visual change from source alone. Rebuild the web container, reload `http://127.0.0.1:3100`, and inspect the rendered result.
+
+## Browser Tooling
+
+- Use the Browser plugin for quick visual inspection of localhost or public pages that do not require sign-in.
+- Use Playwright MCP or Playwright tests for deterministic interaction, assertions, screenshots, and repeatable regressions.
+- Use the Chrome extension only for flows that require an existing profile, cookies, login state, or extensions.
+- After navigation, verify the rendered heading/current route and `html[data-mealmind-ready]` where relevant; a changed URL alone does not prove the page updated.
+
+## Git And Pull Requests
+
+### Current Branch Model
+
+GitHub's default and integration branch is `main`. There is no remote `dev` branch. Do not recreate or target `dev` unless the user explicitly changes the repository workflow.
+
+Never commit directly to `main`. Start each change from the latest remote `main`:
+
+```bash
+git switch main
+git pull --ff-only origin main
+git switch -c <type>/<short-description>
+```
+
+Branch naming examples:
+
+| Type | Examples |
+|---|---|
+| `feature/` | `feature/dark-mode`, `feature/shopping-list` |
+| `bugfix/` | `bugfix/theme-setting-location` |
+| `docs/` | `docs/docker-verification` |
+| `chore/` | `chore/update-deps` |
+
+### Commits And Publishing
+
+- Before staging, run `git status --short --branch` and inspect the diff.
+- Stage only intended files; never use a broad add in a mixed worktree.
+- Keep commits focused and use direct imperative messages without a trailing period.
+- Make a focused commit after the smallest relevant verification passes, then push it promptly.
+- For every non-trivial change, open a draft PR targeting `main` after the first verified push. Keep that PR updated and record scope, root cause, verification, and limitations.
+- Mark the PR ready only after relevant checks and Docker/browser verification pass.
+
+Before final merge, update against remote `main` if necessary:
+
+```bash
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+```
+
+Use `--force-with-lease` only after a rebase. Merge through the PR, then verify GitHub reports it as merged and confirm the branch tip is contained in `origin/main` before branch cleanup.
+
+### Releases
+
+An ordinary PR merge into `main` is not automatically a release. Create a version/tag only when the user explicitly asks to ship one.
+
+For a release:
+
+1. Start a release-preparation branch from current `main`.
+2. Choose the SemVer increment and update the version/lockfile deliberately.
+3. Run the complete relevant verification gate, including the rebuilt Docker stack and live browser checks.
+4. Merge the release PR into `main`.
+5. Check out/pull the resulting `main` merge commit, create an annotated `vMAJOR.MINOR.PATCH` tag on that exact commit, and push the tag.
+
+### Git Safety
+
+- Do not use destructive commands such as `git reset --hard`, `git checkout --`, or forced rebase variants without explicit instruction.
+- Do not revert or delete user changes.
+- Verify intended commit contents and the remaining worktree after every commit.
+
+## Importing Recipes From URLs
+
+Use the repository skill that matches the source:
+
+- HelloFresh URLs: `.agents/skills/hellofresh-scraper/SKILL.md`
+- Other public recipe URLs: `.agents/skills/import-cooklang/SKILL.md`
+
+The import scripts write local ignored `.cook` files under `recipes/`. Validate generated recipes with the skill's validator and the relevant Python/domain tests. Do not stage imported recipe files unless the user explicitly changes the local-only recipe policy.
