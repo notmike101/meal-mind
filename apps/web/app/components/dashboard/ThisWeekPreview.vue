@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { MealDto, MealPlanDto } from "@mealmind/contracts";
-import { ArrowRight, CalendarDays } from "@lucide/vue";
+import { CalendarDays } from "@lucide/vue";
 import { computed } from "vue";
 import { formatDisplayDate, getDatesInWeek } from "~/utils/dates";
 
@@ -49,12 +49,6 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
           </p>
         </div>
       </div>
-      <NuxtLink
-        to="/plan"
-        class="focus-ring mm-button-secondary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold"
-      >
-        View full plan <ArrowRight :size="16" aria-hidden="true" />
-      </NuxtLink>
     </div>
 
     <div v-if="dates.length" class="divide-y divide-line/20">

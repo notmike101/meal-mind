@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { callOnce } from "#app";
-import { ArrowRight, CalendarClock, ShoppingBasket } from "@lucide/vue";
+import { ArrowRight, CalendarClock } from "@lucide/vue";
 import { computed } from "vue";
 import { usePlanningStore } from "~/stores/planning";
 import { useSettingsStore } from "~/stores/settings";
@@ -30,11 +30,6 @@ function openRecipe(recipeId: string, servings: number, trigger: globalThis.HTML
   <div class="space-y-8">
     <section class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
       <PageHeading eyebrow="Dashboard" title="Today's plan" :description="`${formatDisplayDate(today)} · Planning in ${timezone}`" />
-      <div class="flex shrink-0 flex-wrap gap-3">
-        <NuxtLink to="/shopping" class="focus-ring mm-button-secondary inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold">
-          <ShoppingBasket :size="16" aria-hidden="true" /> Shopping list
-        </NuxtLink>
-      </div>
     </section>
     <DashboardDailyReminder v-if="planning.activePlan" :meals="todayMeals" @open-details="openRecipe" />
     <section v-else class="rounded-2xl border border-line/25 bg-surface p-6 shadow-sm sm:p-8">

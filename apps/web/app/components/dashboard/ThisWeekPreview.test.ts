@@ -78,6 +78,12 @@ describe("ThisWeekPreview", () => {
     expect(wrapper.text()).toContain("1 meal across 1 remaining day");
   });
 
+  it("does not render a full-plan shortcut", () => {
+    const wrapper = render();
+
+    expect(wrapper.find('a[href="/plan"]').exists()).toBe(false);
+  });
+
   it("opens recipe details with the meal's selected servings", async () => {
     const wrapper = render();
 
