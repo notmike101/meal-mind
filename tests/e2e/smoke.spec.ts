@@ -133,6 +133,13 @@ test("recipe dialog keeps readable geometry across breakpoints", async ({ page }
   }
 });
 
+test("dashboard omits the misleading weekly plan shortcut", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open weekly plan" })).toHaveCount(0);
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/");
+});
+
 test("renders core MealMind pages", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
