@@ -49,7 +49,10 @@ const locked = computed(() => plan.value ? isPlanLocked(plan.value) : false);
 const weekEnd = computed(() => addDays(selectedWeekStart.value, 6));
 const currentWeekStart = computed(() => planning.currentWeek?.weekStart ?? selectedWeekStart.value);
 const isCurrentWeek = computed(() => selectedWeekStart.value === currentWeekStart.value);
-const canCreateEmptyWeek = computed(() => !plan.value && selectedWeekStart.value >= currentWeekStart.value);
+const isFutureWeek = computed(() => selectedWeekStart.value > currentWeekStart.value);
+const canCreateBlankWeek = computed(() => !plan.value && selectedWeekStart.value >= currentWeekStart.value);
+const canGenerateWeek = computed(() => !plan.value && isFutureWeek.value);
+const canRegenerateWeek = computed(() => plan.value?.status === "draft" && isFutureWeek.value);
 const recipeOptions = computed(() => recipes.catalog?.recipes ?? []);
 const defaultServings = computed(() => settings.data?.settings.defaultMealServings ?? 1);
 const defaultMealCount = computed(() => settings.data?.settings.defaultWeeklyMealCount ?? 14);
@@ -180,12 +183,18 @@ async function generateShoppingList() {
         {{ recipes.catalog?.invalidRecipes.length }} invalid recipe file{{ recipes.catalog?.invalidRecipes.length === 1 ? "" : "s" }} excluded from planning.
       </div>
 
-      <section v-if="!plan && canCreateEmptyWeek" class="flex flex-wrap mm-gap-2" aria-label="Create a plan">
-        <PlanGeneratePlanButton :week-start="selectedWeekStart" :default-meal-count="defaultMealCount" />
-        <PlanBlankPlanButton :week-start="selectedWeekStart" />
+      <section v-if="!plan && (canGenerateWeek || canCreateBlankWeek)" class="flex flex-wrap mm-gap-2" aria-label="Create a plan">
+        <PlanGeneratePlanButton v-if="canGenerateWeek" :week-start="selectedWeekStart" :default-meal-count="defaultMealCount" />
+        <PlanBlankPlanButton v-if="canCreateBlankWeek" :week-start="selectedWeekStart" />
       </section>
-      <section v-else-if="plan?.status === 'draft'" class="flex flex-wrap mm-gap-2">
+      <section v-else-if="plan?.status === 'draft'" class="flex flex-wrap mm-gap-2" aria-label="Plan actions">
         <PlanCommitPlanButton :plan-id="plan.id" />
+        <PlanGeneratePlanButton
+          v-if="canRegenerateWeek"
+          :week-start="selectedWeekStart"
+          :default-meal-count="defaultMealCount"
+          replace-existing
+        />
       </section>
 
       <PlanTodayMeals v-if="showToday" :meals="todayMeals" @open-details="openRecipe" />
@@ -197,7 +206,8 @@ async function generateShoppingList() {
       </section>
       <section v-else class="mm-panel border-dashed py-16 text-center">
         <h2 class="mm-display mm-text-2xl font-bold">No plan for this week</h2>
-        <p v-if="canCreateEmptyWeek" class="mm-mt-2 text-ink/70">Generate a plan or start with a blank week.</p>
+        <p v-if="canGenerateWeek" class="mm-mt-2 text-ink/70">Generate a plan or start with a blank week.</p>
+        <p v-else-if="canCreateBlankWeek" class="mm-mt-2 text-ink/70">Start with a blank week to plan the current week manually.</p>
         <p v-else class="mm-mt-2 text-ink/70">Past empty weeks are kept read-only.</p>
       </section>
     </template>
