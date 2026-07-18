@@ -32,12 +32,15 @@ test("primary navigation contains the unified destinations", async ({ page }) =>
   await expect(navigation.getByRole("link", { name: "Shopping", exact: true })).toHaveCount(0);
 
   await navigation.getByRole("link", { name: "Recipes", exact: true }).click();
+  await expect(page).toHaveURL(/\/recipes$/);
   await waitForReady(page);
   await expect(page.getByRole("heading", { name: "CookLang recipe library" })).toBeVisible();
   await navigation.getByRole("link", { name: "Settings", exact: true }).click();
+  await expect(page).toHaveURL(/\/settings$/);
   await waitForReady(page);
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
   await navigation.getByRole("link", { name: "Plan", exact: true }).click();
+  await expect(page).toHaveURL(/\/plan\?week=\d{4}-\d{2}-\d{2}&view=plan$/);
   await waitForReady(page);
   await expect(page.getByTestId("weekly-workspace")).toBeVisible();
 });
