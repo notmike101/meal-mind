@@ -1,48 +1,88 @@
 import {
-  getRecipeById,
-  getRecipeByIdAtServings,
   getRecipeDescription,
-  loadRecipes,
+  parseRecipeCooklang,
+  type InvalidRecipe,
   type Recipe,
 } from "@mealmind/domain";
 import type { RecipeFilterRequest } from "@mealmind/contracts";
-import fs from "node:fs";
-import path from "node:path";
+import {
+  getRecipeDocumentByRecipeId,
+  getRecipeImageRecord,
+  listInvalidRecipeDocuments,
+  listRecipeDocuments,
+  type RecipeDocument,
+} from "@mealmind/db/repositories/recipes";
 
-const imageContentTypes: Record<string, string> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".webp": "image/webp",
+type RecipeEntry = {
+  recipe: Recipe;
+  document: RecipeDocument;
 };
 
-function recipeRoot() {
-  return path.resolve(process.env.MEALMIND_RECIPE_ROOT || path.join(process.cwd(), "recipes"));
+export type RecipeCatalog = {
+  entries: RecipeEntry[];
+  recipes: Recipe[];
+  invalidRecipes: InvalidRecipe[];
+};
+
+function documentPath(document: RecipeDocument) {
+  return document.sourcePath ?? `database/${document.recipeId ?? document.documentId}.cook`;
 }
 
-function resolveRecipeImage(recipe: Pick<Recipe, "image">) {
-  if (!recipe.image) return null;
-  const root = recipeRoot();
-  const filePath = path.resolve(root, recipe.image);
-  const relative = path.relative(root, filePath);
-  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return null;
-  const contentType = imageContentTypes[path.extname(filePath).toLowerCase()];
-  if (!contentType || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return null;
-  return { filePath, contentType };
+function parseDocument(document: RecipeDocument, servings?: number) {
+  const base = parseRecipeCooklang(document.cooklang, documentPath(document));
+  if (servings === undefined || servings === base.defaultServings) return base;
+  return parseRecipeCooklang(
+    document.cooklang,
+    documentPath(document),
+    servings / base.defaultServings,
+    base.defaultServings,
+  );
 }
 
-export function getRecipeImage(recipeId: string) {
-  const recipe = getRecipeById(recipeId);
-  return recipe ? resolveRecipeImage(recipe) : null;
+function parseErrors(error: unknown) {
+  return [error instanceof Error ? error.message : String(error)];
 }
 
-export function summarizeRecipe(recipe: Recipe) {
-  const image = resolveRecipeImage(recipe);
+export async function getRecipeCatalog(): Promise<RecipeCatalog> {
+  const [documents, invalidDocuments] = await Promise.all([
+    listRecipeDocuments(),
+    listInvalidRecipeDocuments(),
+  ]);
+  const entries: RecipeEntry[] = [];
+  const invalidRecipes: InvalidRecipe[] = invalidDocuments.map((document) => ({
+    filePath: document.sourcePath ?? document.sourceUrl ?? `database/${document.documentId}`,
+    errors: document.parseErrors.length > 0 ? document.parseErrors : ["Recipe document is invalid."],
+  }));
+
+  for (const document of documents) {
+    try {
+      const recipe = parseDocument(document);
+      entries.push({ recipe, document });
+    } catch (error) {
+      invalidRecipes.push({ filePath: documentPath(document), errors: parseErrors(error) });
+    }
+  }
+
+  return {
+    entries,
+    recipes: entries.map((entry) => entry.recipe),
+    invalidRecipes,
+  };
+}
+
+function recipeImageUrl(recipeId: string, document: RecipeDocument) {
+  return document.imageBytes && document.imageBytes.length > 0 && document.imageContentType
+    ? `/api/recipes/${encodeURIComponent(recipeId)}/image`
+    : null;
+}
+
+export function summarizeRecipe(recipe: Recipe, document: RecipeDocument) {
   return {
     id: recipe.id,
     title: recipe.title,
     description: getRecipeDescription(recipe),
-    imageUrl: image ? `/api/recipes/${encodeURIComponent(recipe.id)}/image` : null,
+    imageUrl: recipeImageUrl(recipe.id, document),
+    sourceUrl: document.sourceUrl,
     format: recipe.format,
     suggestedSlots: recipe.suggestedSlots,
     tags: recipe.tags,
@@ -53,34 +93,34 @@ export function summarizeRecipe(recipe: Recipe) {
     ingredientCount: recipe.ingredients.length,
     cookwareCount: recipe.cooklang.cookware.length,
     timerCount: recipe.cooklang.timers.length,
-    filePath: recipe.filePath,
+    filePath: document.sourcePath,
     detailResource: `mealmind://recipes/${recipe.id}`,
     appUrl: `/recipes/${recipe.id}`,
   };
 }
 
-export function detailedRecipe(recipe: Recipe) {
+export function detailedRecipe(recipe: Recipe, document: RecipeDocument) {
   return {
-    ...summarizeRecipe(recipe),
+    ...summarizeRecipe(recipe, document),
     ingredients: recipe.ingredients,
     instructions: recipe.instructions,
     cooklang: recipe.cooklang,
   };
 }
 
-export function listRecipes(input: RecipeFilterRequest = {}) {
-  const { recipes, invalidRecipes } = loadRecipes();
+export async function listRecipes(input: RecipeFilterRequest = {}) {
+  const catalog = await getRecipeCatalog();
   const search = input.search?.trim().toLowerCase();
   const tag = input.tag?.trim().toLowerCase();
   const suggestedSlot = input.suggestedSlot?.trim().toLowerCase();
 
-  const filteredRecipes = recipes.filter((recipe) => {
-     if (suggestedSlot && !recipe.suggestedSlots.some((slot) => slot.toLowerCase() === suggestedSlot)) {
-       return false;
-     }
-     if (tag && !recipe.tags.some((recipeTag) => recipeTag.toLowerCase() === tag)) {
-       return false;
-     }
+  const filteredEntries = catalog.entries.filter(({ recipe }) => {
+    if (suggestedSlot && !recipe.suggestedSlots.some((slot) => slot.toLowerCase() === suggestedSlot)) {
+      return false;
+    }
+    if (tag && !recipe.tags.some((recipeTag) => recipeTag.toLowerCase() === tag)) {
+      return false;
+    }
     if (search) {
       const haystack = [
         recipe.title,
@@ -97,13 +137,25 @@ export function listRecipes(input: RecipeFilterRequest = {}) {
   });
 
   return {
-    recipes: filteredRecipes.map(summarizeRecipe),
-    invalidRecipes,
-    count: filteredRecipes.length,
+    recipes: filteredEntries.map(({ recipe, document }) => summarizeRecipe(recipe, document)),
+    invalidRecipes: catalog.invalidRecipes,
+    count: filteredEntries.length,
   };
 }
 
-export function getRecipeDetail(recipeId: string, servings?: number) {
-  const recipe = servings === undefined ? getRecipeById(recipeId) : getRecipeByIdAtServings(recipeId, servings);
-  return recipe ? detailedRecipe(recipe) : null;
+export async function getRecipeDetail(recipeId: string, servings?: number) {
+  const document = await getRecipeDocumentByRecipeId(recipeId);
+  if (!document) return null;
+  const recipe = parseDocument(document, servings);
+  return detailedRecipe(recipe, document);
+}
+
+export async function getRecipeImage(recipeId: string) {
+  const image = await getRecipeImageRecord(recipeId);
+  if (!image?.imageBytes || !image.imageContentType) return null;
+  return { data: image.imageBytes, contentType: image.imageContentType };
+}
+
+export async function getAvailableRecipes() {
+  return (await getRecipeCatalog()).recipes;
 }

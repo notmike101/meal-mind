@@ -80,6 +80,27 @@ export type InvalidRecipeDto = {
   errors: string[];
 };
 
+export type RecipeImportJobStatus =
+  | "queued"
+  | "fetching"
+  | "converting"
+  | "saving"
+  | "succeeded"
+  | "failed";
+
+export type RecipeImportJobDto = {
+  id: string;
+  sourceUrl: string;
+  status: RecipeImportJobStatus;
+  recipeId: string | null;
+  recipeTitle: string | null;
+  error: string | null;
+  deduplicated: boolean;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+};
+
 export type CooklangValueDto =
   | {
       type: "number";
@@ -187,13 +208,14 @@ export type RecipeDto = {
   title: string;
   description: string;
   imageUrl: string | null;
+  sourceUrl: string | null;
   format: "cooklang";
   defaultServings: number;
   suggestedSlots: string[];
   tags: string[];
   prepTimeMinutes?: number;
   cookTimeMinutes?: number;
-  filePath: string;
+  filePath: string | null;
   ingredients: string[];
   instructions: string;
   cooklang: CooklangRecipeDto;

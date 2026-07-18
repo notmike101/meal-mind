@@ -12,6 +12,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 import yaml
@@ -33,6 +34,7 @@ from recipe_jsonld import (  # noqa: E402
     parse_iso_duration_minutes,
 )
 from recipe_images import cache_recipe_image  # noqa: E402
+import recipe_security  # noqa: E402
 
 CONVERTER_PATH = REPO_ROOT / ".agents/skills/hellofresh-scraper/scripts/convert-to-cooklang.py"
 CONVERTER_SPEC = importlib.util.spec_from_file_location("hellofresh_convert", CONVERTER_PATH)
@@ -370,6 +372,58 @@ class RecipeImageTests(unittest.TestCase):
                 (Path(temporary_directory) / "images/test-recipe.webp").read_bytes(),
                 b"recipe-image",
             )
+
+
+class RecipeSecurityTests(unittest.TestCase):
+    def test_rejects_credentials_and_private_hosts(self) -> None:
+        with self.assertRaisesRegex(ValueError, "credentials"):
+            recipe_security.validate_public_url("https://user:pass@example.com/recipe")
+        with self.assertRaisesRegex(ValueError, "public host"):
+            recipe_security.validate_public_url("http://127.0.0.1/recipe")
+
+    def test_follows_only_bounded_safe_redirects(self) -> None:
+        class Response:
+            def __init__(self, status_code: int, location: str | None = None):
+                self.status_code = status_code
+                self.headers = {"location": location} if location else {}
+
+            def close(self) -> None:
+                return None
+
+        class Session:
+            def __init__(self):
+                self.responses = iter(
+                    [
+                        Response(302, "https://public.example.test/final"),
+                        Response(200),
+                    ]
+                )
+
+            def get(self, *args, **kwargs):
+                del args, kwargs
+                return next(self.responses)
+
+        response = recipe_security.safe_request("https://public.example.test/start", session=Session())
+        self.assertEqual(response.status_code, 200)
+
+    def test_limits_recipe_html_body_size(self) -> None:
+        class Response:
+            headers = {}
+            encoding = "utf-8"
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def iter_content(self, chunk_size: int):
+                del chunk_size
+                return iter([b"x" * (recipe_security.MAX_RECIPE_HTML_BYTES + 1)])
+
+            def close(self) -> None:
+                return None
+
+        with patch.object(recipe_security, "safe_request", return_value=Response()):
+            with self.assertRaisesRegex(ValueError, "5 MB"):
+                recipe_security.fetch_recipe_html("https://public.example.test/recipe")
 
 
 if __name__ == "__main__":

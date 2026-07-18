@@ -66,6 +66,10 @@ test("recipe dialog keeps readable geometry across breakpoints", async ({ page }
 
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
+    await expect.poll(() => dialog.evaluate((element) => {
+      const transform = getComputedStyle(element).transform;
+      return transform === "none" || transform.startsWith("matrix(1, 0, 0, 1");
+    })).toBe(true);
     await expect(dialog.getByTestId("recipe-ingredients")).toBeVisible();
     await expect(dialog.getByTestId("recipe-instructions")).toBeVisible();
 

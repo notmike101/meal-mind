@@ -126,6 +126,7 @@ function summarizeRecipe(recipe: RecipeDto) {
     ingredientCount: recipe.ingredients.length,
     cookwareCount: recipe.cooklang.cookware.length,
     timerCount: recipe.cooklang.timers.length,
+    sourceUrl: recipe.sourceUrl,
     filePath: recipe.filePath,
     detailResource: `mealmind://recipes/${recipe.id}`,
     appUrl: `/recipes/${recipe.id}`,

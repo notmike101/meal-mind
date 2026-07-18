@@ -104,7 +104,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             aria-label="Close recipe details"
-            class="focus-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line/25 bg-surface text-ink/65 transition hover:border-line/50 hover:bg-field hover:text-ink"
+            class="focus-ring flex h-[44px] min-h-[44px] w-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-line/25 bg-surface text-ink/65 transition hover:border-line/50 hover:bg-field hover:text-ink"
             autofocus
             @click="close"
           >

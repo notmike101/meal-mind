@@ -18,6 +18,10 @@
       "types": "./dist/repositories/plans.d.ts",
       "import": "./dist/repositories/plans.js"
     },
+    "./repositories/recipes": {
+      "types": "./dist/repositories/recipes.d.ts",
+      "import": "./dist/repositories/recipes.js"
+    },
     "./repositories/settings": {
       "types": "./dist/repositories/settings.d.ts",
       "import": "./dist/repositories/settings.js"

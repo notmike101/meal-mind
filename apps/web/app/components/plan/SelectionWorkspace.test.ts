@@ -30,6 +30,7 @@ function recipe(id: string, title: string, tags: string[]): RecipeSummaryDto {
     title,
     description: `${title} description`,
     imageUrl: null,
+    sourceUrl: null,
     format: "cooklang",
     defaultServings: 2,
     suggestedSlots: ["Dinner"],

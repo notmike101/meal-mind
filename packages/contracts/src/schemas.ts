@@ -77,6 +77,21 @@ export const recipeDetailRequestSchema = z.object({
   servings: z.coerce.number().int().min(1).max(12).optional(),
 });
 
+export const recipeImportRequestSchema = z.object({
+  url: z.string().trim().min(1).max(2048).refine((value) => {
+    try {
+      const parsed = new URL(value);
+      return ["http:", "https:"].includes(parsed.protocol) && !parsed.username && !parsed.password;
+    } catch {
+      return false;
+    }
+  }, "Recipe URL must be a public HTTP or HTTPS URL."),
+});
+
+export const recipeImportListRequestSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+});
+
 export type GeneratePlanRequest = z.infer<typeof generatePlanRequestSchema>;
 export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;
 export type SettingsUpdateRequest = z.infer<typeof settingsUpdateRequestSchema>;
@@ -88,3 +103,5 @@ export type SwapMealRequest = z.infer<typeof swapMealRequestSchema>;
 export type UpdateShoppingItemRequest = z.infer<typeof updateShoppingItemRequestSchema>;
 export type AdherenceRequest = z.infer<typeof adherenceRequestSchema>;
 export type RecipeFilterRequest = z.infer<typeof recipeFilterRequestSchema>;
+export type RecipeImportRequest = z.infer<typeof recipeImportRequestSchema>;
+export type RecipeImportListRequest = z.infer<typeof recipeImportListRequestSchema>;

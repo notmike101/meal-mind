@@ -8,6 +8,7 @@ const recipe: RecipeSummaryDto = {
   title: "Recipe A",
   description: "Recipe A description",
   imageUrl: null,
+  sourceUrl: null,
   format: "cooklang",
   defaultServings: 2,
   suggestedSlots: ["Dinner"],
