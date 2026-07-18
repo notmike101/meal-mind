@@ -31,9 +31,6 @@ function openRecipe(recipeId: string, servings: number, trigger: globalThis.HTML
     <section class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
       <PageHeading eyebrow="Dashboard" title="Today's plan" :description="`${formatDisplayDate(today)} · Planning in ${timezone}`" />
       <div class="flex shrink-0 flex-wrap gap-3">
-        <NuxtLink to="/plan" class="focus-ring mm-button-primary inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold">
-          Open weekly plan <ArrowRight :size="16" aria-hidden="true" />
-        </NuxtLink>
         <NuxtLink to="/shopping" class="focus-ring mm-button-secondary inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold">
           <ShoppingBasket :size="16" aria-hidden="true" /> Shopping list
         </NuxtLink>
