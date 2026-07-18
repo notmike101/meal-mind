@@ -9,6 +9,7 @@ const recipe: RecipeSummaryDto = {
   title: "Test Recipe",
   description: "A deliberately long recipe description for the catalog card.",
   imageUrl: "/api/recipes/test-recipe/image",
+  sourceUrl: null,
   format: "cooklang",
   defaultServings: 2,
   suggestedSlots: ["Dinner"],

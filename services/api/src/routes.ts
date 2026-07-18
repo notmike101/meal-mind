@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyReply } from "fastify";
-import { createReadStream } from "node:fs";
 import {
   adherenceRequestSchema,
   aiModelsRequestSchema,
@@ -10,6 +9,8 @@ import {
   ok,
   recipeFilterRequestSchema,
   recipeDetailRequestSchema,
+  recipeImportListRequestSchema,
+  recipeImportRequestSchema,
   settingsUpdateRequestSchema,
   swapMealRequestSchema,
   toAppError,
@@ -35,9 +36,15 @@ import {
 } from "./services/planning.js";
 import { generateShoppingList, getShoppingList } from "./services/shopping.js";
 import { getRecipeDetail, getRecipeImage, listRecipes } from "./recipes.js";
+import {
+  enqueueRecipeImport,
+  getRecipeImportJobDto,
+  listRecipeImportJobDtos,
+} from "./recipe-import.js";
 
 type RouteDependencies = {
   triggerAutomaticPlanning?: () => void | Promise<void>;
+  triggerRecipeImport?: () => void | Promise<void>;
 };
 
 function sendError(reply: FastifyReply, error: unknown) {
@@ -51,12 +58,39 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
 
   app.get("/api/recipes", async (request) => {
     const query = recipeFilterRequestSchema.parse(request.query ?? {});
-    return ok(listRecipes(query));
+    return ok(await listRecipes(query));
+  });
+
+  app.post("/api/recipes/imports", async (request, reply) => {
+    const parsed = recipeImportRequestSchema.safeParse(request.body ?? {});
+    if (!parsed.success) {
+      return reply.status(400).send(fail("BAD_REQUEST", parsed.error.issues[0]?.message ?? "Recipe URL is invalid."));
+    }
+    try {
+      const job = await enqueueRecipeImport(parsed.data.url);
+      void Promise.resolve(dependencies.triggerRecipeImport?.()).catch((error) => {
+        app.log.error({ err: error }, "Could not trigger the recipe import worker.");
+      });
+      return reply.status(202).send(ok(job));
+    } catch (error) {
+      return sendError(reply, error);
+    }
+  });
+
+  app.get<{ Params: { jobId: string } }>("/api/recipes/imports/:jobId", async (request, reply) => {
+    const job = await getRecipeImportJobDto(request.params.jobId);
+    if (!job) return reply.status(404).send(fail("NOT_FOUND", "Recipe import job not found."));
+    return ok(job);
+  });
+
+  app.get("/api/recipes/imports", async (request) => {
+    const query = recipeImportListRequestSchema.parse(request.query ?? {});
+    return ok(await listRecipeImportJobDtos(query.limit));
   });
 
   app.get<{ Params: { recipeId: string }; Querystring: { servings?: string } }>("/api/recipes/:recipeId", async (request, reply) => {
     const query = recipeDetailRequestSchema.parse(request.query ?? {});
-    const recipe = getRecipeDetail(request.params.recipeId, query.servings);
+    const recipe = await getRecipeDetail(request.params.recipeId, query.servings);
     if (!recipe) {
       return reply.status(404).send(fail("NOT_FOUND", "Recipe not found."));
     }
@@ -64,14 +98,14 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
   });
 
   app.get<{ Params: { recipeId: string } }>("/api/recipes/:recipeId/image", async (request, reply) => {
-    const image = getRecipeImage(request.params.recipeId);
+    const image = await getRecipeImage(request.params.recipeId);
     if (!image) {
       return reply.status(404).send(fail("NOT_FOUND", "Recipe image not found."));
     }
     return reply
       .header("Content-Type", image.contentType)
       .header("Cache-Control", "public, max-age=86400")
-      .send(createReadStream(image.filePath));
+      .send(image.data);
   });
 
   app.get("/api/settings", async () => ok(await getSettingsWithPantry()));

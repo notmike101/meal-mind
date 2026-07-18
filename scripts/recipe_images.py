@@ -9,6 +9,8 @@ from urllib.parse import urlparse
 
 import requests
 
+from recipe_security import safe_request
+
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 CONTENT_TYPE_EXTENSIONS = {
     "image/jpeg": ".jpg",
@@ -29,8 +31,9 @@ def cache_recipe_image(
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return None
 
-    response = session.get(
+    response = safe_request(
         image_url,
+        session=session,
         headers={"User-Agent": "MealMind recipe importer/1.0"},
         timeout=30,
         stream=True,

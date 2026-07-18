@@ -7,7 +7,6 @@ import {
   getNextWeekRange,
   isDateWithinRange,
   isPlanLocked,
-  loadRecipes,
   normalizeMealSlot,
   validatePlannedMealsForWeek,
   validateServingCount,
@@ -34,6 +33,7 @@ import {
 import { getSettings, getSettingsWithPantry } from "@mealmind/db/repositories/settings";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
 import { generateShoppingList } from "./shopping.js";
+import { getAvailableRecipes, getRecipeCatalog } from "../recipes.js";
 
 function hashPrompt(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -121,7 +121,7 @@ export async function generateWeeklyPlan(input: { weekStart?: string; replaceExi
     throw new AppError("BAD_REQUEST", "Meal count must be a positive integer.", 400);
   }
 
-  const { recipes, invalidRecipes } = loadRecipes();
+  const { recipes, invalidRecipes } = await getRecipeCatalog();
   if (recipes.length === 0) {
     throw new AppError("BAD_REQUEST", "No valid recipes are available for planning.", 400, { invalidRecipes });
   }
@@ -223,7 +223,7 @@ export async function addMeal(input: {
   if (!isDateWithinRange(input.date, plan)) {
     throw new AppError("BAD_REQUEST", "Meal date must be within the plan week.", 400);
   }
-  const recipe = loadRecipes().recipes.find((candidate) => candidate.id === input.recipeId);
+  const recipe = (await getAvailableRecipes()).find((candidate) => candidate.id === input.recipeId);
   if (!recipe) throw new AppError("BAD_REQUEST", "Selected recipe is not available in the library.", 400);
   const slot = normalizeMealSlot(input.slot);
   if ((slot?.length ?? 0) > 50) throw new AppError("BAD_REQUEST", "Meal slot labels must be 50 characters or fewer.", 400);
@@ -316,7 +316,7 @@ export async function swapMeal(input: {
   const meal = plan.meals.find((candidate) => candidate.id === input.mealId);
   if (!meal) throw new AppError("NOT_FOUND", "Meal not found.", 404);
 
-  const recipes = loadRecipes().recipes;
+  const recipes = await getAvailableRecipes();
   let selectedRecipeId = input.recipeId;
   let note = input.note;
   if (input.mode === "ai") {

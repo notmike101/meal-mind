@@ -1,10 +1,11 @@
 import { runJsonPrompt, shoppingListDraftSchema, shoppingListMessages, type ShoppingListDraft } from "@mealmind/ai";
 import { AppError } from "@mealmind/contracts";
-import { buildMealIngredients, loadRecipes, normalizeShoppingItemName } from "@mealmind/domain";
+import { buildMealIngredients, normalizeShoppingItemName } from "@mealmind/domain";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
 import { getPlanWithMeals } from "@mealmind/db/repositories/plans";
 import { getSettingsWithPantry } from "@mealmind/db/repositories/settings";
 import { deleteShoppingListForPlan, getShoppingListForPlan, replaceShoppingList } from "@mealmind/db/repositories/shopping";
+import { getAvailableRecipes } from "../recipes.js";
 
 function validateShoppingListAgainstRecipes(draft: ShoppingListDraft, recipeIds: Set<string>) {
   const errors: string[] = [];
@@ -25,7 +26,7 @@ export async function generateShoppingList(planId: string) {
   }
 
   const { settings, pantryStaples } = await getSettingsWithPantry();
-  const { recipes } = loadRecipes();
+  const recipes = await getAvailableRecipes();
   const pantryNames = pantryStaples.map((staple) => staple.name);
   const mealIngredients = buildMealIngredients({
     meals: plan.meals.filter((meal) => !plan.skippedDates.includes(meal.date)),

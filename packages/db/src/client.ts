@@ -129,6 +129,65 @@ export async function ensureDatabase() {
 
     CREATE INDEX IF NOT EXISTS ai_events_type_idx ON ai_events(event_type);
 
+    CREATE TABLE IF NOT EXISTS recipe_documents (
+      document_id TEXT PRIMARY KEY,
+      recipe_id TEXT,
+      origin TEXT NOT NULL CHECK(origin IN ('file', 'url')),
+      status TEXT NOT NULL CHECK(status IN ('valid', 'invalid')),
+      source_url TEXT,
+      source_path TEXT,
+      title TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      default_servings INTEGER NOT NULL DEFAULT 2 CHECK(default_servings >= 1 AND default_servings <= 12),
+      suggested_slots JSONB NOT NULL DEFAULT '[]'::jsonb,
+      tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+      prep_time_minutes INTEGER,
+      cook_time_minutes INTEGER,
+      cooklang TEXT NOT NULL,
+      content_hash TEXT NOT NULL,
+      parse_errors JSONB NOT NULL DEFAULT '[]'::jsonb,
+      image_bytes BYTEA,
+      image_content_type TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS recipe_documents_status_idx ON recipe_documents(status);
+    CREATE INDEX IF NOT EXISTS recipe_documents_recipe_id_idx ON recipe_documents(recipe_id);
+    CREATE INDEX IF NOT EXISTS recipe_documents_source_url_idx ON recipe_documents(source_url);
+    CREATE INDEX IF NOT EXISTS recipe_documents_source_path_idx ON recipe_documents(source_path);
+    CREATE UNIQUE INDEX IF NOT EXISTS recipe_documents_url_unique
+      ON recipe_documents(source_url)
+      WHERE origin = 'url' AND source_url IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS recipe_documents_valid_recipe_id_unique
+      ON recipe_documents(recipe_id)
+      WHERE status = 'valid' AND recipe_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS recipe_documents_file_path_unique
+      ON recipe_documents(source_path)
+      WHERE origin = 'file' AND source_path IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS recipe_import_jobs (
+      id TEXT PRIMARY KEY,
+      source_url TEXT NOT NULL,
+      status TEXT NOT NULL CHECK(status IN ('queued', 'fetching', 'converting', 'saving', 'succeeded', 'failed')),
+      recipe_id TEXT,
+      recipe_title TEXT,
+      error TEXT,
+      deduplicated BOOLEAN NOT NULL DEFAULT FALSE,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      lease_until TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      completed_at TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS recipe_import_jobs_status_idx ON recipe_import_jobs(status);
+    CREATE INDEX IF NOT EXISTS recipe_import_jobs_source_url_idx ON recipe_import_jobs(source_url);
+    CREATE INDEX IF NOT EXISTS recipe_import_jobs_created_at_idx ON recipe_import_jobs(created_at);
+    CREATE UNIQUE INDEX IF NOT EXISTS recipe_import_jobs_active_source_unique
+      ON recipe_import_jobs(source_url)
+      WHERE status IN ('queued', 'fetching', 'converting', 'saving');
+
     ALTER TABLE settings
       ADD COLUMN IF NOT EXISTS auto_generate_next_week BOOLEAN NOT NULL DEFAULT TRUE;
 

@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -95,6 +96,7 @@ from recipe_jsonld import (  # noqa: E402
     normalize_recipe_json_ld,
 )
 from recipe_images import cache_recipe_image  # noqa: E402
+from recipe_security import fetch_recipe_html  # noqa: E402
 
 
 class RecipeExtractor:
@@ -107,13 +109,7 @@ class RecipeExtractor:
 
     def fetch(self) -> str:
         if self.html is None:
-            response = requests.get(
-                self.url,
-                headers={"User-Agent": "MealMind recipe importer/1.0"},
-                timeout=30,
-            )
-            response.raise_for_status()
-            self.html = response.text
+            self.html = fetch_recipe_html(self.url)
         return self.html
 
     def extract_jsonld(self) -> dict[str, Any] | None:
@@ -243,12 +239,15 @@ def main() -> int:
     parser.add_argument("url", help="Public recipe URL")
     parser.add_argument("output_dir", nargs="?", default="recipes")
     parser.add_argument("--meal-type", choices=("lunch", "dinner"))
+    parser.add_argument("--json", action="store_true", help="Print the saved recipe result as JSON.")
     args = parser.parse_args()
     try:
         result = import_recipe_from_url(args.url, args.output_dir, args.meal_type)
     except Exception as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 1
+    if result and args.json:
+        print(json.dumps(result, ensure_ascii=False))
     return 0 if result else 1
 
 

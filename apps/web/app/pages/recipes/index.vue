@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import { callOnce } from "#app";
 import { BookOpen, Search } from "@lucide/vue";
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import type { RecipeImportJobDto } from "@mealmind/contracts";
+import { errorMessage } from "~/composables/use-api";
 import { useRecipeModal } from "~/composables/use-recipe-modal";
 import { useRecipesStore } from "~/stores/recipes";
 
 const recipes = useRecipesStore();
 const recipeModal = useRecipeModal();
-await callOnce("recipe-catalog", () => recipes.fetchCatalog(), { mode: "navigation" });
+await callOnce("recipe-library", () => Promise.all([recipes.fetchCatalog(), recipes.fetchRecentImports()]), { mode: "navigation" });
 const query = ref("");
+const importJob = ref<RecipeImportJobDto | null>(null);
+const importRequestError = ref<string | null>(null);
+let importPollTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+const terminalStatuses = new Set(["succeeded", "failed"]);
+const importBusy = computed(() => Boolean(importJob.value && !terminalStatuses.has(importJob.value.status)));
 const filteredRecipes = computed(() => {
   const normalized = query.value.trim().toLocaleLowerCase();
   const catalog = recipes.catalog?.recipes ?? [];
@@ -21,21 +29,81 @@ const filteredRecipes = computed(() => {
 function openRecipe(recipeId: string, trigger: globalThis.HTMLElement) {
   void recipeModal.openRecipe(recipeId, 2, trigger);
 }
+
+function stopImportPolling() {
+  if (importPollTimer) globalThis.clearTimeout(importPollTimer);
+  importPollTimer = null;
+}
+
+function scheduleImportPoll() {
+  stopImportPolling();
+  if (!importJob.value || terminalStatuses.has(importJob.value.status)) return;
+  importPollTimer = globalThis.setTimeout(() => void pollImport(), 900);
+}
+
+async function pollImport() {
+  if (!importJob.value || terminalStatuses.has(importJob.value.status)) return;
+  try {
+    importJob.value = await recipes.fetchRecipeImport(importJob.value.id);
+    await recipes.fetchRecentImports();
+    if (importJob.value.status === "succeeded") await recipes.fetchCatalog();
+    scheduleImportPoll();
+  } catch (error) {
+    importRequestError.value = errorMessage(error, "Import status could not be loaded.");
+    scheduleImportPoll();
+  }
+}
+
+async function startImport(url: string) {
+  importRequestError.value = null;
+  try {
+    importJob.value = await recipes.startRecipeImport(url);
+    await recipes.fetchRecentImports();
+    scheduleImportPoll();
+  } catch (error) {
+    importRequestError.value = errorMessage(error, "Recipe import could not be started.");
+  }
+}
+
+function viewImportedRecipe(event: globalThis.MouseEvent, recipeId: string) {
+  const trigger = event.currentTarget instanceof globalThis.HTMLElement ? event.currentTarget : undefined;
+  void recipeModal.openRecipe(recipeId, 2, trigger);
+}
+
+onMounted(() => {
+  const active = recipes.imports.find((job) => !terminalStatuses.has(job.status));
+  if (active) {
+    importJob.value = active;
+    scheduleImportPoll();
+  }
+});
+
+onBeforeUnmount(stopImportPolling);
 </script>
 
 <template>
   <div class="mm-space-y-6">
-    <section class="flex flex-col mm-gap-6 lg:flex-row lg:items-end lg:justify-between">
-      <PageHeading eyebrow="Recipes" title="CookLang recipe library" description="Browse your trusted local collection and find the right meal in seconds." />
-      <div class="flex w-fit shrink-0 items-center mm-gap-3 rounded-2xl border border-line/25 bg-surface px-4 py-3 shadow-sm">
-        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-moss/12 text-moss">
-          <BookOpen :size="20" aria-hidden="true" />
-        </span>
-        <div>
-          <span class="block text-2xl font-bold leading-none tabular-nums">{{ recipes.catalog?.recipes.length ?? 0 }}</span>
-          <span class="mt-1 block mm-text-xs font-semibold text-ink/65">recipes ready to cook</span>
+    <section class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.82fr)] xl:items-stretch">
+      <div class="flex flex-col justify-between gap-6">
+        <PageHeading eyebrow="Recipes" title="CookLang recipe library" description="Browse your trusted local collection and find the right meal in seconds." />
+        <div class="flex w-fit shrink-0 items-center mm-gap-3 rounded-2xl border border-line/25 bg-surface px-4 py-3 shadow-sm">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-moss/12 text-moss">
+            <BookOpen :size="20" aria-hidden="true" />
+          </span>
+          <div>
+            <span class="block text-2xl font-bold leading-none tabular-nums">{{ recipes.catalog?.recipes.length ?? 0 }}</span>
+            <span class="mt-1 block mm-text-xs font-semibold text-ink/65">recipes ready to cook</span>
+          </div>
         </div>
       </div>
+      <RecipesImportRecipeForm
+        :busy="importBusy"
+        :job="importJob"
+        :recent-jobs="recipes.imports"
+        :request-error="importRequestError"
+        @submit="startImport"
+        @view-recipe="viewImportedRecipe"
+      />
     </section>
     <RecipesInvalidRecipeNotice
       v-if="recipes.catalog?.invalidRecipes.length"

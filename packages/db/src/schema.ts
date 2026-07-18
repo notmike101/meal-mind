@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   boolean,
+  customType,
   index,
   integer,
   jsonb,
@@ -10,6 +11,10 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType: () => "bytea",
+});
 
 export const settings = pgTable("settings", {
   id: integer("id").primaryKey(),
@@ -126,6 +131,63 @@ export const aiEvents = pgTable(
   (table) => [index("ai_events_type_idx").on(table.eventType)],
 );
 
+export const recipeDocuments = pgTable(
+  "recipe_documents",
+  {
+    documentId: text("document_id").primaryKey(),
+    recipeId: text("recipe_id"),
+    origin: text("origin", { enum: ["file", "url"] }).notNull(),
+    status: text("status", { enum: ["valid", "invalid"] }).notNull(),
+    sourceUrl: text("source_url"),
+    sourcePath: text("source_path"),
+    title: text("title").notNull().default(""),
+    description: text("description").notNull().default(""),
+    defaultServings: integer("default_servings").notNull().default(2),
+    suggestedSlots: jsonb("suggested_slots").$type<string[]>().notNull().default([]),
+    tags: jsonb("tags").$type<string[]>().notNull().default([]),
+    prepTimeMinutes: integer("prep_time_minutes"),
+    cookTimeMinutes: integer("cook_time_minutes"),
+    cooklang: text("cooklang").notNull(),
+    contentHash: text("content_hash").notNull(),
+    parseErrors: jsonb("parse_errors").$type<string[]>().notNull().default([]),
+    imageBytes: bytea("image_bytes"),
+    imageContentType: text("image_content_type"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (table) => [
+    index("recipe_documents_status_idx").on(table.status),
+    index("recipe_documents_recipe_id_idx").on(table.recipeId),
+    index("recipe_documents_source_url_idx").on(table.sourceUrl),
+    index("recipe_documents_source_path_idx").on(table.sourcePath),
+  ],
+);
+
+export const recipeImportJobs = pgTable(
+  "recipe_import_jobs",
+  {
+    id: text("id").primaryKey(),
+    sourceUrl: text("source_url").notNull(),
+    status: text("status", {
+      enum: ["queued", "fetching", "converting", "saving", "succeeded", "failed"],
+    }).notNull(),
+    recipeId: text("recipe_id"),
+    recipeTitle: text("recipe_title"),
+    error: text("error"),
+    deduplicated: boolean("deduplicated").notNull().default(false),
+    attempts: integer("attempts").notNull().default(0),
+    leaseUntil: text("lease_until"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+    completedAt: text("completed_at"),
+  },
+  (table) => [
+    index("recipe_import_jobs_status_idx").on(table.status),
+    index("recipe_import_jobs_source_url_idx").on(table.sourceUrl),
+    index("recipe_import_jobs_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export const mealPlansRelations = relations(mealPlans, ({ many }) => ({
   meals: many(planMeals),
   shoppingLists: many(shoppingLists),
@@ -166,3 +228,7 @@ export type ShoppingItem = InferSelectModel<typeof shoppingItems>;
 export type InsertShoppingItem = InferInsertModel<typeof shoppingItems>;
 export type AiEvent = InferSelectModel<typeof aiEvents>;
 export type InsertAiEvent = InferInsertModel<typeof aiEvents>;
+export type RecipeDocument = InferSelectModel<typeof recipeDocuments>;
+export type InsertRecipeDocument = InferInsertModel<typeof recipeDocuments>;
+export type RecipeImportJob = InferSelectModel<typeof recipeImportJobs>;
+export type InsertRecipeImportJob = InferInsertModel<typeof recipeImportJobs>;
