@@ -63,6 +63,47 @@ test("week navigation is URL-backed and does not overflow representative viewpor
   }
 });
 
+test("plan generation controls respect week lifecycle without changing data", async ({ page, request }) => {
+  const stateResponse = await request.get("/api/plans/current");
+  expect(stateResponse.ok()).toBe(true);
+  const statePayload = await stateResponse.json() as {
+    ok: true;
+    data: {
+      currentWeek: { weekStart: string };
+      nextWeek: { weekStart: string };
+    };
+  };
+  const { currentWeek, nextWeek } = statePayload.data;
+
+  const currentPlanResponse = await request.get(`/api/plans/by-week/${currentWeek.weekStart}`);
+  expect(currentPlanResponse.ok()).toBe(true);
+  const currentPlanPayload = await currentPlanResponse.json() as { ok: true; data: { status: string } | null };
+  await page.goto(`/plan?week=${currentWeek.weekStart}&view=plan`);
+  await waitForReady(page);
+  await expect(page.getByRole("button", { name: "Regenerate plan" })).toHaveCount(0);
+  if (!currentPlanPayload.data) {
+    await expect(page.getByRole("button", { name: "Generate plan" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Start blank plan" })).toBeVisible();
+  }
+
+  const nextPlanResponse = await request.get(`/api/plans/by-week/${nextWeek.weekStart}`);
+  expect(nextPlanResponse.ok()).toBe(true);
+  const nextPlanPayload = await nextPlanResponse.json() as { ok: true; data: { status: string } | null };
+  await page.goto(`/plan?week=${nextWeek.weekStart}&view=plan`);
+  await waitForReady(page);
+
+  if (nextPlanPayload.data?.status === "draft") {
+    await page.getByRole("button", { name: "Regenerate plan" }).click();
+    const dialog = page.getByRole("dialog", { name: "Regenerate plan" });
+    await expect(dialog.getByText(/Every meal, edit, skipped day, and shopping-list item/)).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toHaveCount(0);
+  } else {
+    await expect(page.getByRole("button", { name: "Regenerate plan" })).toHaveCount(0);
+    if (!nextPlanPayload.data) await expect(page.getByRole("button", { name: "Generate plan" })).toBeVisible();
+  }
+});
+
 test("recipe details retain route-backed dialog history", async ({ page }) => {
   await page.goto("/recipes");
   await waitForReady(page);
