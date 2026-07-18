@@ -10,7 +10,10 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 
-MAX_RECIPE_HTML_BYTES = 5 * 1024 * 1024
+# Modern recipe pages can embed several megabytes of client-side application state.
+# Keep the fetch bounded while leaving room for valid pages such as HelloFresh recipes.
+MAX_RECIPE_HTML_MB = 10
+MAX_RECIPE_HTML_BYTES = MAX_RECIPE_HTML_MB * 1024 * 1024
 MAX_REDIRECTS = 5
 
 
@@ -82,7 +85,7 @@ def fetch_recipe_html(url: str) -> str:
     content_length = response.headers.get("content-length")
     if content_length and int(content_length) > MAX_RECIPE_HTML_BYTES:
         response.close()
-        raise ValueError("Recipe page exceeds the 5 MB limit.")
+        raise ValueError(f"Recipe page exceeds the {MAX_RECIPE_HTML_MB} MB limit.")
 
     chunks: list[bytes] = []
     size = 0
@@ -92,7 +95,7 @@ def fetch_recipe_html(url: str) -> str:
                 continue
             size += len(chunk)
             if size > MAX_RECIPE_HTML_BYTES:
-                raise ValueError("Recipe page exceeds the 5 MB limit.")
+                raise ValueError(f"Recipe page exceeds the {MAX_RECIPE_HTML_MB} MB limit.")
             chunks.append(chunk)
     finally:
         response.close()
