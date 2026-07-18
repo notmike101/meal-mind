@@ -406,6 +406,28 @@ class RecipeSecurityTests(unittest.TestCase):
         response = recipe_security.safe_request("https://public.example.test/start", session=Session())
         self.assertEqual(response.status_code, 200)
 
+    def test_allows_recipe_html_above_legacy_five_megabyte_limit(self) -> None:
+        body = b"x" * (5 * 1024 * 1024 + 1)
+
+        class Response:
+            headers = {}
+            encoding = "utf-8"
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def iter_content(self, chunk_size: int):
+                del chunk_size
+                return iter([body])
+
+            def close(self) -> None:
+                return None
+
+        with patch.object(recipe_security, "safe_request", return_value=Response()):
+            html = recipe_security.fetch_recipe_html("https://public.example.test/recipe")
+
+        self.assertEqual(len(html.encode("utf-8")), len(body))
+
     def test_limits_recipe_html_body_size(self) -> None:
         class Response:
             headers = {}
@@ -422,7 +444,7 @@ class RecipeSecurityTests(unittest.TestCase):
                 return None
 
         with patch.object(recipe_security, "safe_request", return_value=Response()):
-            with self.assertRaisesRegex(ValueError, "5 MB"):
+            with self.assertRaisesRegex(ValueError, "10 MB"):
                 recipe_security.fetch_recipe_html("https://public.example.test/recipe")
 
 
