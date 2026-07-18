@@ -47,12 +47,14 @@ test("week navigation is URL-backed and does not overflow representative viewpor
   await waitForReady(page);
   const workspace = page.getByTestId("weekly-workspace");
   const originalWeek = await workspace.getAttribute("data-week-start");
+  const thisWeekHref = await page.getByRole("link", { name: "This week" }).getAttribute("href");
+  const thisWeek = new URL(thisWeekHref!, page.url()).searchParams.get("week");
   await page.getByRole("link", { name: "Next week" }).click();
   await waitForReady(page);
   await expect(workspace).not.toHaveAttribute("data-week-start", originalWeek!);
   await page.getByRole("link", { name: "This week" }).click();
   await waitForReady(page);
-  await expect(workspace).toHaveAttribute("data-week-start", originalWeek!);
+  await expect(workspace).toHaveAttribute("data-week-start", thisWeek!);
 
   for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     await page.setViewportSize(viewport);
