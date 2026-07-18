@@ -136,7 +136,7 @@ export async function enqueueRecipeImport(inputUrl: string) {
   const sourceUrl = normalizeRecipeUrl(inputUrl);
   await assertPublicRecipeHost(sourceUrl);
   const latest = await getLatestRecipeImportJob(sourceUrl);
-  if (latest) return toDto(latest)!;
+  if (latest && latest.status !== "failed") return toDto(latest)!;
   const existingRecipe = await getRecipeDocumentBySourceUrl(sourceUrl);
   if (existingRecipe?.recipeId) {
     const completed = await createCompletedRecipeImportJob({

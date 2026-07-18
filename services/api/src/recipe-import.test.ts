@@ -78,6 +78,26 @@ describe("recipe import URL and queue behavior", () => {
     expect(mocks.createRecipeImportJob).not.toHaveBeenCalled();
   });
 
+  it("queues a new job when the latest import for the URL failed", async () => {
+    resetMocks();
+    mocks.getLatestRecipeImportJob.mockResolvedValue({
+      ...queuedJob,
+      id: "failed-job",
+      status: "failed",
+      error: "Recipe page exceeds the 5 MB limit.",
+      completedAt: "2026-07-15T00:01:00.000Z",
+    });
+
+    await expect(enqueueRecipeImport("https://EXAMPLE.com/recipe#top")).resolves.toMatchObject({
+      id: "job-1",
+      status: "queued",
+    });
+    expect(mocks.createRecipeImportJob).toHaveBeenCalledOnce();
+    expect(mocks.createRecipeImportJob).toHaveBeenCalledWith(expect.objectContaining({
+      sourceUrl: "https://example.com/recipe",
+    }));
+  });
+
   it("returns a completed deduplication job for a legacy URL record", async () => {
     resetMocks();
     mocks.getRecipeDocumentBySourceUrl.mockResolvedValue({ recipeId: "legacy-recipe", title: "Legacy Recipe" });
