@@ -13,7 +13,7 @@ describe("planning store", () => {
   beforeEach(() => setActivePinia(createPinia()));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("refreshes the exact selected week after generation", async () => {
+  it.each([false, true])("refreshes the exact selected week after generation with replaceExisting=%s", async (replaceExisting) => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, data: { id: "draft" } })
       .mockResolvedValueOnce({ ok: true, data: emptyState })
@@ -23,11 +23,11 @@ describe("planning store", () => {
     const store = usePlanningStore();
     store.selectedWeekStart = "2026-07-06";
 
-    await store.generate("2026-07-06", false, 9);
+    await store.generate("2026-07-06", replaceExisting, 9);
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/plans/generate", {
       method: "POST",
-      body: { weekStart: "2026-07-06", replaceExisting: false, mealCount: 9 },
+      body: { weekStart: "2026-07-06", replaceExisting, mealCount: 9 },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/plans/by-week/2026-07-06", {});
     expect(store.selectedPlan?.id).toBe("draft");

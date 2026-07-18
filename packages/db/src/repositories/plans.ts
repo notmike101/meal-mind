@@ -25,13 +25,25 @@ export async function createPlanWithMeals(plan: InsertMealPlan, meals: InsertPla
   return saved;
 }
 
-export async function replacePlanWithMeals(plan: InsertMealPlan, meals: InsertPlanMeal[]) {
+export async function replacePlanWithMeals(existingPlanId: string, plan: InsertMealPlan, meals: InsertPlanMeal[]) {
   const db = getDb();
-  await db.transaction(async (tx) => {
-    await tx.delete(mealPlans).where(eq(mealPlans.weekStart, plan.weekStart));
+  const replaced = await db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(mealPlans)
+      .where(and(
+        eq(mealPlans.id, existingPlanId),
+        eq(mealPlans.weekStart, plan.weekStart),
+        eq(mealPlans.status, "draft"),
+      ))
+      .returning({ id: mealPlans.id });
+    if (deleted.length === 0) return false;
+
     await tx.insert(mealPlans).values(plan);
     if (meals.length > 0) await tx.insert(planMeals).values(meals);
+    return true;
   });
+  if (!replaced) return null;
+
   const saved = await getPlanWithMeals(plan.id);
   if (!saved) throw new Error("Plan was replaced but could not be read back.");
   return saved;

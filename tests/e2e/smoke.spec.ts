@@ -32,12 +32,15 @@ test("primary navigation contains the unified destinations", async ({ page }) =>
   await expect(navigation.getByRole("link", { name: "Shopping", exact: true })).toHaveCount(0);
 
   await navigation.getByRole("link", { name: "Recipes", exact: true }).click();
+  await expect(page).toHaveURL(/\/recipes$/);
   await waitForReady(page);
   await expect(page.getByRole("heading", { name: "CookLang recipe library" })).toBeVisible();
   await navigation.getByRole("link", { name: "Settings", exact: true }).click();
+  await expect(page).toHaveURL(/\/settings$/);
   await waitForReady(page);
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
   await navigation.getByRole("link", { name: "Plan", exact: true }).click();
+  await expect(page).toHaveURL(/\/plan\?week=\d{4}-\d{2}-\d{2}&view=plan$/);
   await waitForReady(page);
   await expect(page.getByTestId("weekly-workspace")).toBeVisible();
 });
@@ -47,12 +50,18 @@ test("week navigation is URL-backed and does not overflow representative viewpor
   await waitForReady(page);
   const workspace = page.getByTestId("weekly-workspace");
   const originalWeek = await workspace.getAttribute("data-week-start");
-  const thisWeekHref = await page.getByRole("link", { name: "This week" }).getAttribute("href");
+  const thisWeekLink = page.getByRole("link", { name: "This week", exact: true });
+  const nextWeekLink = page.getByRole("link", { name: "Next week", exact: true });
+  const thisWeekHref = await thisWeekLink.getAttribute("href");
+  const nextWeekHref = await nextWeekLink.getAttribute("href");
   const thisWeek = new URL(thisWeekHref!, page.url()).searchParams.get("week");
-  await page.getByRole("link", { name: "Next week" }).click();
+  const nextWeek = new URL(nextWeekHref!, page.url()).searchParams.get("week");
+  await nextWeekLink.click();
+  await expect(page).toHaveURL(new RegExp(`/plan\\?week=${nextWeek}&view=plan$`));
   await waitForReady(page);
   await expect(workspace).not.toHaveAttribute("data-week-start", originalWeek!);
-  await page.getByRole("link", { name: "This week" }).click();
+  await thisWeekLink.click();
+  await expect(page).toHaveURL(new RegExp(`/plan\\?week=${thisWeek}&view=plan$`));
   await waitForReady(page);
   await expect(workspace).toHaveAttribute("data-week-start", thisWeek!);
 
@@ -60,6 +69,47 @@ test("week navigation is URL-backed and does not overflow representative viewpor
     await page.setViewportSize(viewport);
     await page.reload();
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  }
+});
+
+test("plan generation controls respect week lifecycle without changing data", async ({ page, request }) => {
+  const stateResponse = await request.get("/api/plans/current");
+  expect(stateResponse.ok()).toBe(true);
+  const statePayload = await stateResponse.json() as {
+    ok: true;
+    data: {
+      currentWeek: { weekStart: string };
+      nextWeek: { weekStart: string };
+    };
+  };
+  const { currentWeek, nextWeek } = statePayload.data;
+
+  const currentPlanResponse = await request.get(`/api/plans/by-week/${currentWeek.weekStart}`);
+  expect(currentPlanResponse.ok()).toBe(true);
+  const currentPlanPayload = await currentPlanResponse.json() as { ok: true; data: { status: string } | null };
+  await page.goto(`/plan?week=${currentWeek.weekStart}&view=plan`);
+  await waitForReady(page);
+  await expect(page.getByRole("button", { name: "Regenerate plan" })).toHaveCount(0);
+  if (!currentPlanPayload.data) {
+    await expect(page.getByRole("button", { name: "Generate plan" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Start blank plan" })).toBeVisible();
+  }
+
+  const nextPlanResponse = await request.get(`/api/plans/by-week/${nextWeek.weekStart}`);
+  expect(nextPlanResponse.ok()).toBe(true);
+  const nextPlanPayload = await nextPlanResponse.json() as { ok: true; data: { status: string } | null };
+  await page.goto(`/plan?week=${nextWeek.weekStart}&view=plan`);
+  await waitForReady(page);
+
+  if (nextPlanPayload.data?.status === "draft") {
+    await page.getByRole("button", { name: "Regenerate plan" }).click();
+    const dialog = page.getByRole("dialog", { name: "Regenerate plan" });
+    await expect(dialog.getByText(/Every meal, edit, skipped day, and shopping-list item/)).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(dialog).toHaveCount(0);
+  } else {
+    await expect(page.getByRole("button", { name: "Regenerate plan" })).toHaveCount(0);
+    if (!nextPlanPayload.data) await expect(page.getByRole("button", { name: "Generate plan" })).toBeVisible();
   }
 });
 

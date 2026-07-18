@@ -78,7 +78,9 @@ test("falls back only when week is omitted and keeps explicit empty weeks visibl
   await goto(page, workspaceUrl(fixture.weeks.current, "plan"));
   await expect(page).toHaveURL(new RegExp(`${workspaceUrl(fixture.weeks.current, "plan").replace("?", "\\?")}$`));
   await expect(page.getByRole("heading", { name: "No plan for this week" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Generate plan" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Generate plan" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Start blank plan" })).toBeVisible();
+  await expect(page.getByText("Start with a blank week to plan the current week manually.")).toBeVisible();
 });
 
 test("enforces empty-week rules and can create a blank plan with a meal", async ({ page, request }) => {
@@ -123,6 +125,51 @@ test("generates, edits, swaps, skips, and commits a selected week", async ({ pag
   await page.getByRole("button", { name: "Commit plan" }).click();
   await expect(page.getByText("Locked", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Commit plan" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Regenerate plan" })).toHaveCount(0);
+});
+
+test("regenerates a future draft and removes all prior plan-owned state", async ({ page, request }) => {
+  const fixture = await reset(request);
+  await goto(page, workspaceUrl(fixture.weeks.next, "plan"));
+  const workspace = page.getByTestId("weekly-workspace");
+  const oldPlanId = await workspace.getAttribute("data-plan-id");
+  expect(oldPlanId).toBeTruthy();
+
+  const skipButton = page.getByRole("button", { name: /^Skip / }).first();
+  const skipLabel = await skipButton.getAttribute("aria-label");
+  await skipButton.click();
+  await expect(page.getByRole("button", { name: skipLabel!.replace("Skip", "Restore") })).toBeVisible();
+
+  await page.getByTestId("shopping-tab").click();
+  await waitForReady(page);
+  await page.getByRole("checkbox").first().check();
+  await expect(page.getByRole("checkbox").first()).toBeChecked();
+  await page.getByTestId("plan-tab").click();
+  await waitForReady(page);
+
+  await page.getByRole("button", { name: "Regenerate plan" }).click();
+  const dialog = page.getByRole("dialog", { name: "Regenerate plan" });
+  await expect(dialog.getByText(/Every meal, edit, skipped day, and shopping-list item/)).toBeVisible();
+  await dialog.getByRole("spinbutton", { name: "Number of meals" }).fill("3");
+  await dialog.getByRole("button", { name: "Regenerate plan" }).click();
+
+  await expect(workspace).not.toHaveAttribute("data-plan-id", oldPlanId!);
+  await expect(page.getByRole("button", { name: /^Restore / })).toHaveCount(0);
+
+  const planResponse = await request.get(`http://127.0.0.1:3199/api/plans/by-week/${fixture.weeks.next}`);
+  const planPayload = await planResponse.json() as { ok: true; data: { id: string; skippedDates: string[]; meals: unknown[] } };
+  expect(planPayload.data.id).not.toBe(oldPlanId);
+  expect(planPayload.data.skippedDates).toEqual([]);
+  expect(planPayload.data.meals).toHaveLength(3);
+
+  const oldListResponse = await request.get(`http://127.0.0.1:3199/api/plans/${oldPlanId}/shopping-list`);
+  const oldListPayload = await oldListResponse.json() as { ok: true; data: unknown };
+  expect(oldListPayload.data).toBeNull();
+
+  await page.getByTestId("shopping-tab").click();
+  await waitForReady(page);
+  await expect(page.getByRole("checkbox")).toHaveCount(3);
+  for (const checkbox of await page.getByRole("checkbox").all()) await expect(checkbox).not.toBeChecked();
 });
 
 test("tracks current-week adherence inside the Plan tab", async ({ page }) => {

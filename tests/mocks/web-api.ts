@@ -410,6 +410,9 @@ export function buildMockApi(): FastifyInstance {
   app.post("/api/plans/generate", async (request, reply) => {
     const body = request.body as { weekStart?: string; replaceExisting?: boolean; mealCount?: number } | null;
     if (!body?.weekStart) return reply.status(400).send(fail("BAD_REQUEST", "weekStart is required."));
+    if (body.weekStart <= state.weeks.current) {
+      return reply.status(409).send(fail("CONFLICT", "Meal plans can only be generated for future weeks."));
+    }
     const existing = state.plans.find((plan) => plan.weekStart === body.weekStart);
     if (existing && !body.replaceExisting) return reply.status(409).send(fail("CONFLICT", "A plan already exists for that week."));
     if (existing?.status !== undefined && existing.status !== "draft") {
