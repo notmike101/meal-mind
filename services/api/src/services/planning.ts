@@ -65,6 +65,13 @@ function resolveWeek(weekStart: string | undefined, timezone: string): WeekRange
     : getNextWeekRange(new Date(), timezone);
 }
 
+function assertFuturePlanningWeek(weekStart: string, timezone: string) {
+  const currentWeekStart = getCurrentWeekRange(new Date(), timezone).weekStart;
+  if (weekStart <= currentWeekStart) {
+    throw new AppError("CONFLICT", "Meal plans can only be generated for future weeks.", 409);
+  }
+}
+
 function assertEditablePlan<T extends { status: "draft" | "committed" | "active" | "completed" }>(plan: T | null): asserts plan is T {
   if (!plan) throw new AppError("NOT_FOUND", "Meal plan not found.", 404);
   if (isPlanLocked(plan)) throw new AppError("CONFLICT", "This meal plan is locked.", 409);
@@ -147,17 +154,19 @@ export async function generateWeeklyPlan(input: { weekStart?: string; replaceExi
     throw new AppError("BAD_REQUEST", "Meal count must be a positive integer.", 400);
   }
 
-  const { recipes, invalidRecipes } = await getRecipeCatalog();
-  if (recipes.length === 0) {
-    throw new AppError("BAD_REQUEST", "No valid recipes are available for planning.", 400, { invalidRecipes });
-  }
   const resolvedWeek = resolveWeek(input.weekStart, settings.timezone);
+  assertFuturePlanningWeek(resolvedWeek.weekStart, settings.timezone);
   const existing = await getPlanByWeekStart(resolvedWeek.weekStart);
   if (existing && !input.replaceExisting) {
     throw new AppError("CONFLICT", "A plan already exists for that week.", 409, { planId: existing.id });
   }
   if (existing && isPlanLocked(existing)) {
     throw new AppError("CONFLICT", "A locked plan cannot be replaced.", 409);
+  }
+
+  const { recipes, invalidRecipes } = await getRecipeCatalog();
+  if (recipes.length === 0) {
+    throw new AppError("BAD_REQUEST", "No valid recipes are available for planning.", 400, { invalidRecipes });
   }
 
   let validationErrors: string[] = [];
@@ -219,9 +228,17 @@ export async function generateWeeklyPlan(input: { weekStart?: string; replaceExi
         sortOrder,
       };
     });
+    assertFuturePlanningWeek(resolvedWeek.weekStart, settings.timezone);
     const saved = existing
-      ? await replacePlanWithMeals(plan, meals)
+      ? await replacePlanWithMeals(existing.id, plan, meals)
       : await createPlanWithMeals(plan, meals);
+    if (!saved) {
+      throw new AppError(
+        "CONFLICT",
+        "The draft changed while regeneration was running. Refresh and try again.",
+        409,
+      );
+    }
     await refreshShoppingList(saved.id);
     return getPlanWithMeals(saved.id);
   }
