@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useHead, useNuxtApp, useRoute, useRouter } from "#imports";
-import { computed, watch } from "vue";
+import { computed, nextTick, watch } from "vue";
 import { useRecipeModal } from "~/composables/use-recipe-modal";
 
 const route = useRoute();
@@ -18,6 +18,13 @@ const displayedLayout = computed(() => recipeModal.active.value
 nuxtApp.hook("page:finish", () => {
   document.documentElement.dataset.mealmindReady = route.fullPath;
 });
+
+if (import.meta.client) {
+  watch(() => router.currentRoute.value.fullPath, async (fullPath) => {
+    await nextTick();
+    document.documentElement.dataset.mealmindReady = fullPath;
+  }, { flush: "post" });
+}
 
 watch(() => router.currentRoute.value.fullPath, (fullPath) => {
   const navigation = recipeModal.navigation.value;

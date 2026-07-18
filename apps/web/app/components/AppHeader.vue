@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import { useRoute } from "#imports";
-import { CalendarDays, ChefHat, ListChecks, Settings, ShieldCheck, ShoppingBasket } from "@lucide/vue";
+import { ChefHat, ListChecks, Settings, ShieldCheck } from "@lucide/vue";
 
 const route = useRoute();
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: CalendarDays },
   { href: "/plan", label: "Plan", icon: ListChecks },
-  { href: "/shopping", label: "Shopping", icon: ShoppingBasket },
   { href: "/recipes", label: "Recipes", icon: ChefHat },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 function isActive(href: string) {
-  return href === "/" ? route.path === href : route.path.startsWith(href);
+  return route.path.startsWith(href);
 }
 </script>
 
@@ -21,7 +19,7 @@ function isActive(href: string) {
   <aside class="relative z-40 border-b border-rail-foreground/10 bg-rail text-rail-foreground lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r">
     <div class="flex min-h-full flex-col">
       <div class="flex items-center justify-between border-b border-rail-foreground/10 px-4 py-4 sm:px-6 lg:block lg:px-6 lg:py-7">
-        <NuxtLink to="/" class="focus-ring group flex items-center mm-gap-3 rounded-lg" aria-label="MealMind dashboard">
+        <NuxtLink to="/plan" class="focus-ring group flex items-center mm-gap-3 rounded-lg" aria-label="MealMind weekly workspace">
           <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-strong text-strong-foreground shadow-soft transition-transform duration-200 group-hover:-translate-y-0.5">
             <ChefHat :size="21" :stroke-width="2.1" aria-hidden="true" />
           </span>

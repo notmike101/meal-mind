@@ -41,50 +41,34 @@ Use the package scope `@mealmind/*`. Do not reintroduce `HelloQwen`, `helloqwen`
 - Never run `docker compose down -v` or otherwise remove `pg_data` without explicit approval for a data reset.
 - Use explicit paths when staging in a mixed worktree. Preserve unrelated user changes and untracked files.
 
-## Local Runtime And Ports
+## Local Frontend Development
 
-Standard host endpoints:
+Never run the MealMind Docker or Compose stack locally. Local development is limited to the Nuxt web UI backed by the deterministic test-only mock API:
 
-- Web: `http://127.0.0.1:3100`
-- API: `http://127.0.0.1:3101`
-- API health: `http://127.0.0.1:3101/healthz`
-- MCP HTTP: `http://127.0.0.1:3102/api/mcp`
-- MCP health: `http://127.0.0.1:3102/healthz`
-- Postgres: `127.0.0.1:54320`
+- Mocked web: `http://127.0.0.1:3100`
+- Mock API: `http://127.0.0.1:3199`
 
-Compose services are `postgres`, `api`, `mcp`, and `web`. The Docker-backed app at port 3100 is the canonical final local QA runtime.
-
-Do not run host development servers and the Compose app simultaneously: both use ports 3100 and 3101.
-
-### Host Development
-
-`npm run dev` starts only the API and web workspaces. It does not start Postgres or the MCP HTTP server. Start dependencies separately and supply host-resolvable environment variables.
-
-The root `.env.example` contains container DNS names such as `postgres`, `api`, and `mcp`; those names work inside Compose, not from host processes. The API package does not automatically load the root `.env` for `npm run dev`.
-
-Typical PowerShell host values are:
-
-```powershell
-$env:DATABASE_URL = "postgres://mealmind:mealmind@127.0.0.1:54320/mealmind"
-$env:MEALMIND_AI_BASE_URL = "http://127.0.0.1:1234/v1"
-npm run dev
-```
-
-Useful host commands:
+Use these commands:
 
 ```bash
-npm run dev
-npm run dev:api
-npm run dev:web
-npm run mcp
-npm run dev -w @mealmind/mcp
+npm run dev:web:mock
+npm run test:web
+npm run test:e2e:web
 ```
 
-`npm run mcp` starts the stdio MCP server and requires a reachable API. `npm run dev -w @mealmind/mcp` starts MCP HTTP on port 3102 and also requires the API.
+`dev:web:mock` launches Fastify on port 3199 and Nuxt on port 3100, setting `MEALMIND_API_BASE_URL` only for the child process. Do not create or modify `.env` or `apps/web/.env.local` for the mock workflow. Mock Playwright tests reset named scenarios before every test and run with one worker.
+
+The home server is the only integrated QA runtime. Its SSH target and checkout are `homelab-codex:/home/codex/meal-mind`, with these service endpoints:
+
+- Web: `http://home-server:3100`
+- API and health: `http://home-server:3101`, `/healthz`
+- MCP HTTP and health: `http://home-server:3102/api/mcp`, `/healthz`
+
+Do not point local frontend tests at the home server or mutate live data through browser automation. Use the local mock suite for stateful frontend coverage and use the home server for final read-only browser verification plus integrated container gates.
 
 ## Environment And Provider Configuration
 
-Compose reads `.env` overrides and otherwise uses defaults from `compose.yaml`. Important variables include:
+The home-server Compose runtime reads `.env` overrides and otherwise uses defaults from `compose.yaml`. Important variables include:
 
 - `DATABASE_URL`
 - `MEALMIND_API_BASE_URL`
@@ -94,7 +78,7 @@ Compose reads `.env` overrides and otherwise uses defaults from `compose.yaml`. 
 - `MEALMIND_AI_BASE_URL`
 - `OPENAI_COMPATIBLE_API_KEY` (optional; never commit a real value)
 
-For Docker, the configured provider must be reachable from the container. `host.docker.internal` is the default; some providers may require a LAN-reachable URL. Verify assumptions against `docs/AI_CONFIGURATION.md` and the live container, not historical handoff notes.
+For the home-server containers, the configured provider must be reachable from the container. Verify assumptions against `docs/AI_CONFIGURATION.md` and the live runtime, not historical handoff notes.
 
 ## Database And Startup Side Effects
 
@@ -114,7 +98,9 @@ Prefer preserving existing data over deleting or recreating the volume.
 npm install
 npm run lint
 npm run test
+npm run test:web
 npm run build
+npm run test:e2e:web
 npm run mcp:smoke
 npm run mcp:http-smoke
 npm run test:e2e
@@ -122,9 +108,9 @@ npm run test:e2e
 
 Run the smallest useful checks while developing, then the checks appropriate to the changed surfaces before finalizing.
 
-## Docker Rebuild And Runtime Verification
+## Home-Server Rebuild And Runtime Verification
 
-Rebuilding the affected production image is mandatory before final browser or runtime verification. The Compose services do not bind-mount application source, so `docker compose restart web` does not pick up UI edits.
+All Docker commands in this section run only on `homelab-codex` from `/home/codex/meal-mind`. Do not run them on the local workstation. Rebuilding the affected production image on the home server is mandatory before final browser or runtime verification. The Compose services do not bind-mount application source, so `docker compose restart web` does not pick up UI edits.
 
 ### Choose The Rebuild Scope
 
@@ -162,9 +148,9 @@ After every rebuild:
 4. For UI work, inspect at least a representative desktop and mobile viewport, check light/dark behavior when relevant, and confirm no overflow, clipping, broken dialogs, or undersized controls.
 5. Run Playwright when deterministic workflow or responsive assertions are relevant.
 
-`playwright.config.ts` uses `reuseExistingServer: true`. Playwright will test whatever already owns port 3100, including a stale container. Rebuild and verify the Docker runtime before `npm run test:e2e`; do not treat a green run against an unidentified server as proof of the current code.
+`playwright.config.ts` uses `reuseExistingServer: true`. On the home server, it will test whatever already owns port 3100. Rebuild and verify the Compose runtime before running the integrated `npm run test:e2e` gate from a disposable container; do not treat a green run against an unidentified server as proof of the current code.
 
-If old code still appears or another process owns a standard port:
+If old code still appears on the home server or another process owns a standard port:
 
 ```bash
 docker compose down
@@ -173,17 +159,17 @@ docker compose up -d --build --wait
 
 Identify and stop the actual stale container/process if needed. Do not add `-v`.
 
-The user has approved stopping existing local connections when rebuilding is needed so the standard ports can be reused.
+Never add `-v`; preserve `pg_data` throughout every rebuild and deployment.
 
 ## Testing Expectations
 
 - Pure/shared logic: targeted Vitest tests, then `npm run test` when appropriate.
 - Type/import/workspace changes: `npm run build`.
 - Formatting/lint-sensitive changes: `npm run lint`.
-- Web-visible changes: rebuild `web`, verify in the Browser, and run `npm run test:e2e` for repeatable coverage.
-- API or database changes: rebuild `api`, verify `/healthz`, and test the affected workflow.
-- MCP changes: rebuild `mcp`; run `npm run mcp:smoke` and/or `npm run mcp:http-smoke` as applicable.
-- Docker, port, or environment changes: rebuild the full stack, run `docker compose ps`, check 3100/3101/3102, and inspect logs for unhealthy services.
+- Web-visible changes: run `npm run test:web`, `npm run test:e2e:web`, and local Browser inspection against the mock; then rebuild `web` on the home server and perform read-only Browser verification.
+- API or database changes: build and unit-test locally without Docker, then rebuild `api` on the home server, verify `/healthz`, and run the affected integrated workflow from disposable containers.
+- MCP changes: rebuild `mcp` on the home server; run `npm run mcp:smoke` and/or `npm run mcp:http-smoke` there as applicable.
+- Docker, port, or environment changes: rebuild the full stack on the home server, run `docker compose ps`, check 3100/3101/3102, and inspect logs for unhealthy services.
 - Recipe generation/schema work: run `uv run tests/python/test_recipe_generation.py` plus targeted `packages/domain/src/recipes.test.ts` coverage.
 - Documentation-only changes: at minimum run `git diff --check` and verify every documented command/path against the repository.
 
@@ -224,7 +210,7 @@ MealMind is a focused planning workspace, not a marketing site.
 - Ensure long recipe names, metadata, form controls, dialogs, and planner columns do not overflow at mobile, laptop, or desktop widths.
 - Use Pinia stores, existing composables, and same-origin `/api/*` proxies; do not make components call ports 3101 or 3102 directly.
 - Route-backed dialogs must retain keyboard dismissal, focus restoration, body-scroll locking, and responsive behavior.
-- Never judge a visual change from source alone. Rebuild the web container, reload `http://127.0.0.1:3100`, and inspect the rendered result.
+- Never judge a visual change from source alone. Inspect `http://127.0.0.1:3100` through the local mock workflow, then rebuild and inspect the home-server web container before acceptance.
 
 ## Browser Tooling
 

@@ -4,6 +4,7 @@ import { ref } from "vue";
 import { errorMessage } from "~/composables/use-api";
 import { usePlanningStore } from "~/stores/planning";
 
+const props = defineProps<{ weekStart: string }>();
 const planning = usePlanningStore();
 const busy = ref(false);
 const error = ref<string | null>(null);
@@ -12,7 +13,7 @@ async function createBlank() {
   busy.value = true;
   error.value = null;
   try {
-    await planning.createBlank();
+    await planning.createBlank(props.weekStart);
   } catch (caught) {
     error.value = errorMessage(caught, "Could not create a blank plan.");
   } finally {

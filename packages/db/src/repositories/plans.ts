@@ -50,6 +50,12 @@ export async function getPlanByWeekStart(weekStart: string) {
   return plan ? getPlanWithMeals(plan.id) : null;
 }
 
+export async function getAllPlans() {
+  const plans = await getDb().select().from(mealPlans).orderBy(desc(mealPlans.weekStart));
+  const withMeals = await Promise.all(plans.map((plan) => getPlanWithMeals(plan.id)));
+  return withMeals.filter((plan): plan is PlanWithMeals => Boolean(plan));
+}
+
 export async function getPlansOverlapping(range: WeekRange) {
   const plans = await getDb()
     .select()
