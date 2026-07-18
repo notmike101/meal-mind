@@ -50,12 +50,18 @@ test("week navigation is URL-backed and does not overflow representative viewpor
   await waitForReady(page);
   const workspace = page.getByTestId("weekly-workspace");
   const originalWeek = await workspace.getAttribute("data-week-start");
-  const thisWeekHref = await page.getByRole("link", { name: "This week" }).getAttribute("href");
+  const thisWeekLink = page.getByRole("link", { name: "This week", exact: true });
+  const nextWeekLink = page.getByRole("link", { name: "Next week", exact: true });
+  const thisWeekHref = await thisWeekLink.getAttribute("href");
+  const nextWeekHref = await nextWeekLink.getAttribute("href");
   const thisWeek = new URL(thisWeekHref!, page.url()).searchParams.get("week");
-  await page.getByRole("link", { name: "Next week" }).click();
+  const nextWeek = new URL(nextWeekHref!, page.url()).searchParams.get("week");
+  await nextWeekLink.click();
+  await expect(page).toHaveURL(new RegExp(`/plan\\?week=${nextWeek}&view=plan$`));
   await waitForReady(page);
   await expect(workspace).not.toHaveAttribute("data-week-start", originalWeek!);
-  await page.getByRole("link", { name: "This week" }).click();
+  await thisWeekLink.click();
+  await expect(page).toHaveURL(new RegExp(`/plan\\?week=${thisWeek}&view=plan$`));
   await waitForReady(page);
   await expect(workspace).toHaveAttribute("data-week-start", thisWeek!);
 
