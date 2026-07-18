@@ -4,7 +4,7 @@ import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { errorMessage } from "~/composables/use-api";
 import { usePlanningStore } from "~/stores/planning";
 
-const props = withDefaults(defineProps<{ replaceExisting?: boolean; label?: string; defaultMealCount?: number }>(), {
+const props = withDefaults(defineProps<{ weekStart: string; replaceExisting?: boolean; label?: string; defaultMealCount?: number }>(), {
   replaceExisting: false,
   label: undefined,
   defaultMealCount: 14,
@@ -52,7 +52,7 @@ async function generate() {
   busy.value = true;
   error.value = null;
   try {
-    await planning.generate(props.replaceExisting, mealCount.value);
+    await planning.generate(props.weekStart, props.replaceExisting, mealCount.value);
     open.value = false;
   } catch (caught) {
     error.value = errorMessage(caught, "Could not generate plan.");
@@ -72,7 +72,7 @@ async function generate() {
     >
       <RefreshCw v-if="busy" :size="16" class="animate-spin" aria-hidden="true" />
       <Sparkles v-else :size="16" aria-hidden="true" />
-      {{ busy ? "Generating" : label ?? (replaceExisting ? "Replace draft" : "Generate next week") }}
+      {{ busy ? "Generating" : label ?? (replaceExisting ? "Replace draft" : "Generate plan") }}
     </button>
 
     <Teleport to="body">
@@ -89,7 +89,7 @@ async function generate() {
         <section class="mm-p-6 sm:p-7">
           <div class="flex items-start justify-between mm-gap-4">
             <div>
-              <h2 id="generate-plan-heading" class="mm-text-xl font-bold">{{ replaceExisting ? "Replace draft plan" : "Generate next week" }}</h2>
+              <h2 id="generate-plan-heading" class="mm-text-xl font-bold">{{ replaceExisting ? "Replace draft plan" : "Generate plan" }}</h2>
               <p id="generate-plan-description" class="mm-mt-1 mm-text-sm text-ink/65">Choose how many meals the AI should plan across the week.</p>
             </div>
             <button type="button" :disabled="busy" aria-label="Close generation dialog" class="focus-ring rounded-xl mm-p-2 text-ink/60 transition-colors hover:bg-field hover:text-ink" @click="closeDialog">

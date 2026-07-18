@@ -2,18 +2,23 @@
 import type { MealDto } from "@mealmind/contracts";
 import { Check, CircleCheckBig, Utensils, X } from "@lucide/vue";
 import { computed, ref } from "vue";
+import { errorMessage } from "~/composables/use-api";
 import { usePlanningStore } from "~/stores/planning";
 
 const props = defineProps<{ meals: MealDto[] }>();
 const planning = usePlanningStore();
 const emit = defineEmits<{ openDetails: [recipeId: string, servings: number, trigger: globalThis.HTMLElement] }>();
 const busyMealId = ref<string | null>(null);
+const error = ref<string | null>(null);
 const plannedMeals = computed(() => props.meals.filter((meal) => meal.status === "planned"));
 
 async function update(mealId: string, status: "done" | "skipped") {
   busyMealId.value = mealId;
+  error.value = null;
   try {
     await planning.updateAdherence(mealId, status);
+  } catch (caught) {
+    error.value = errorMessage(caught, "Could not update today's meal.");
   } finally {
     busyMealId.value = null;
   }
@@ -33,7 +38,7 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
         </span>
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Today</p>
-          <h2 class="mt-1 text-xl font-semibold tracking-tight text-ink">Active meals</h2>
+          <h2 class="mt-1 text-xl font-semibold tracking-tight text-ink">Today's meals</h2>
         </div>
       </div>
       <span v-if="plannedMeals.length" class="inline-flex w-fit items-center rounded-full bg-tomato/10 px-3 py-1.5 text-sm font-semibold text-tomato">
@@ -56,14 +61,12 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
             @click.exact.left.prevent="openRecipe($event, meal)"
           >{{ meal.recipeTitleSnapshot }}</a>
         </h3>
-        <p class="mt-2 text-sm text-ink/55">
-          {{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}
-        </p>
+        <p class="mt-2 text-sm text-ink/55">{{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}</p>
         <div class="mt-auto flex flex-wrap gap-3 pt-6">
           <button
             type="button"
             :disabled="busyMealId === meal.id"
-            class="focus-ring mm-button-primary inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold"
+            class="focus-ring mm-button-primary inline-flex min-h-11 items-center gap-2 px-3.5 py-2 text-sm font-semibold"
             @click="update(meal.id, 'done')"
           >
             <Check :size="15" aria-hidden="true" /> Done
@@ -71,7 +74,7 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
           <button
             type="button"
             :disabled="busyMealId === meal.id"
-            class="focus-ring mm-button-secondary inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold"
+            class="focus-ring mm-button-secondary inline-flex min-h-11 items-center gap-2 px-3.5 py-2 text-sm font-semibold"
             @click="update(meal.id, 'skipped')"
           >
             <X :size="15" aria-hidden="true" /> Skipped
@@ -83,5 +86,6 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
       <CircleCheckBig :size="20" class="shrink-0 text-moss" aria-hidden="true" />
       <p>No meals are scheduled for today. Your day is clear.</p>
     </div>
+    <p v-if="error" role="alert" class="mx-5 mb-5 rounded-xl bg-tomato/10 px-4 py-3 text-sm font-medium text-tomato">{{ error }}</p>
   </section>
 </template>

@@ -6,29 +6,28 @@ describe("shopping store", () => {
   beforeEach(() => setActivePinia(createPinia()));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("selects the active plan before a draft", async () => {
-    const activePlan = {
-      id: "active",
-      weekStart: "2026-06-29",
-      weekEnd: "2026-07-05",
-      status: "active",
-      slots: [],
-    };
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        data: {
-          activePlan,
-          nextDraft: { ...activePlan, id: "draft", status: "draft" },
-          nextWeek: { weekStart: "2026-07-06", weekEnd: "2026-07-12" },
-        },
-      })
-      .mockResolvedValueOnce({ ok: true, data: null });
+  it("loads the list for the explicitly supplied plan", async () => {
+    const plan = { id: "selected", weekStart: "2026-07-06", weekEnd: "2026-07-12", status: "draft" as const };
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, data: { id: "list", planId: plan.id, items: [] } });
     vi.stubGlobal("$fetch", fetchMock);
 
     const store = useShoppingStore();
-    await store.fetchCurrent();
-    expect(store.plan?.id).toBe("active");
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/plans/active/shopping-list", {});
+    await store.fetchForPlan(plan);
+
+    expect(store.plan?.id).toBe("selected");
+    expect(store.shoppingList?.planId).toBe("selected");
+    expect(fetchMock).toHaveBeenCalledWith("/api/plans/selected/shopping-list", {});
+  });
+
+  it("clears a prior list when switching to an empty week", async () => {
+    const plan = { id: "selected", weekStart: "2026-07-06", weekEnd: "2026-07-12", status: "draft" as const };
+    vi.stubGlobal("$fetch", vi.fn().mockResolvedValueOnce({ ok: true, data: { id: "list", planId: plan.id, items: [] } }));
+    const store = useShoppingStore();
+
+    await store.fetchForPlan(plan);
+    await store.fetchForPlan(null);
+
+    expect(store.plan).toBeNull();
+    expect(store.shoppingList).toBeNull();
   });
 });

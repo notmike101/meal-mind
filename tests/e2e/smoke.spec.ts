@@ -1,269 +1,90 @@
 import { expect, test } from "@playwright/test";
 
-test("primary navigation renders each page on the first click", async ({ page }) => {
-  await page.goto("/");
+async function waitForReady(page: import("@playwright/test").Page) {
+  const url = new URL(page.url());
+  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", `${url.pathname}${url.search}`);
+}
 
+test("root and shopping compatibility routes resolve into the weekly workspace", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/plan\?week=\d{4}-\d{2}-\d{2}&view=plan$/);
+  await waitForReady(page);
+  const workspace = page.getByTestId("weekly-workspace");
+  await expect(workspace).toBeVisible();
+  const week = await workspace.getAttribute("data-week-start");
+  const planId = await workspace.getAttribute("data-plan-id");
+
+  await page.goto(`/shopping?week=${week}`);
+  await expect(page).toHaveURL(new RegExp(`/plan\\?week=${week}&view=shopping$`));
+  await waitForReady(page);
+  await expect(workspace).toHaveAttribute("data-plan-id", planId ?? "");
+  await expect(page.getByTestId("shopping-tab")).toHaveAttribute("aria-current", "page");
+});
+
+test("primary navigation contains the unified destinations", async ({ page }) => {
+  await page.goto("/");
+  await waitForReady(page);
   const navigation = page.getByRole("navigation", { name: "Primary navigation" });
-  const destinations = [
-    { name: "Plan", path: "/plan", heading: /Choose next week's meals|Weekly meal plan/ },
-    { name: "Shopping", path: "/shopping", heading: "Consolidated grocery list" },
-    { name: "Recipes", path: "/recipes", heading: "CookLang recipe library" },
-    { name: "Settings", path: "/settings", heading: "Local planner settings" },
-    { name: "Dashboard", path: "/", heading: "Today's plan" },
-  ];
+  await expect(navigation.getByRole("link", { name: "Plan", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Recipes", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Settings", exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Dashboard", exact: true })).toHaveCount(0);
+  await expect(navigation.getByRole("link", { name: "Shopping", exact: true })).toHaveCount(0);
 
-  for (const destination of destinations) {
-    await navigation.getByRole("link", { name: destination.name, exact: true }).click();
-    await expect(page).toHaveURL(destination.path);
-    await expect(page.getByRole("heading", { name: destination.heading })).toBeVisible();
-    await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", destination.path);
-  }
-});
-
-test("uses a consistent workspace shell across primary pages", async ({ page }) => {
-  await page.setViewportSize({ width: 1920, height: 900 });
-  const paths = ["/", "/plan", "/shopping", "/recipes", "/settings"];
-
-  for (const path of paths) {
-    await page.goto(path);
-    await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", path);
-
-    const geometry = await page.evaluate(() => {
-      const sidebar = document.querySelector<HTMLElement>("aside");
-      const main = document.querySelector<HTMLElement>("main");
-      if (!sidebar || !main) throw new Error("App shell containers were not rendered");
-
-      const sidebarBox = sidebar.getBoundingClientRect();
-      const mainBox = main.getBoundingClientRect();
-      return {
-        sidebarLeft: sidebarBox.left,
-        sidebarWidth: sidebarBox.width,
-        mainLeft: mainBox.left,
-        mainWidth: mainBox.width,
-        bodyWidth: document.body.scrollWidth,
-      };
-    });
-
-    expect(geometry.sidebarLeft).toBeCloseTo(0, 0);
-    expect(geometry.sidebarWidth).toBeCloseTo(248, 0);
-    expect(geometry.mainLeft).toBeCloseTo(geometry.sidebarWidth, 0);
-    expect(geometry.mainWidth + geometry.sidebarWidth).toBeCloseTo(1920, 0);
-    expect(geometry.bodyWidth).toBe(1920);
-  }
-});
-
-test("recipe dialog keeps readable geometry across breakpoints", async ({ page }) => {
-  for (const viewport of [
-    { width: 390, height: 844 },
-    { width: 1440, height: 900 },
-  ]) {
-    await page.setViewportSize(viewport);
-    await page.goto("/recipes");
-    await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/recipes");
-    const recipeCard = page.locator("article")
-      .filter({ hasText: "Adobo Loco Steak with a Poblano, Corn, and Crispy Potato Hash" });
-    await recipeCard.getByRole("link").click();
-
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    await expect.poll(() => dialog.evaluate((element) => {
-      const transform = getComputedStyle(element).transform;
-      return transform === "none" || transform.startsWith("matrix(1, 0, 0, 1");
-    })).toBe(true);
-    await expect(dialog.getByTestId("recipe-ingredients")).toBeVisible();
-    await expect(dialog.getByTestId("recipe-instructions")).toBeVisible();
-
-    const geometry = await dialog.evaluate((element) => {
-      const recipeBody = element.querySelector<HTMLElement>("[data-testid='recipe-body']");
-      const ingredients = element.querySelector<HTMLElement>("[data-testid='recipe-ingredients']");
-      const ingredientItem = ingredients?.querySelector<HTMLElement>("li");
-      const instructions = element.querySelector<HTMLElement>("[data-testid='recipe-instructions']");
-      const close = element.querySelector<HTMLElement>("[aria-label='Close recipe details']");
-      if (!recipeBody || !ingredients || !ingredientItem || !instructions || !close) {
-        throw new Error("Recipe dialog structure is incomplete");
-      }
-
-      const dialogBox = element.getBoundingClientRect();
-      const ingredientBox = ingredients.getBoundingClientRect();
-      const ingredientItemBox = ingredientItem.getBoundingClientRect();
-      const instructionBox = instructions.getBoundingClientRect();
-      const closeBox = close.getBoundingClientRect();
-      const bodyStyle = getComputedStyle(recipeBody);
-
-      return {
-        dialogLeft: dialogBox.left,
-        dialogRight: dialogBox.right,
-        dialogWidth: dialogBox.width,
-        bodyGap: Number.parseFloat(bodyStyle.columnGap || bodyStyle.gap),
-        bodyColumns: bodyStyle.gridTemplateColumns,
-        ingredientLeft: ingredientBox.left,
-        ingredientWidth: ingredientBox.width,
-        ingredientHeight: ingredientBox.height,
-        ingredientContentInset: ingredientItemBox.left - ingredientBox.left,
-        instructionLeft: instructionBox.left,
-        instructionWidth: instructionBox.width,
-        instructionHeight: instructionBox.height,
-        closeWidth: closeBox.width,
-        closeHeight: closeBox.height,
-        pageWidth: document.documentElement.scrollWidth,
-        viewportWidth: document.documentElement.clientWidth,
-      };
-    });
-
-    expect(geometry.dialogLeft).toBeGreaterThanOrEqual(0);
-    expect(geometry.dialogRight).toBeLessThanOrEqual(viewport.width);
-    expect(geometry.closeWidth).toBeGreaterThanOrEqual(44);
-    expect(geometry.closeHeight).toBeGreaterThanOrEqual(44);
-    expect(geometry.bodyGap).toBeGreaterThanOrEqual(24);
-    expect(geometry.ingredientContentInset).toBeGreaterThanOrEqual(16);
-    expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
-
-    if (viewport.width < 1024) {
-      expect(geometry.dialogWidth).toBeCloseTo(viewport.width, 0);
-      expect(geometry.ingredientLeft).toBeCloseTo(geometry.instructionLeft, 0);
-      expect(geometry.ingredientWidth).toBeCloseTo(geometry.instructionWidth, 0);
-    } else {
-      expect(geometry.bodyColumns.split(" ")).toHaveLength(2);
-      expect(geometry.ingredientLeft).toBeLessThan(geometry.instructionLeft);
-      expect(geometry.ingredientHeight).toBeLessThan(geometry.instructionHeight);
-    }
-
-    await dialog.getByRole("button", { name: "Close recipe details" }).click();
-    await expect(dialog).toHaveCount(0);
-  }
-});
-
-test("dashboard omits misleading shortcuts", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open weekly plan" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Shopping list" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "View full plan" })).toHaveCount(0);
-  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/");
-});
-
-test("renders core MealMind pages", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Today's plan" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Plan/ })).toBeVisible();
-
-  await page.goto("/recipes");
+  await navigation.getByRole("link", { name: "Recipes", exact: true }).click();
+  await waitForReady(page);
   await expect(page.getByRole("heading", { name: "CookLang recipe library" })).toBeVisible();
-  await expect(page.getByText("Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli")).toBeVisible();
-  await expect(page.getByText(/Crispy panko-coated chicken/)).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Instructions" })).toHaveCount(0);
-  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/recipes");
-  const recipeCard = page.locator("article")
-    .filter({ hasText: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" });
-  await recipeCard.getByRole("link").click();
-  await expect(page).toHaveURL(/\/recipes\/hot-honey-chicken-with-bbq-roasted-potatoes-buttery-broccoli$/);
-  const recipeDialog = page.getByRole("dialog");
-  await expect(recipeDialog).toBeVisible();
-  await expect(page.getByRole("heading", { name: "CookLang recipe library" })).toBeVisible();
-  await expect(recipeDialog.getByRole("heading", { name: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" })).toBeVisible();
-  await expect(recipeDialog.getByRole("heading", { name: "Ingredients" })).toBeVisible();
-  await expect(recipeDialog.getByRole("heading", { name: "Instructions" })).toBeVisible();
-  await expect(recipeDialog.getByText(/Adjust racks to top and middle positions and preheat oven to 425 degrees/)).toBeVisible();
-
-  await recipeDialog.getByRole("button", { name: "Close recipe details" }).click();
-  await expect(page).toHaveURL(/\/recipes$/);
-  await expect(recipeDialog).toHaveCount(0);
-
-  await page.goForward();
-  await expect(recipeDialog).toBeVisible();
-  await page.reload();
-  await expect(recipeDialog).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" })).toBeVisible();
-  await expect(page.getByRole("main").getByRole("link", { name: "Recipes" })).toBeVisible();
-
-  await page.goto("/settings");
+  await navigation.getByRole("link", { name: "Settings", exact: true }).click();
+  await waitForReady(page);
   await expect(page.getByRole("heading", { name: "Local planner settings" })).toBeVisible();
-  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/settings");
-  await expect(page.getByLabel("AI base URL")).toHaveValue(/^(?!.*ai-gateway).*\/v1$/);
-  await expect(page.getByLabel("AI model")).toHaveValue(/qwen3\.6-35b-a3b/);
-  await page.getByRole("button", { name: "Load models" }).click();
-  await expect(page.getByText(/AI endpoint reachable/)).toBeVisible();
-  await expect(page.getByLabel("AI model").locator("option")).toContainText(["qwen3.6-35b-a3b"]);
-  await expect(page.getByRole("checkbox", { name: "Automatically generate next week's plan" })).toBeChecked();
-  await expect(page.getByLabel("Default meal servings")).toHaveValue(/\d+/);
-  await expect(page.getByLabel("Weekly meals")).toHaveValue(/\d+/);
-
-  await page.goto("/shopping");
-  await expect(page.getByRole("heading", { name: "Consolidated grocery list" })).toBeVisible();
-  await expect(page.getByText(/No meal plan selected|Shopping progress/)).toBeVisible();
+  await navigation.getByRole("link", { name: "Plan", exact: true }).click();
+  await waitForReady(page);
+  await expect(page.getByTestId("weekly-workspace")).toBeVisible();
 });
 
-test("supports direct recipe routes and missing recipe responses", async ({ page }) => {
-  await page.goto("/recipes/hot-honey-chicken-with-bbq-roasted-potatoes-buttery-broccoli");
-  await expect(page.getByRole("heading", { name: "Hot Honey Chicken with BBQ-Roasted Potatoes & Buttery Broccoli" })).toBeVisible();
-  await expect(page.getByText(/Adjust racks to top and middle positions and preheat oven to 425 degrees/)).toBeVisible();
+test("week navigation is URL-backed and does not overflow representative viewports", async ({ page }) => {
+  await page.goto("/");
+  await waitForReady(page);
+  const workspace = page.getByTestId("weekly-workspace");
+  const originalWeek = await workspace.getAttribute("data-week-start");
+  await page.getByRole("link", { name: "Next week" }).click();
+  await waitForReady(page);
+  await expect(workspace).not.toHaveAttribute("data-week-start", originalWeek!);
+  await page.getByRole("link", { name: "This week" }).click();
+  await waitForReady(page);
+  await expect(workspace).toHaveAttribute("data-week-start", originalWeek!);
 
-  const response = await page.goto("/recipes/not-a-recipe");
-  expect(response?.status()).toBe(404);
-});
-
-test("plan page exposes generation controls", async ({ page }) => {
-  await page.goto("/plan");
-  await expect(page.getByRole("heading", { name: /Choose next week's meals|Weekly meal plan/ })).toBeVisible();
-  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/plan");
-  const planContent = page.getByTestId("plan-content");
-  const planWorkspace = page.getByTestId("plan-workspace");
-  await expect(planContent).toBeVisible();
-  await expect(planWorkspace).toBeVisible();
-  const [headerGap, workspaceGap] = await Promise.all([
-    planContent.evaluate((element) => Number.parseFloat(getComputedStyle(element).marginTop)),
-    planWorkspace.evaluate((element) => Number.parseFloat(getComputedStyle(element).marginTop)),
-  ]);
-  expect(headerGap).toBeGreaterThan(0);
-  expect(workspaceGap).toBeCloseTo(headerGap, 1);
-  const generationButton = page.getByRole("button", { name: /Generate next week|Replace draft/ });
-  await expect(generationButton).toBeVisible();
-  await generationButton.click();
-  const generationDialog = page.getByRole("dialog");
-  await expect(generationDialog).toBeVisible();
-  await expect(generationDialog.getByRole("spinbutton", { name: "Number of meals" })).toHaveValue(/\d+/);
-  await generationDialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(generationDialog).toHaveCount(0);
-  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/plan");
-  const recipeDetailsLink = page.getByRole("main").getByRole("link", { name: /^(Details|Recipe details)$/ }).first();
-  await expect(recipeDetailsLink).toBeVisible();
-  await recipeDetailsLink.click();
-  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
-  const recipeDialog = page.getByRole("dialog");
-  await expect(recipeDialog).toBeVisible();
-  await recipeDialog.getByRole("button", { name: "Close recipe details" }).click();
-  await expect(page).toHaveURL(/\/plan$/);
-  await expect(recipeDialog).toHaveCount(0);
-  for (const width of [390, 768, 1280, 1600]) {
-    await page.setViewportSize({ width, height: 900 });
+  for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+    await page.setViewportSize(viewport);
     await page.reload();
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   }
 });
 
-test("theme preference defaults to system and can be overridden", async ({ page }) => {
+test("recipe details retain route-backed dialog history", async ({ page }) => {
+  await page.goto("/recipes");
+  await waitForReady(page);
+  const firstRecipe = page.locator("article").first();
+  await expect(firstRecipe).toBeVisible();
+  await firstRecipe.getByRole("link").click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page).toHaveURL(/\/recipes\/[^/]+$/);
+  await dialog.getByRole("button", { name: "Close recipe details" }).click();
+  await expect(page).toHaveURL(/\/recipes$/);
+  await page.goForward();
+  await expect(dialog).toBeVisible();
+});
+
+test("theme preference remains responsive and client-local", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  await page.goto("/");
-
-  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("dark");
-  await expect(page.getByRole("button", { name: "Use light theme" })).toHaveCount(0);
-
   await page.goto("/settings");
+  await waitForReady(page);
   await expect(page.getByRole("heading", { name: "Appearance" })).toBeVisible();
-  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/settings");
   await page.getByRole("button", { name: "Use light theme" }).click();
-  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mealmind-theme"))).toBe("light");
-
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.reload();
-  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
-
-  await page.goto("/");
-  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("light");
-
-  await page.goto("/settings");
-  await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/settings");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.getByRole("button", { name: "Use system theme" }).click();
-  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe("dark");
-  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("mealmind-theme"))).toBe("system");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });

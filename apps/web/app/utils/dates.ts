@@ -20,10 +20,18 @@ export function formatDisplayDate(isoDate: string) {
   }).format(new Date(`${isoDate}T12:00:00Z`));
 }
 
-function addDays(isoDate: string, days: number) {
+export function addDays(isoDate: string, days: number) {
   const date = new Date(`${isoDate}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+export function normalizeWeekStart(value: unknown) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T12:00:00Z`);
+  if (Number.isNaN(date.valueOf()) || date.toISOString().slice(0, 10) !== value) return null;
+  const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+  return addDays(value, -daysSinceMonday);
 }
 
 export function getDatesInWeek(weekStart: string) {

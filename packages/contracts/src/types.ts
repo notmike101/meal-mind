@@ -69,9 +69,17 @@ export type WeekRangeDto = {
   weekEnd: string;
 };
 
+export type MealPlanSummaryDto = Pick<
+  MealPlanDto,
+  "id" | "weekStart" | "weekEnd" | "status" | "creationSource" | "commitSource" | "committedAt" | "createdAt"
+> & {
+  mealCount: number;
+};
+
 export type PlanningStateDto = {
   activePlan: MealPlanDto | null;
   nextDraft: MealPlanDto | null;
+  currentWeek: WeekRangeDto;
   nextWeek: WeekRangeDto;
 };
 

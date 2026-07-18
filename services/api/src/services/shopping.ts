@@ -1,6 +1,6 @@
 import { runJsonPrompt, shoppingListDraftSchema, shoppingListMessages, type ShoppingListDraft } from "@mealmind/ai";
 import { AppError } from "@mealmind/contracts";
-import { buildMealIngredients, normalizeShoppingItemName } from "@mealmind/domain";
+import { buildMealIngredients, isPlanLocked, normalizeShoppingItemName } from "@mealmind/domain";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
 import { getPlanWithMeals } from "@mealmind/db/repositories/plans";
 import { getSettingsWithPantry } from "@mealmind/db/repositories/settings";
@@ -23,6 +23,11 @@ export async function generateShoppingList(planId: string) {
   const plan = await getPlanWithMeals(planId);
   if (!plan) {
     throw new AppError("NOT_FOUND", "Meal plan not found.", 404);
+  }
+
+  const existingList = await getShoppingListForPlan(planId);
+  if (existingList && isPlanLocked(plan)) {
+    throw new AppError("CONFLICT", "An existing shopping list for a locked plan cannot be regenerated.", 409);
   }
 
   const { settings, pantryStaples } = await getSettingsWithPantry();

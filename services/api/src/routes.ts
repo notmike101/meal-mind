@@ -29,6 +29,8 @@ import {
   removeMeal,
   generateWeeklyPlan,
   getCurrentPlanningState,
+  getPlanForWeek,
+  getPlanSummaries,
   swapMeal,
   updateAdherence,
   updateMeal,
@@ -136,6 +138,17 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
   });
 
   app.get("/api/plans/current", async () => ok(await getCurrentPlanningState()));
+
+  app.get("/api/plans", async () => ok(await getPlanSummaries()));
+
+  app.get<{ Params: { weekStart: string } }>("/api/plans/by-week/:weekStart", async (request, reply) => {
+    try {
+      const { weekStart } = createPlanRequestSchema.required().parse(request.params);
+      return ok(await getPlanForWeek(weekStart));
+    } catch (error) {
+      return sendError(reply, error);
+    }
+  });
 
   app.post("/api/plans", async (request, reply) => {
     try {

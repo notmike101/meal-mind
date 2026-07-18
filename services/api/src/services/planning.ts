@@ -4,6 +4,7 @@ import { AppError } from "@mealmind/contracts";
 import {
   addDays,
   formatDateInTimeZone,
+  getCurrentWeekRange,
   getNextWeekRange,
   isDateWithinRange,
   isPlanLocked,
@@ -17,6 +18,7 @@ import {
   applyLazyLocks,
   createPlanWithMeals,
   deletePlanMeal,
+  getAllPlans,
   getMealsByIds,
   getMostRecentDraft,
   getPlanByWeekStart,
@@ -81,13 +83,37 @@ export async function getCurrentPlanningState() {
   await applyLazyLocks(new Date(), settings.timezone);
   const today = formatDateInTimeZone(new Date(), settings.timezone);
   const currentRange = await getPlansOverlapping({ weekStart: today, weekEnd: today });
+  const currentWeek = getCurrentWeekRange(new Date(), settings.timezone);
   const nextWeek = getNextWeekRange(new Date(), settings.timezone);
   const nextDraft = (await getPlanByWeekStart(nextWeek.weekStart)) ?? (await getMostRecentDraft());
   return {
     activePlan: currentRange.find((plan) => plan.status === "active" || plan.status === "committed") ?? null,
     nextDraft,
+    currentWeek,
     nextWeek,
   };
+}
+
+export async function getPlanSummaries() {
+  const settings = await getSettings();
+  await applyLazyLocks(new Date(), settings.timezone);
+  return (await getAllPlans()).map((plan) => ({
+    id: plan.id,
+    weekStart: plan.weekStart,
+    weekEnd: plan.weekEnd,
+    status: plan.status,
+    creationSource: plan.creationSource,
+    commitSource: plan.commitSource,
+    committedAt: plan.committedAt,
+    createdAt: plan.createdAt,
+    mealCount: plan.meals.length,
+  }));
+}
+
+export async function getPlanForWeek(weekStart: string) {
+  const settings = await getSettings();
+  await applyLazyLocks(new Date(), settings.timezone);
+  return getPlanByWeekStart(weekStart);
 }
 
 export async function createBlankPlan(input: { weekStart?: string }) {

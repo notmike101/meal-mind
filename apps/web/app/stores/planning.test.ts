@@ -5,6 +5,7 @@ import { usePlanningStore } from "./planning";
 const emptyState = {
   activePlan: null,
   nextDraft: null,
+  currentWeek: { weekStart: "2026-06-29", weekEnd: "2026-07-05" },
   nextWeek: { weekStart: "2026-07-06", weekEnd: "2026-07-12" },
 };
 
@@ -12,36 +13,41 @@ describe("planning store", () => {
   beforeEach(() => setActivePinia(createPinia()));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("loads planning state and refreshes after generation", async () => {
+  it("refreshes the exact selected week after generation", async () => {
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true, data: emptyState })
       .mockResolvedValueOnce({ ok: true, data: { id: "draft" } })
-      .mockResolvedValueOnce({ ok: true, data: emptyState });
+      .mockResolvedValueOnce({ ok: true, data: emptyState })
+      .mockResolvedValueOnce({ ok: true, data: [] })
+      .mockResolvedValueOnce({ ok: true, data: { id: "draft", weekStart: "2026-07-06" } });
     vi.stubGlobal("$fetch", fetchMock);
     const store = usePlanningStore();
+    store.selectedWeekStart = "2026-07-06";
 
-    await store.fetchState();
-    expect(store.nextWeek).toEqual(emptyState.nextWeek);
-    await store.generate(true);
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/plans/generate", {
+    await store.generate("2026-07-06", false, 9);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/plans/generate", {
       method: "POST",
-      body: { replaceExisting: true },
+      body: { weekStart: "2026-07-06", replaceExisting: false, mealCount: 9 },
     });
+    expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/plans/by-week/2026-07-06", {});
+    expect(store.selectedPlan?.id).toBe("draft");
   });
 
-  it("updates a skipped day and refreshes planning state", async () => {
+  it("does not let a stale week response replace newer navigation", async () => {
+    let resolveFirst: ((value: unknown) => void) | undefined;
+    const first = new Promise((resolve) => { resolveFirst = resolve; });
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true, data: { id: "plan-1" } })
-      .mockResolvedValueOnce({ ok: true, data: emptyState });
+      .mockReturnValueOnce(first)
+      .mockResolvedValueOnce({ ok: true, data: { id: "newer", weekStart: "2026-07-13" } });
     vi.stubGlobal("$fetch", fetchMock);
     const store = usePlanningStore();
 
-    await store.setDaySkipped("plan-1", "2026-07-08", true);
+    const oldRequest = store.fetchWeek("2026-07-06");
+    await store.fetchWeek("2026-07-13");
+    resolveFirst?.({ ok: true, data: { id: "older", weekStart: "2026-07-06" } });
+    await oldRequest;
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/plans/plan-1/skipped-days", {
-      method: "PATCH",
-      body: { date: "2026-07-08", skipped: true },
-    });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/plans/current", {});
+    expect(store.selectedWeekStart).toBe("2026-07-13");
+    expect(store.selectedPlan?.id).toBe("newer");
   });
 });

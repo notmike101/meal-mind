@@ -111,7 +111,7 @@ async function chooseRecipe(recipeId: string) {
         recipeId,
         servings: addServings.value,
       });
-      const addedForDate = planning.editablePlan?.meals.filter((meal) => meal.date === date) ?? [];
+      const addedForDate = planning.selectedPlan?.meals.filter((meal) => meal.date === date) ?? [];
       activeMealId.value = addedForDate[addedForDate.length - 1]?.id ?? "";
       addingDate.value = null;
     }, "Could not add that meal.");
