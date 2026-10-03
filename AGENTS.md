@@ -225,7 +225,7 @@ MealMind is a focused planning workspace, not a marketing site.
 
 GitHub's default and integration branch is `main`. There is no remote `dev` branch. Do not recreate or target `dev` unless the user explicitly changes the repository workflow.
 
-Never commit directly to `main`. Start each change from the latest remote `main`:
+All work, including documentation and small fixes, must be done on a dedicated branch created from the latest remote `main`. Never work or commit directly on `main`, and do not reuse an unrelated work branch. Start each change from the latest remote `main`:
 
 ```bash
 git switch main
@@ -248,7 +248,7 @@ Branch naming examples:
 - Stage only intended files; never use a broad add in a mixed worktree.
 - Keep commits focused and use direct imperative messages without a trailing period.
 - Make a focused commit after the smallest relevant verification passes, then push it promptly.
-- For every non-trivial change, open a draft PR targeting `main` after the first verified push. Keep that PR updated and record scope, root cause, verification, and limitations.
+- Every change must have a PR targeting `main`; merge into `main` only through that PR. Open a draft PR after the first verified push. Keep that PR updated and record scope, root cause, verification, and limitations.
 - Mark the PR ready only after relevant checks and Docker/browser verification pass.
 
 Before final merge, update against remote `main` if necessary:
@@ -259,9 +259,17 @@ git rebase origin/main
 git push --force-with-lease
 ```
 
-Use `--force-with-lease` only after a rebase. Merge through the PR, then verify GitHub reports it as merged and confirm the branch tip is contained in `origin/main` before branch cleanup.
+Use `--force-with-lease` only after a rebase.
+
+### Review Pass
+
+Every PR must be reviewed and explicitly approved by both an AI agent and a human before it is merged. A reviewer subagent must review the PR changes and document its approval and reasoning on the PR itself. The human must also leave an approval comment directly on the PR. AI subagent reviews must explicitly disclose that it is an AI subagent reviewing the PR.
+
+Both of these gates must be passed explicitly before merging is allowed.
 
 ### Releases
+
+Merge through the PR, then verify GitHub reports it as merged and confirm the branch tip is contained in `origin/main` before branch cleanup.
 
 An ordinary PR merge into `main` is not automatically a release. Create a version/tag only when the user explicitly asks to ship one.
 
