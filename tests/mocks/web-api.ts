@@ -1,6 +1,9 @@
 import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
 import {
   fail,
+  aiModelsRequestSchema,
+  areAiBaseUrlsEqual,
+  settingsUpdateRequestSchema,
   ok,
   type MealDto,
   type MealPlanDto,
@@ -15,7 +18,7 @@ import {
 } from "@mealmind/contracts";
 import { addDays, formatDateInTimeZone, getCurrentWeekRange, getNextWeekRange } from "@mealmind/domain";
 
-export type MockScenario = "default" | "missing-shopping-list" | "no-current-plan";
+export type MockScenario = "default" | "missing-shopping-list" | "no-current-plan" | "discovery-failure";
 
 type MockWeeks = {
   current: string;
@@ -33,6 +36,7 @@ type MockState = {
   sequence: number;
   timestampBase: number;
   settings: SettingsWithPantryDto;
+  aiApiKey: string | null;
   recipes: RecipeDto[];
   plans: MealPlanDto[];
   shoppingLists: Record<string, ShoppingListDto>;
@@ -277,6 +281,7 @@ function createState(scenario: MockScenario): MockState {
       settings: publicSettings,
       pantryStaples: [{ id: 1, name: "salt", normalizedName: "salt" }],
     },
+    aiApiKey: null,
     recipes,
     plans,
     shoppingLists: {},
@@ -344,7 +349,7 @@ export function buildMockApi(): FastifyInstance {
   app.get("/healthz", async () => ok({ status: "ok" }));
   app.post("/__mock/reset", async (request, reply) => {
     const scenario = (request.body as { scenario?: string } | null)?.scenario ?? "default";
-    if (!(["default", "missing-shopping-list", "no-current-plan"] as string[]).includes(scenario)) {
+    if (!(["default", "missing-shopping-list", "no-current-plan", "discovery-failure"] as string[]).includes(scenario)) {
       return reply.status(400).send(fail("BAD_REQUEST", `Unknown mock scenario: ${scenario}`));
     }
     state = createState(scenario as MockScenario);
@@ -352,11 +357,46 @@ export function buildMockApi(): FastifyInstance {
   });
 
   app.get("/api/settings", async () => ok(state.settings));
-  app.patch("/api/settings", async (request) => {
-    Object.assign(state.settings.settings, request.body ?? {}, { updatedAt: nextTimestamp() });
+  app.patch("/api/settings", async (request, reply) => {
+    const parsed = settingsUpdateRequestSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send(fail("BAD_REQUEST", "Invalid settings."));
+    }
+    const { aiApiKey, pantryStaples, ...publicUpdates } = parsed.data;
+    const endpointChanged = publicUpdates.aiBaseUrl !== undefined
+      && !areAiBaseUrlsEqual(publicUpdates.aiBaseUrl, state.settings.settings.aiBaseUrl);
+    if (aiApiKey !== undefined) state.aiApiKey = aiApiKey;
+    else if (endpointChanged) state.aiApiKey = null;
+    Object.assign(state.settings.settings, publicUpdates, {
+      aiAuthConfigured: Boolean(state.aiApiKey),
+      updatedAt: nextTimestamp(),
+    });
+    if (pantryStaples !== undefined) {
+      state.settings.pantryStaples = pantryStaples.map((name, index) => ({
+        id: index + 1,
+        name,
+        normalizedName: name.trim().toLowerCase(),
+      }));
+    }
     return ok(state.settings);
   });
-  app.post("/api/settings/test-ai", async () => ok({ models: [{ id: "mock-planner" }], authConfigured: false }));
+  app.post("/api/settings/test-ai", async (request, reply) => {
+    const parsed = aiModelsRequestSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send(fail("BAD_REQUEST", "Invalid AI connection settings."));
+    }
+    if (state.scenario === "discovery-failure") {
+      return reply.status(502).send(fail("AI_UNAVAILABLE", "Mock model discovery is unavailable."));
+    }
+    const { aiBaseUrl, aiApiKey } = parsed.data;
+    const credential = aiApiKey !== undefined
+      ? aiApiKey
+      : areAiBaseUrlsEqual(aiBaseUrl, state.settings.settings.aiBaseUrl) ? state.aiApiKey : null;
+    return ok({
+      models: [{ id: "mock-planner" }, { id: "mock-reasoner" }],
+      authConfigured: Boolean(credential),
+    });
+  });
 
   app.get("/api/recipes", async (): Promise<ReturnType<typeof ok<RecipeListDto>>> => ok({
     recipes: state.recipes.map(recipeSummary),

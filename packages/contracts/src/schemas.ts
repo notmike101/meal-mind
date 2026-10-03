@@ -10,14 +10,44 @@ export const createPlanRequestSchema = z.object({
   weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
-const aiBaseUrlSchema = z.url().refine((value) => ["http:", "https:"].includes(new URL(value).protocol), {
-  message: "AI base URL must use HTTP or HTTPS.",
+export function normalizeAiBaseUrl(value: string) {
+  const url = new URL(value.trim());
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new Error("AI base URL must use HTTP or HTTPS.");
+  }
+  if (url.username || url.password || /^https?:[\\/]*[^/?#]*@/i.test(value.trim()) || value.includes("?") || value.includes("#")) {
+    throw new Error("AI base URL must not contain credentials, a query, or a fragment.");
+  }
+  return url.toString().replace(/\/+$/, "");
+}
+
+export function areAiBaseUrlsEqual(left: string, right: string) {
+  try {
+    return normalizeAiBaseUrl(left) === normalizeAiBaseUrl(right);
+  } catch {
+    return false;
+  }
+}
+
+const aiBaseUrlSchema = z.string().transform((value, context) => {
+  try {
+    return normalizeAiBaseUrl(value);
+  } catch (error) {
+    context.addIssue({
+      code: "custom",
+      message: error instanceof Error ? error.message : "AI base URL is invalid.",
+    });
+    return z.NEVER;
+  }
 });
+
+const aiApiKeySchema = z.string().trim().transform((value) => value || null).nullable().optional();
 
 export const settingsUpdateRequestSchema = z.object({
   timezone: z.string().optional(),
   aiBaseUrl: aiBaseUrlSchema.optional(),
   aiModel: z.string().trim().min(1).optional(),
+  aiApiKey: aiApiKeySchema,
   planningPreferences: z.string().optional(),
   planningVarietyRules: z.string().optional(),
   defaultMealServings: z.coerce.number().int().min(1).max(12).optional(),
@@ -28,6 +58,7 @@ export const settingsUpdateRequestSchema = z.object({
 
 export const aiModelsRequestSchema = z.object({
   aiBaseUrl: aiBaseUrlSchema,
+  aiApiKey: aiApiKeySchema,
 });
 
 const mealSlotLabelSchema = z.string().trim().max(50).transform((value) => value || null).nullable();

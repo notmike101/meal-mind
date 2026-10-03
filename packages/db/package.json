@@ -40,6 +40,7 @@
     "db:migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
+    "@mealmind/contracts": "0.1.0",
     "@mealmind/domain": "0.1.0",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.16.3"

@@ -3,7 +3,7 @@ import { AppError } from "@mealmind/contracts";
 import { buildMealIngredients, isPlanLocked, normalizeShoppingItemName } from "@mealmind/domain";
 import { createAiEvent } from "@mealmind/db/repositories/ai-events";
 import { getPlanWithMeals } from "@mealmind/db/repositories/plans";
-import { getSettingsWithPantry } from "@mealmind/db/repositories/settings";
+import { getPantryStaples, getSettings } from "@mealmind/db/repositories/settings";
 import { deleteShoppingListForPlan, getShoppingListForPlan, replaceShoppingList } from "@mealmind/db/repositories/shopping";
 import { getAvailableRecipes } from "../recipes.js";
 
@@ -30,7 +30,7 @@ export async function generateShoppingList(planId: string) {
     throw new AppError("CONFLICT", "An existing shopping list for a locked plan cannot be regenerated.", 409);
   }
 
-  const { settings, pantryStaples } = await getSettingsWithPantry();
+  const [settings, pantryStaples] = await Promise.all([getSettings(), getPantryStaples()]);
   const recipes = await getAvailableRecipes();
   const pantryNames = pantryStaples.map((staple) => staple.name);
   const mealIngredients = buildMealIngredients({
@@ -60,10 +60,6 @@ export async function generateShoppingList(planId: string) {
       user: messages.user,
       schema: shoppingListDraftSchema,
       logEvent: createAiEvent,
-      // Reasoning-capable providers count hidden reasoning against the
-      // completion budget. A full multi-meal shopping list also needs room
-      // for a large final JSON payload.
-      maxTokens: 16384,
     }).catch((error: unknown) => {
       if (error instanceof AppError && error.code === "AI_VALIDATION_FAILED" && attempt === 0) {
         validationErrors = ["The prior response did not match the required JSON schema."];

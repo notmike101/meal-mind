@@ -15,6 +15,10 @@ export type SettingsDto = {
   updatedAt: string;
 };
 
+export type AiConnectionSettings = Pick<SettingsDto, "aiBaseUrl" | "aiModel"> & {
+  aiApiKey?: string | null;
+};
+
 export type PublicSettingsDto = SettingsDto & {
   aiAuthConfigured: boolean;
 };

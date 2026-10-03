@@ -7,6 +7,7 @@ import {
   fail,
   generatePlanRequestSchema,
   ok,
+  areAiBaseUrlsEqual,
   recipeFilterRequestSchema,
   recipeDetailRequestSchema,
   recipeImportListRequestSchema,
@@ -113,8 +114,12 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
   app.get("/api/settings", async () => ok(await getSettingsWithPantry()));
 
   app.patch("/api/settings", async (request, reply) => {
+    const parsed = settingsUpdateRequestSchema.safeParse(request.body ?? {});
+    if (!parsed.success) {
+      return reply.status(400).send(fail("BAD_REQUEST", "Settings are invalid."));
+    }
     try {
-      const body = settingsUpdateRequestSchema.parse(request.body ?? {});
+      const body = parsed.data;
       const updated = await updateSettings(body);
       if (body.autoGenerateNextWeek === true && dependencies.triggerAutomaticPlanning) {
         void Promise.resolve(dependencies.triggerAutomaticPlanning()).catch((error) => {
@@ -122,16 +127,24 @@ export function registerRoutes(app: FastifyInstance, dependencies: RouteDependen
         });
       }
       return ok(updated);
-    } catch (error) {
-      return sendError(reply, error);
+    } catch {
+      return reply.status(500).send(fail("INTERNAL_ERROR", "Could not save settings."));
     }
   });
 
   app.post("/api/settings/test-ai", async (request, reply) => {
+    const parsed = aiModelsRequestSchema.safeParse(request.body ?? {});
+    if (!parsed.success) {
+      return reply.status(400).send(fail("BAD_REQUEST", "Provider connection settings are invalid."));
+    }
     try {
-      const body = aiModelsRequestSchema.parse(request.body ?? {});
+      const body = parsed.data;
       const settings = await getSettings();
-      return ok(await testAiConnectivity({ ...settings, aiBaseUrl: body.aiBaseUrl }, createAiEvent));
+      const aiBaseUrl = body.aiBaseUrl;
+      const aiApiKey = body.aiApiKey !== undefined
+        ? body.aiApiKey
+        : areAiBaseUrlsEqual(aiBaseUrl, settings.aiBaseUrl) ? settings.aiApiKey : null;
+      return ok(await testAiConnectivity({ ...settings, aiBaseUrl, aiApiKey }, createAiEvent));
     } catch (error) {
       return sendError(reply, error);
     }
