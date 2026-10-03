@@ -52,6 +52,12 @@ New commits require fresh AI and human approvals.
   and the PR head/base are checked again before publishing the result. Every run
   refreshes all open main PRs because GitHub concurrency can replace pending runs.
 
+Commit statuses belong to a SHA, not to an individual PR. If multiple open main
+PRs share the same head SHA, **every one of them** must meet both approvals before
+that SHA's status can pass. Closing or retargeting a duplicate triggers a fresh
+evaluation. Retarget events may run the workflow for another base branch, but
+only open PRs currently targeting main receive or affect gate statuses.
+
 When approvals are missing, a failed gate run is expected. On review/manual
 signals a run may evaluate multiple PRs; inspect each PR's `merge-gate` status
 rather than treating the aggregate workflow result as that PR's decision.

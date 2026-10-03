@@ -2,8 +2,8 @@ name: Dual approval merge gate
 
 on:
   pull_request_target:
-    branches: [main]
-    types: [opened, reopened, synchronize, edited, ready_for_review]
+    # Retargeting away from main must clear that PR from shared-SHA evaluations.
+    types: [opened, reopened, synchronize, edited, ready_for_review, closed]
   issue_comment:
     types: [created, edited, deleted]
   workflow_run:
@@ -24,7 +24,9 @@ concurrency:
 
 jobs:
   evaluate:
-    if: github.event_name != 'issue_comment' || github.event.issue.pull_request
+    if: >-
+      (github.event_name != 'issue_comment' || github.event.issue.pull_request) &&
+      (github.event_name != 'pull_request_target' || github.event.pull_request.base.ref == 'main' || github.event.action == 'edited')
     runs-on: ubuntu-latest
     steps:
       # Never check out or execute PR code in this privileged workflow.

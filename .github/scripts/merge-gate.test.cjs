@@ -147,3 +147,50 @@ test("comment, review and manual events re-read open main PRs", async () => {
     if (eventName !== "issue_comment") assert.ok(fixture.calls.some((args) => args.base === "main" && args.state === "open"));
   }
 });
+
+test("a shared commit cannot borrow AI approval from another PR in either enumeration order", async () => {
+  for (const order of [[51, 52], [52, 51]]) {
+    const fixture = apiFixture();
+    const pr = (number) => ({ number, state: "open", base: { ref: "main" }, head: { sha }, user: { login: "contributor" } });
+    fixture.github.rest.pulls.get = async ({ pull_number }) => ({ data: pr(pull_number) });
+    fixture.github.paginate = async (method, args) => {
+      if (method === fixture.github.rest.pulls.list) return order.map(pr);
+      if (method === fixture.github.rest.pulls.listReviews) return [review];
+      return args.issue_number === 52 ? [approval] : [];
+    };
+    await runGate(fixture);
+    assert.deepEqual(fixture.statuses.map((status) => status.state), ["pending", "failure"]);
+    assert.match(fixture.statuses.at(-1).description, /51.*AI approval/);
+  }
+});
+
+test("a shared SHA passes when all PRs approve or an unapproved duplicate closes or retargets", async () => {
+  for (const excluded of [undefined, { state: "closed" }, { base: { ref: "release" } }]) {
+    const fixture = apiFixture();
+    const prs = [51, 52].map((number) => ({ number, state: "open", base: { ref: "main" }, head: { sha }, user: { login: "contributor" } }));
+    Object.assign(prs[0], excluded);
+    fixture.context.eventName = "pull_request_target";
+    fixture.context.payload = { action: excluded?.state ? "closed" : "edited", pull_request: prs[0] };
+    fixture.github.rest.pulls.get = async ({ pull_number }) => ({ data: prs.find((pr) => pr.number === pull_number) });
+    fixture.github.paginate = async (method, args) => {
+      if (method === fixture.github.rest.pulls.list) return prs;
+      if (method === fixture.github.rest.pulls.listReviews) return [review];
+      return !excluded || args.issue_number === 52 ? [approval] : [];
+    };
+    await runGate(fixture);
+    assert.equal(fixture.statuses.at(-1).state, "success");
+  }
+});
+
+test("a new shared-SHA PR appearing during evaluation prevents a stale success", async () => {
+  const fixture = apiFixture();
+  const pr = (number) => ({ number, state: "open", base: { ref: "main" }, head: { sha }, user: { login: "contributor" } });
+  let lists = 0;
+  fixture.github.paginate = async (method) => {
+    if (method === fixture.github.rest.pulls.list) return ++lists === 1 ? [pr(51)] : [pr(51), pr(52)];
+    return method === fixture.github.rest.pulls.listReviews ? [review] : [approval];
+  };
+  await runGate(fixture);
+  assert.equal(fixture.statuses.at(-1).state, "failure");
+  assert.match(fixture.statuses.at(-1).description, /PR set changed/);
+});
