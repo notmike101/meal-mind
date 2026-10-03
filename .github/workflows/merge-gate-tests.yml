@@ -1,0 +1,30 @@
+name: Merge gate tests and review signal
+
+on:
+  pull_request:
+    branches: [main]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test .github/scripts/merge-gate.test.cjs
+  review-signal:
+    if: github.event_name == 'pull_request_review' && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      # Fork review events have read-only tokens. The trusted workflow_run handler
+      # reads approvals itself; this job passes no code, artifacts or decisions.
+      - run: echo 'Review changed; the merge gate will re-read GitHub approvals'

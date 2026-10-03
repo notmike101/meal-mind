@@ -267,6 +267,10 @@ Every PR must be reviewed and explicitly approved by both an AI agent and a huma
 
 Both of these gates must be passed explicitly before merging is allowed.
 
+AI approval comments must use the current PR head SHA and the structured format
+in `docs/MERGE_GATE.md`. Human approval must also be submitted through GitHub's
+review system; a conversation comment alone does not satisfy the merge gate.
+
 ### Releases
 
 Merge through the PR, then verify GitHub reports it as merged and confirm the branch tip is contained in `origin/main` before branch cleanup.
