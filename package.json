@@ -31,7 +31,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "drizzle-orm": "^0.45.2",
-    "fastify": "^5.6.2",
+    "fastify": "^5.12.5",
     "glob": "^13.0.6",
     "openai": "^6.44.0",
     "pg": "^8.16.3",
