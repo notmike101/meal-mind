@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { AppError, type AiModelsDto, type SettingsDto as Settings } from "@mealmind/contracts";
+import { AppError, type AiConnectionSettings, type AiModelsDto } from "@mealmind/contracts";
 
 export type AiEventType = "plan_generate" | "slot_swap" | "shopping_list" | "connectivity_test";
 
@@ -16,20 +16,60 @@ export type AiEventLogInput = {
 
 type AiEventLogger = (event: AiEventLogInput) => Promise<unknown> | unknown;
 
-function getOpenAI(settings: Pick<Settings, "aiBaseUrl">) {
+function effectiveApiKey(settings: AiConnectionSettings) {
+  return (settings.aiApiKey === undefined ? process.env.OPENAI_COMPATIBLE_API_KEY : settings.aiApiKey)?.trim() || null;
+}
+
+function getOpenAI(settings: AiConnectionSettings) {
+  const apiKey = effectiveApiKey(settings);
   return new OpenAI({
-    apiKey: process.env.OPENAI_COMPATIBLE_API_KEY?.trim() || "not-required",
+    apiKey: apiKey || "not-required",
+    defaultHeaders: apiKey ? undefined : { Authorization: null },
     baseURL: settings.aiBaseUrl,
     fetch: globalThis.fetch,
   });
 }
 
-function authorizationHeaders(): Record<string, string> {
-  const token = process.env.OPENAI_COMPATIBLE_API_KEY?.trim();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+function redactSecrets(value: string, settings: AiConnectionSettings) {
+  const secrets = [settings.aiApiKey?.trim(), process.env.OPENAI_COMPATIBLE_API_KEY?.trim()]
+    .filter((secret): secret is string => Boolean(secret))
+    .flatMap((secret) => [secret, JSON.stringify(secret).slice(1, -1)])
+    .sort((left, right) => right.length - left.length);
+  for (const secret of secrets) {
+    value = value.split(secret).join("[REDACTED]");
+  }
+  return value;
 }
 
-function normalizeModels(payload: unknown): AiModelsDto {
+function redactJson(value: unknown, settings: AiConnectionSettings): unknown {
+  if (typeof value === "string") {
+    return redactSecrets(value, settings);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => redactJson(item, settings));
+  }
+  if (value !== null && typeof value === "object") {
+    const redacted: Record<string, unknown> = Object.create(null);
+    for (const key of Object.keys(value)) {
+      redacted[redactSecrets(key, settings)] = redactJson((value as Record<string, unknown>)[key], settings);
+    }
+    return redacted;
+  }
+  return value;
+}
+
+function logAiEvent(logEvent: AiEventLogger, event: AiEventLogInput, settings: AiConnectionSettings) {
+  return logEvent({
+    ...event,
+    model: redactSecrets(event.model, settings),
+    baseUrl: redactSecrets(event.baseUrl, settings),
+    requestJson: JSON.stringify(redactJson(JSON.parse(event.requestJson), settings)),
+    responseJson: event.responseJson === null ? null : JSON.stringify(redactJson(JSON.parse(event.responseJson), settings)),
+    errorMessage: event.errorMessage === null ? null : redactSecrets(event.errorMessage, settings),
+  });
+}
+
+function normalizeModels(payload: unknown, authConfigured: boolean): AiModelsDto {
   const data = payload && typeof payload === "object" && "data" in payload
     ? (payload as { data?: unknown }).data
     : undefined;
@@ -43,7 +83,7 @@ function normalizeModels(payload: unknown): AiModelsDto {
 
   return {
     models: [...new Set(ids)].sort((left, right) => left.localeCompare(right)).map((id) => ({ id })),
-    authConfigured: Boolean(process.env.OPENAI_COMPATIBLE_API_KEY?.trim()),
+    authConfigured,
   };
 }
 
@@ -89,12 +129,11 @@ function parseJsonObject(content: string) {
 
 export async function runJsonPrompt<T>(input: {
   eventType: AiEventType;
-  settings: Settings;
+  settings: AiConnectionSettings;
   system: string;
   user: string;
   schema: z.ZodType<T>;
   logEvent: AiEventLogger;
-  maxTokens?: number;
 }) {
   const requestJson = JSON.stringify({
     system: input.system,
@@ -106,21 +145,11 @@ export async function runJsonPrompt<T>(input: {
     const client = getOpenAI(input.settings);
     const completion = await client.chat.completions.create({
       model: input.settings.aiModel,
-      temperature: 0.2,
-      response_format: { type: "text" },
-      // Qwen reasoning-capable backends can put the entire structured answer
-      // in reasoning_content unless their chat template is told to disable
-      // thinking. This is provider-compatible and keeps content final-only.
-      chat_template_kwargs: { enable_thinking: false },
-      ...(input.maxTokens === undefined ? {} : { max_tokens: input.maxTokens }),
       messages: [
         { role: "system", content: input.system },
         { role: "user", content: input.user },
-        // Qwen-family chat templates reliably enter final-answer mode when
-        // the assistant turn closes the optional thinking block explicitly.
-        { role: "assistant", content: "<think>\n\n</think>\n\n" },
       ],
-    } as unknown as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming);
+    });
 
     // Reasoning-capable providers may expose chain-of-thought separately as
     // `reasoning_content`. Only the assistant's final `content` is allowed
@@ -130,7 +159,7 @@ export async function runJsonPrompt<T>(input: {
     const validation = input.schema.safeParse(parsed);
 
     if (!validation.success) {
-      await input.logEvent({
+      await logAiEvent(input.logEvent, {
         eventType: input.eventType,
         model: input.settings.aiModel,
         baseUrl: input.settings.aiBaseUrl,
@@ -138,13 +167,13 @@ export async function runJsonPrompt<T>(input: {
         responseJson: JSON.stringify(parsed),
         status: "validation_failed",
         errorMessage: validation.error.message,
-      });
+      }, input.settings);
       throw new AppError("AI_VALIDATION_FAILED", "AI response did not match the expected schema.", 502, {
-        issues: validation.error.issues,
+        issues: redactJson(validation.error.issues, input.settings),
       });
     }
 
-    await input.logEvent({
+    await logAiEvent(input.logEvent, {
       eventType: input.eventType,
       model: input.settings.aiModel,
       baseUrl: input.settings.aiBaseUrl,
@@ -152,7 +181,7 @@ export async function runJsonPrompt<T>(input: {
       responseJson: JSON.stringify(validation.data),
       status: "success",
       errorMessage: null,
-    });
+    }, input.settings);
 
     return validation.data;
   } catch (error) {
@@ -160,7 +189,7 @@ export async function runJsonPrompt<T>(input: {
       throw error;
     }
 
-    await input.logEvent({
+    await logAiEvent(input.logEvent, {
       eventType: input.eventType,
       model: input.settings.aiModel,
       baseUrl: input.settings.aiBaseUrl,
@@ -168,31 +197,32 @@ export async function runJsonPrompt<T>(input: {
       responseJson: null,
       status: "request_failed",
       errorMessage: error instanceof Error ? error.message : String(error),
-    });
+    }, input.settings);
 
     throw new AppError(
       "AI_UNAVAILABLE",
-      `Cannot reach AI endpoint at ${input.settings.aiBaseUrl}.`,
+      `Cannot reach AI endpoint at ${redactSecrets(input.settings.aiBaseUrl, input.settings)}.`,
       502,
-      error instanceof Error ? error.message : String(error),
+      redactSecrets(error instanceof Error ? error.message : String(error), input.settings),
     );
   }
 }
 
-export async function testAiConnectivity(settings: Pick<Settings, "aiBaseUrl" | "aiModel">, logEvent: AiEventLogger) {
+export async function testAiConnectivity(settings: AiConnectionSettings, logEvent: AiEventLogger) {
   const endpoint = `${settings.aiBaseUrl.replace(/\/$/, "")}/models`;
   const requestJson = JSON.stringify({ endpoint });
+  const apiKey = effectiveApiKey(settings);
 
   try {
     const response = await fetch(endpoint, {
-      headers: authorizationHeaders(),
+      headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
       throw new Error(`Endpoint returned HTTP ${response.status}.`);
     }
-    const models = normalizeModels(await response.json());
-    await logEvent({
+    const models = normalizeModels(await response.json(), Boolean(apiKey));
+    await logAiEvent(logEvent, {
       eventType: "connectivity_test",
       model: settings.aiModel,
       baseUrl: settings.aiBaseUrl,
@@ -200,10 +230,10 @@ export async function testAiConnectivity(settings: Pick<Settings, "aiBaseUrl" | 
       responseJson: JSON.stringify(models),
       status: "success",
       errorMessage: null,
-    });
+    }, settings);
     return models;
   } catch (error) {
-    await logEvent({
+    await logAiEvent(logEvent, {
       eventType: "connectivity_test",
       model: settings.aiModel,
       baseUrl: settings.aiBaseUrl,
@@ -211,7 +241,7 @@ export async function testAiConnectivity(settings: Pick<Settings, "aiBaseUrl" | 
       responseJson: null,
       status: "request_failed",
       errorMessage: error instanceof Error ? error.message : String(error),
-    });
-    throw new AppError("AI_UNAVAILABLE", `Cannot reach AI endpoint at ${endpoint}.`, 502);
+    }, settings);
+    throw new AppError("AI_UNAVAILABLE", `Cannot reach AI endpoint at ${redactSecrets(endpoint, settings)}.`, 502);
   }
 }

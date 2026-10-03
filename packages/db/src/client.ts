@@ -42,6 +42,7 @@ export async function ensureDatabase() {
       timezone TEXT NOT NULL DEFAULT 'America/Chicago',
       ai_base_url TEXT NOT NULL DEFAULT 'http://host.docker.internal:1234/v1',
       ai_model TEXT NOT NULL DEFAULT 'qwen3.6-35b-a3b',
+      ai_api_key TEXT,
       planning_preferences TEXT NOT NULL DEFAULT '',
       planning_variety_rules TEXT NOT NULL DEFAULT 'Avoid repeating the same recipe in a week unless no alternatives exist.',
       default_lunch_servings INTEGER NOT NULL DEFAULT 1 CHECK(default_lunch_servings >= 1 AND default_lunch_servings <= 12),
@@ -52,6 +53,8 @@ export async function ensureDatabase() {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    ALTER TABLE settings ADD COLUMN IF NOT EXISTS ai_api_key TEXT;
 
     CREATE TABLE IF NOT EXISTS pantry_staples (
       id SERIAL PRIMARY KEY,
@@ -247,11 +250,6 @@ export async function ensureDatabase() {
   `);
 
   const directAiBaseUrl = process.env.MEALMIND_AI_BASE_URL || "http://host.docker.internal:1234/v1";
-  await pool.query(
-    `UPDATE settings SET ai_base_url = $1 WHERE id = 1 AND ai_base_url = 'http://ai-gateway:8080/v1'`,
-    [directAiBaseUrl],
-  );
-
   const now = new Date().toISOString();
   await pool.query(
     `

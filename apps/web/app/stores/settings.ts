@@ -9,13 +9,12 @@ export const useSettingsStore = defineStore("settings", {
       this.data = await apiRequest<SettingsWithPantryDto>("/api/settings");
     },
     async save(input: SettingsUpdateRequest) {
-      await apiRequest("/api/settings", { method: "PATCH", body: input });
-      await this.fetchSettings();
+      this.data = await apiRequest<SettingsWithPantryDto>("/api/settings", { method: "PATCH", body: input });
     },
-    async testAi(aiBaseUrl: string) {
+    async testAi(aiBaseUrl: string, aiApiKey?: string | null) {
       return apiRequest<AiModelsDto>("/api/settings/test-ai", {
         method: "POST",
-        body: { aiBaseUrl },
+        body: { aiBaseUrl, ...(aiApiKey !== undefined ? { aiApiKey } : {}) },
       });
     },
   },

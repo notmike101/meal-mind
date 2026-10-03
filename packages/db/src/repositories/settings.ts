@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { normalizePantryName, validateServingCount } from "@mealmind/domain";
+import { areAiBaseUrlsEqual, normalizeAiBaseUrl, type AiConnectionSettings, type PublicSettingsDto, type SettingsDto } from "@mealmind/contracts";
 import { getDb } from "../client.js";
 import { pantryStaples, settings } from "../schema.js";
 
@@ -7,6 +8,7 @@ export type SettingsUpdate = {
   timezone?: string;
   aiBaseUrl?: string;
   aiModel?: string;
+  aiApiKey?: string | null;
   planningPreferences?: string;
   planningVarietyRules?: string;
   defaultMealServings?: number;
@@ -20,7 +22,16 @@ export async function getSettings() {
   if (!current) {
     throw new Error("Settings row was not initialized.");
   }
-  return current;
+  // NULL preserves legacy environment auth; empty text explicitly disables auth.
+  return { ...current, aiApiKey: current.aiApiKey === null ? undefined : current.aiApiKey || null };
+}
+
+export function toPublicSettings(current: SettingsDto & AiConnectionSettings): PublicSettingsDto {
+  const { aiApiKey, ...publicSettings } = current;
+  return {
+    ...publicSettings,
+    aiAuthConfigured: Boolean(aiApiKey === undefined ? process.env.OPENAI_COMPATIBLE_API_KEY?.trim() : aiApiKey),
+  };
 }
 
 export async function getPantryStaples() {
@@ -30,10 +41,7 @@ export async function getPantryStaples() {
 export async function getSettingsWithPantry() {
   const [currentSettings, staples] = await Promise.all([getSettings(), getPantryStaples()]);
   return {
-    settings: {
-      ...currentSettings,
-      aiAuthConfigured: Boolean(process.env.OPENAI_COMPATIBLE_API_KEY?.trim()),
-    },
+    settings: toPublicSettings(currentSettings),
     pantryStaples: staples,
   };
 }
@@ -51,11 +59,15 @@ export async function updateSettings(input: SettingsUpdate) {
   }
 
   if (input.aiBaseUrl !== undefined) {
-    const url = new URL(input.aiBaseUrl);
-    if (!["http:", "https:"].includes(url.protocol)) {
-      throw new Error("AI base URL must use HTTP or HTTPS.");
+    updates.aiBaseUrl = normalizeAiBaseUrl(input.aiBaseUrl);
+    const current = await getSettings();
+    if (input.aiApiKey === undefined && !areAiBaseUrlsEqual(updates.aiBaseUrl, current.aiBaseUrl)) {
+      updates.aiApiKey = "";
     }
-    updates.aiBaseUrl = url.toString().replace(/\/$/, "");
+  }
+
+  if (input.aiApiKey !== undefined) {
+    updates.aiApiKey = input.aiApiKey?.trim() || "";
   }
 
   if (input.aiModel !== undefined) {

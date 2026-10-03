@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PantryStapleDto, PublicSettingsDto, SettingsUpdateRequest } from "@mealmind/contracts";
-import { computed, reactive, ref } from "vue";
+import { normalizeAiBaseUrl } from "@mealmind/contracts";
+import { computed, reactive, ref, watch } from "vue";
 import { errorMessage } from "~/composables/use-api";
 import { useSettingsStore } from "~/stores/settings";
 import { parsePantryStaples } from "~/utils/settings";
@@ -11,6 +12,7 @@ const form = reactive({
   timezone: props.settings.timezone,
   aiBaseUrl: props.settings.aiBaseUrl,
   aiModel: props.settings.aiModel,
+  aiApiKey: undefined as string | null | undefined,
   planningPreferences: props.settings.planningPreferences,
   planningVarietyRules: props.settings.planningVarietyRules,
   defaultMealServings: props.settings.defaultMealServings,
@@ -20,30 +22,54 @@ const form = reactive({
 });
 const status = ref<string | null>(null);
 const busy = ref(false);
-const models = ref<string[]>([props.settings.aiModel]);
+const models = ref<string[]>([]);
 const catalogUrl = ref<string | null>(null);
+const savedUrl = ref(props.settings.aiBaseUrl);
+const savedAuthConfigured = ref(props.settings.aiAuthConfigured);
 
-const modelsLoaded = computed(() => catalogUrl.value === form.aiBaseUrl);
-const canSave = computed(() => {
-  if (!form.aiBaseUrl.trim() || !form.aiModel.trim()) return false;
-  return !modelsLoaded.value || models.value.includes(form.aiModel);
-});
+function endpoint(value: string) {
+  try {
+    return normalizeAiBaseUrl(value.trim());
+  } catch {
+    return value.trim();
+  }
+}
+
+const endpointChanged = computed(() => endpoint(savedUrl.value) !== endpoint(form.aiBaseUrl));
+const authConfigured = computed(() => form.aiApiKey === null
+  ? false
+  : Boolean(form.aiApiKey?.trim()) || (!endpointChanged.value && savedAuthConfigured.value));
+const modelsLoaded = computed(() => catalogUrl.value === endpoint(form.aiBaseUrl));
+const canSave = computed(() => Boolean(form.aiBaseUrl.trim() && form.aiModel.trim()));
+
+watch([() => endpoint(form.aiBaseUrl), () => form.aiApiKey], () => {
+  catalogUrl.value = null;
+  models.value = [];
+}, { flush: "sync" });
 
 function payload(): SettingsUpdateRequest {
+  const { aiApiKey, pantryStaples, ...settings } = form;
+  const key = aiApiKey === null ? null : aiApiKey?.trim() || undefined;
   return {
-    ...form,
-    pantryStaples: parsePantryStaples(form.pantryStaples),
+    ...settings,
+    ...(key !== undefined ? { aiApiKey: key } : {}),
+    pantryStaples: parsePantryStaples(pantryStaples),
   };
 }
 
 async function save(showMessage = true) {
   await store.save(payload());
+  if (store.data) {
+    savedUrl.value = store.data.settings.aiBaseUrl;
+    savedAuthConfigured.value = store.data.settings.aiAuthConfigured;
+  }
+  form.aiApiKey = undefined;
   if (showMessage) status.value = "Settings saved.";
 }
 
 async function runSave() {
   if (!canSave.value) {
-    status.value = "Enter an AI base URL and model, or select a model reported by the endpoint.";
+    status.value = "Enter an AI base URL and model.";
     return;
   }
   busy.value = true;
@@ -61,18 +87,18 @@ async function testAi() {
   busy.value = true;
   status.value = null;
   catalogUrl.value = null;
+  models.value = [];
+  const aiBaseUrl = form.aiBaseUrl;
+  const aiApiKey = form.aiApiKey === null ? null : form.aiApiKey?.trim() || undefined;
   try {
-    const response = await store.testAi(form.aiBaseUrl);
+    const response = await store.testAi(aiBaseUrl, aiApiKey);
+    if (endpoint(aiBaseUrl) !== endpoint(form.aiBaseUrl) || aiApiKey !== (form.aiApiKey === null ? null : form.aiApiKey?.trim() || undefined)) return;
     models.value = response.models.map((model) => model.id);
-    catalogUrl.value = form.aiBaseUrl;
-    const currentModelAvailable = models.value.includes(form.aiModel);
-    if (!currentModelAvailable) form.aiModel = "";
+    catalogUrl.value = endpoint(aiBaseUrl);
     const count = models.value.length;
-    status.value = currentModelAvailable
-      ? `AI endpoint reachable. ${count} model${count === 1 ? "" : "s"} reported.`
-      : `AI endpoint reachable, but the configured model was not reported. Select an available model.`;
+    status.value = `AI endpoint reachable. ${count} model${count === 1 ? "" : "s"} reported. You can also enter a model ID manually.`;
   } catch (caught) {
-    status.value = errorMessage(caught, "AI test failed.");
+    status.value = `${errorMessage(caught, "AI test failed.")} You can still enter a model ID manually.`;
   } finally {
     busy.value = false;
   }
@@ -86,7 +112,7 @@ async function testAi() {
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Runtime</p>
           <h2 class="mt-2 text-xl font-semibold tracking-tight text-ink">Connection & defaults</h2>
-          <p class="mt-2 text-sm leading-6 text-ink/55">Configure the local AI endpoint and your everyday planning defaults.</p>
+          <p class="mt-2 text-sm leading-6 text-ink/55">Configure an OpenAI-compatible endpoint and your everyday planning defaults.</p>
         </div>
         <div class="grid gap-4 md:grid-cols-2">
           <div class="grid content-start gap-4 rounded-xl bg-field/50 p-4 sm:p-5">
@@ -94,9 +120,11 @@ async function testAi() {
             <SettingsConnectionFields
               v-model:ai-base-url="form.aiBaseUrl"
               v-model:ai-model="form.aiModel"
+              v-model:ai-api-key="form.aiApiKey"
               v-model:timezone="form.timezone"
               :models="models"
-              :auth-configured="props.settings.aiAuthConfigured"
+              :auth-configured="authConfigured"
+              :endpoint-changed="endpointChanged"
               :models-loaded="modelsLoaded"
             />
           </div>
