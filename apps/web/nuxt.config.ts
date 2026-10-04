@@ -1,5 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { defineNuxtConfig } from "nuxt/config";
+import { generateDesignTokens } from "./design/generate-tokens";
+
+const tokenCss = generateDesignTokens();
 
 export default defineNuxtConfig({
   srcDir: "app",
@@ -7,7 +10,11 @@ export default defineNuxtConfig({
     pageTransition: { name: "page", mode: "out-in" },
   },
   modules: ["@pinia/nuxt"],
-  css: ["~/assets/css/main.css"],
+  css: [tokenCss, "~/assets/css/main.css"],
+  hooks: {
+    // The Nuxt CLI clears buildDir after loading config for build/prepare.
+    "build:before": () => { generateDesignTokens(); },
+  },
   alias: {
     "@mealmind/contracts": fileURLToPath(new URL("../../packages/contracts/src/index.ts", import.meta.url)),
   },
