@@ -687,3 +687,14 @@ This file is append-only during implementation. Each entry records current objec
 - `npm run lint`, `npm run test` (49 tests), `npm run build`, both MCP smoke suites, and all 4 Playwright scenarios passed.
 - Rebuilt the Compose stack and verified model discovery plus a real chat-completions request through the gateway against LM Studio.
 - Visually verified the rebuilt Settings page, model dropdown, authentication status, responsive width, and successful live model loading.
+
+## 2026-10-03 — Dependabot issue #46
+
+- Consolidated the 21 dependency updates listed in GitHub issue #46 into compatible Fastify, MCP SDK, Nuxt, concurrently, PostCSS, and Vitest updates plus targeted transitive lockfile refreshes. Also covers the newer Fastify #54 and devalue #55 replacements.
+- Kept duplicate root/service dependency declarations aligned. No dependency overrides or unrelated direct-major migrations.
+- Nuxt 4.5 requires a newer Vue runtime. Mocked SSR exposed duplicate Vue patch versions and a Lucide HTTP 500; explicitly aligned the root test runtime and web runtime on Vue 3.5.43. Declared the web's existing Vue Router dependency so its type plugin resolves outside Nuxt's nested dependency tree.
+- Removed the redundant external PostCSS configuration rejected by Nuxt 4.5; the existing Nuxt configuration retains Tailwind and autoprefixer.
+- Verified every installed instance against the requested dependency floors, including all brace-expansion major lines and both Undici branches. Mocked Playwright passed all 11 workflows after the runtime fix; browser inspection confirmed the rendered planner and mobile recipe catalog without mobile overflow.
+- `npm audit` decreased from 39 findings (including one critical) to 17 findings (13 high, four moderate, zero critical). Remaining findings originate in the existing Drizzle/esbuild, Tailwind/braces, and Nuxt/Nitro/node-forge chains. The suggested Nuxt downgrade and Tailwind major migration are not part of this issue's dependency updates.
+- Local test verification uses uv-managed Python on the child process PATH because the workstation otherwise selects Inkscape's broken bundled interpreter. No environment files or local user data were changed.
+- Final local gates passed: `npm ci`, `npm run lint`, `npm run build`, `npm run test` (181 tests), and `npm run test:web` (44 tests). The explicit router declaration removed the previously observed type-plugin resolution warning.
