@@ -102,7 +102,14 @@ test("enforces empty-week rules and can create a blank plan with a meal", async 
 test("generates, edits, swaps, skips, and commits a selected week", async ({ page, request }) => {
   const fixture = await reset(request);
   await goto(page, workspaceUrl(fixture.weeks.futureEmpty, "plan"));
-  await page.getByRole("button", { name: "Generate plan" }).click();
+  const generateTrigger = page.getByRole("button", { name: "Generate plan", exact: true });
+  await generateTrigger.click();
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(generateTrigger).toBeFocused();
+  await generateTrigger.click();
+  await page.keyboard.press("Escape");
+  await expect(generateTrigger).toBeFocused();
+  await generateTrigger.click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("spinbutton", { name: "Number of meals" }).fill("3");
   await dialog.getByRole("button", { name: "Generate plan" }).click();
@@ -204,21 +211,31 @@ test("generates a missing locked list and persists checkbox completion by plan",
 });
 
 test("preserves recipe-modal history and responsive theme behavior", async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   await goto(page, "/");
   await expectNoHorizontalOverflow(page);
   const origin = page.url();
-  await page.getByRole("link", { name: "Citrus Chicken Bowls" }).first().click();
+  const recipeTrigger = page.getByRole("link", { name: "Citrus Chicken Bowls" }).first();
+  await recipeTrigger.click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page).toHaveURL(/\/recipes\/citrus-chicken-bowls$/);
   await page.getByRole("button", { name: "Close recipe details" }).click();
   await expect(page).toHaveURL(origin);
+  await expect(recipeTrigger).toBeFocused();
   await page.goForward();
   await expect(page.getByRole("dialog")).toBeVisible();
 
   await goto(page, "/settings");
   await page.getByRole("button", { name: "Use dark theme" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.reload();
+  await waitForReady(page);
+  await expect(page.getByRole("button", { name: "Use dark theme" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Use system theme" })).toHaveAttribute("aria-pressed", "false");
   await goto(page, "/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expectNoHorizontalOverflow(page);
@@ -226,6 +243,20 @@ test("preserves recipe-modal history and responsive theme behavior", async ({ pa
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.reload();
   await expectNoHorizontalOverflow(page);
+
+  await goto(page, "/settings");
+  await page.getByRole("button", { name: "Use light theme" }).click();
+  await page.reload();
+  await waitForReady(page);
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.getByRole("button", { name: "Use light theme" })).toHaveAttribute("aria-pressed", "true");
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.getByRole("button", { name: "Use system theme" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  expect(consoleErrors).toEqual([]);
 });
 
 test("configures a provider with a private key and a manual model, then removes authentication", async ({ page, request }) => {

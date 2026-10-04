@@ -77,6 +77,8 @@ The generator rejects missing/extra fields and groups, wrong versions/types, inv
 
 Generated CSS establishes light defaults on `:root`, explicitly writes the light palette for `:root[data-theme="light"]`, and writes dark values for `:root[data-theme="dark"]`. `prefers-color-scheme: dark` supplies dark values only when `data-theme` is absent. This preserves pre-hydration/system preference behavior without JS-dependent palette loading. Shared dimensions/fonts inherit into teleported dialogs.
 
+The inline script in `app.vue` reads the saved preference and applies `data-theme` before paint. The client theme plugin initializes the reactive store through `onNuxtReady`, which waits for Nuxt's hydration deferrals to finish (`isHydrating` becomes false and `app:suspense:resolve` fires) before scheduling its callback. `app:mounted` alone is too early for async page hydration. The initial toggle markup therefore retains the SSR `system` preference until initialization restores the saved light/dark/system selection and installs the existing `matchMedia` listener. Later preference updates keep their existing storage and palette behavior. Do not move the browser-only preference read back before Nuxt is ready.
+
 | Role | Light | Dark | Usage |
 | --- | --- | --- | --- |
 | `canvas` | `#f7f6f3` | `#171614` | Application background |
@@ -104,6 +106,8 @@ Use `text-steel` / `.mm-text-secondary` for supporting copy and `text-muted` / `
 
 Normal text must reach 4.5:1 and large text/control/focus indicators 3:1, including placeholders and hover states. Focus must be checked on canvas, surface, field and rail. These are acceptance requirements; final measured results belong in the research/audit document, not implied by this table.
 
+For wrapping metadata, constrain the pill to `max-w-full` and give its inner text flex item `min-w-0 break-words`; `break-words` on the outer pill alone does not override a child's automatic flex minimum. Keep metadata icons `shrink-0`. Direct-text tag pills and filter buttons also use `min-w-0 max-w-full break-words`.
+
 ## Component patterns and interaction contracts
 
 No wrapper button/field/card framework was added. Use native elements with existing CSS classes and retain labels, described errors, links and events. The pattern metadata includes default, hover, focus, active, disabled, error and busy intent where applicable.
@@ -122,17 +126,24 @@ No wrapper button/field/card framework was added. Use native elements with exist
 | `.mm-interactive` | Hover changes boundary/elevation without moving the content; focus belongs on the real link/button |
 | `.mm-nav-item` | Native navigation link with opaque rail-muted text, rail-hover state, `aria-current="page"` active surface/weight; add `.focus-ring` |
 | `dialog` / `::backdrop` | Neutral native-dialog surface and scrim, tokenized entry motion; existing components own modal lifecycle |
+| `.mm-dialog-compact` | Generation dialog bounded by `width.md` and viewport minus `spacing.8`; native scrolling |
+| `.mm-dialog-recipe` / `.mm-dialog-frame` | Full-height mobile sheet; above `sm`, bounded `width.dialog` and viewport-minus-gutter height with internally scrolling body |
+| `.mm-icon-button` | `height.control` minimum width/height for named icon-only controls |
+| `.mm-button-danger` | Combine with secondary button for opaque destructive text/border; disabled treatment remains |
+| `.mm-status-error` | Neutral surface, opaque tomato text/border and wrapping message; caller owns alert/status semantics |
 
-Preserve native `showModal()`, focus trapping, Escape/backdrop dismissal, trigger restoration, body-scroll locking and route history. Styling must not replace those mechanisms. Reduced-motion media rules shorten transition/animation durations using the JSON reduced duration and prevent repeated animation.
+Preserve native `showModal()`, focus trapping, Escape/backdrop dismissal, trigger restoration, body-scroll locking and route history. Recipe-dialog teardown calls native `close()` before restoring body scrolling and trigger focus, so the background trigger is no longer inert when focused. The generation dialog likewise calls `close()` in its pre-flush open-state watcher before `v-if` removal, and during component teardown, allowing native return-focus to the opener. Styling must not replace those mechanisms. Reduced-motion media rules shorten transition/animation durations using the JSON reduced duration and prevent repeated animation.
 
 The four-pixel baseline is `shared.spacing`. Use the same Tailwind spacing and `mm-p-*`, `mm-gap-*`, `mm-space-y-*`, `mm-text-*`, `mm-leading-*` contracts; there is no second scale. `height.control` is 44px at the default 16px root font size and scales with user font preferences. `width.rail` is 14rem (224px at that root size), `width.shell` is 86rem, and responsive breakpoints come from the JSON. CSS uses Tailwind's `@screen lg` instead of a duplicate breakpoint literal.
 
-### Existing Vue APIs represented in metadata
+### Final shared Vue APIs
 
-All components below have **no public slots**. CSS/native patterns have no Vue props/slots/emits. No existing Vue API changed in this foundation step.
+Existing props/events retain their consumer names. CSS/native patterns have no Vue props/slots/emits. Only AppShell and SectionPanel expose slots; the other listed components expose none.
 
-| Component (under `apps/web/app/components/`) | Props | Emits |
+| Component (under `apps/web/app/components/`) | Props | Emits / slots |
 | --- | --- | --- |
+| `AppShell.vue` | None | No emits; default slot renders route content |
+| `SectionPanel.vue` | Required `title: string`; optional `help?: string` | No emits; default body slot and optional `actions` slot |
 | `PageHeading.vue` | Required `eyebrow: string`, `title: string`, `description: string` | None |
 | `AppHeader.vue` | None; route-derived Plan/Recipes/Settings navigation | None |
 | `recipes/RecipeCard.vue` | Required `recipe: RecipeSummaryDto` | `openDetails(recipeId: string, trigger: HTMLElement)` |
@@ -142,20 +153,90 @@ All components below have **no public slots**. CSS/native patterns have no Vue p
 | `recipes/ImportRecipeForm.vue` | Required `job: RecipeImportJobDto \| null`; optional `busy=false`, `recentJobs=[]`, `requestError=null` | `submit(url: string)`, `viewRecipe(event: MouseEvent, recipeId: string)` |
 | `plan/ServingsStepper.vue` | Required `servings: number`, `disabled: boolean` | `update(servings: number)` |
 
+### Route and section layout
+
+Both named layouts use `<AppShell><slot /></AppShell>`. AppShell owns the `main-content` landmark (`tabindex="-1"`), skip link, desktop rail placement, one gutter scale and the bounded `width.shell` content area. There is no `wide` prop or alternate numeric width: the existing wide layout name remains for the planner and route-backed dialog history, but delegates to the same useful workspace width. The rail uses `width.rail`; below `lg`, all three links remain visible in a top row. Gutters use `spacing.4` below `sm` and `spacing.6` above it.
+
+SectionPanel owns a real section, its generated `useId()` h2 association, neutral panel/padding, optional help, and wrapping heading-side actions. It does not create a form, wrap fields or own workflow state. Its actual consumers are Appearance and the four settings groups, shopping progress, today adherence, and the add/edit meal panels. Default/body and actions are its only slots; no events or variant props exist.
+
+```text
+DESKTOP (lg+)
+[224px MealMind rail] [Page title / context        week links]
+[Plan              ] [Plan | Shopping                      ]
+[Recipes           ] [Selected-week status                  ]
+[Settings          ] [Primary actions                      ]
+[Local footer      ] [Today (current committed week only)   ]
+                     [Weekly schedule: all seven day groups]
+                     [Labeled editor + search/tags/cards    ]
+
+MOBILE / TABLET
+[MealMind]
+[Plan | Recipes | Settings]
+[Compact page heading / week links]
+[Plan | Shopping]
+[Status / wrapping actions]
+[Today]
+[Responsive day groups / labeled editor]
+
+RECIPES: heading + count -> importer -> search/result count -> cards
+SETTINGS: heading -> Appearance -> Connection & defaults -> Meal preferences
+          -> Automation -> Pantry staples -> Save / Load models
+DETAIL: same title scale -> time/tags/servings -> ingredients + steps
+```
+
+Locked weeks display all seven dates in one/two/three-column grouped panels, including explicit “No meals scheduled” and “Skipped” states. Editable day groups reflow using `width.day` rather than forcing horizontal scrolling. Selected-week status precedes creation/commit/regeneration actions and Today; loading, lock and week rules remain existing page/store decisions. Shopping retains its progress/category/item structure.
+
 ### Usage
 
 ```vue
+<!-- Layout: both named layouts use this same shell. -->
+<AppShell><slot /></AppShell>
+
+<!-- Page content inside that layout. -->
 <PageHeading eyebrow="Recipe library" title="Recipes" description="Choose meals for your week." />
-<section class="mm-panel mm-p-5 mm-space-y-4" aria-labelledby="section-title">
-  <h2 id="section-title" class="mm-text-xl font-semibold">Import recipe</h2>
-  <label for="recipe-url" class="mm-text-sm font-medium">Recipe URL</label>
-  <input id="recipe-url" type="url" class="mm-field w-full mm-px-3 mm-py-2" />
-  <button type="button" class="mm-button-primary focus-ring mm-px-4 mm-py-2">Import</button>
-  <p class="text-steel mm-text-sm">Supporting copy remains opaque.</p>
-</section>
+<SectionPanel title="Shopping progress" :help="progressSummary">
+  <template #actions>
+    <button type="button" class="focus-ring mm-button-secondary mm-px-4 mm-py-2" @click="regenerate">Regenerate</button>
+  </template>
+  <div role="progressbar" aria-label="Shopping completion" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100" class="h-2 rounded-full bg-field">
+    <div class="h-full rounded-full bg-success" :style="{ width: progress + '%' }" />
+  </div>
+</SectionPanel>
 ```
 
-In a real form, wire the existing submit/store flow rather than copying this illustrative markup as a new workflow.
+The shell belongs in the layout, not in a page that already has one. The section example shows the actual shopping structure: progress data and regenerate handler belong to ShoppingList, not SectionPanel. Use existing form events/stores for real workflows.
+
+### Preserved leaf APIs
+
+All props are required unless marked optional. None of these components exposes slots. The JSON metadata records the corresponding typed events and real sources. Existing models use Vue's native `update:<model>` contract.
+
+| Component under `apps/web/app/components/` | Props / models | Events |
+| --- | --- | --- |
+| `plan/LockedWeek.vue` | `plan: MealPlanDto`, `recipes: RecipeSummaryDto[]` | `openDetails(recipeId, servings, trigger)` |
+| `plan/PlanSummary.vue` | `plan: MealPlanDto`, `locked: boolean` | None |
+| `plan/ScheduleStrip.vue` | `plan: MealPlanDto`, `activeMealId: string`, `addingDate: string \| null`, optional `busy?: boolean` | `select(mealId)`, `add(date)`, `toggleDay(date, skipped)` |
+| `plan/SelectionWorkspace.vue` | `plan: MealPlanDto`, `recipes: RecipeSummaryDto[]`, `defaultServings: number` | `openDetails(recipeId, servings, trigger)` |
+| `plan/TodayMeals.vue` | `meals: MealDto[]` | `openDetails(recipeId, servings, trigger)` |
+| `plan/RecipeSelectionCard.vue` | `recipe: RecipeSummaryDto`, `selected: boolean`, `usedCount: number`, `actionLabel: string`, `disabled: boolean` | `choose()`, `openDetails(recipeId, trigger)` |
+| `plan/RecipePhoto.vue` | `imageUrl: string \| null`, `title: string` | None |
+| `plan/BlankPlanButton.vue` | `weekStart: string` | None |
+| `plan/CommitPlanButton.vue` | `planId: string` | None |
+| `recipes/RecipeMeta.vue` | `suggestedSlots: string[]`, `totalTime: number`, `tags: string[]`, optional `showTags=true` | None |
+| `recipes/IngredientList.vue` | `ingredients: string[]` | None |
+| `recipes/InstructionList.vue` | `recipe: RecipeDto` | None |
+| `recipes/RecipeToken.vue` | `token: CooklangTokenDto` | None |
+| `recipes/InvalidRecipeNotice.vue` | `invalidRecipes: InvalidRecipeDto[]` | None |
+| `shopping/ShoppingList.vue` | `items: ShoppingItemDto[]`, `canRegenerate: boolean` | None |
+| `shopping/ShoppingCategory.vue` | `category: string`, `items: ShoppingItemDto[]`, `busyItemId: string \| null` | `update(itemId, checked)` |
+| `shopping/ShoppingItem.vue` | `item: ShoppingItemDto`, `busy: boolean` | `update(itemId, checked)` |
+| `settings/SettingsForm.vue` | `settings: PublicSettingsDto`, `pantryStaples: PantryStapleDto[]` | None |
+| `settings/ConnectionFields.vue` | String models `aiBaseUrl`, `aiModel`, `timezone`; optional model `aiApiKey: string \| null \| undefined`; `models: string[]`, `authConfigured: boolean`, `modelsLoaded: boolean`, optional `endpointChanged?: boolean` | `update:aiBaseUrl`, `update:aiModel`, `update:aiApiKey`, `update:timezone` |
+| `settings/ServingFields.vue` | Number models `servings`, `weeklyMealCount` | `update:servings`, `update:weeklyMealCount` |
+| `settings/PlanningFields.vue` | String models `preferences`, `varietyRules` | `update:preferences`, `update:varietyRules` |
+| `settings/AutomationField.vue` | Boolean default model `modelValue` | `update:modelValue` |
+| `settings/PantryField.vue` | String default model `modelValue` | `update:modelValue` |
+| `settings/FormActions.vue` | `busy: boolean`, `canSave: boolean` | `save()`, `testAi()` |
+| `settings/ThemeToggle.vue` | None; existing theme store | None |
 
 ## Metadata interface for agents
 
@@ -181,9 +262,3 @@ In a real form, wire the existing submit/store flow rather than copying this ill
 6. For data validation without filesystem writes, use `renderDesignTokens(tokens: unknown, metadata: unknown): string`. It validates records and metadata references and returns deterministic CSS. Filesystem existence checks belong to `generateDesignTokens()`.
 7. The controller verifies using `npm run test:web`, `npm run test:e2e:web`, `npm run lint`, and `npm run build`; local browser work uses only the 3100/3199 mock workflow. Check 390/768/1440 widths, both themes, fields/focus, both dialogs and the editor. Rebuild the home-server web image before read-only integrated acceptance. Do not use local Docker or alter recipes/secrets/planning data.
 8. For token provenance proof, temporarily change a token input, regenerate/restart, inspect the consuming element's computed style in the mock UI, and restore the source. Add durable tests only for plausible behavioral/invalid-input/contrast risks, not CSS source snapshots or class-string assertions.
-
-## Foundation handoff status
-
-The foundation implements JSON generation, source validation, CSS/Tailwind consumption and native shared styles. Page/component styling and the shared shell/section cutover are the next implementation task; existing page-local alpha text, hard-coded geometry and native-dialog utility overrides have not been migrated here. The metadata marks current Vue contracts, not hypothetical new shell APIs. Update these records and the layout documentation during that cutover.
-
-No builds, tests, linters, formatters or browser checks were run by the foundation worker. The controller owns runtime, contrast and visual verification after handoff. Do not read this document as acceptance evidence.

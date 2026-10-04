@@ -36,18 +36,18 @@ const keyInput = computed({
         class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink"
       />
     </label>
-    <p aria-live="polite" class="mm-text-xs text-ink/55">
+    <p aria-live="polite" class="mm-text-xs text-muted">
       Authentication token:
       {{ aiApiKey === null ? "not configured (removal pending)" : aiApiKey?.trim() ? "configured (replacement pending)" : authConfigured ? "configured" : "not configured (optional)" }}.
       Leave blank to keep the current key for the same endpoint.
       Keys are stored in plaintext in the local database.
     </p>
-    <p v-if="endpointChanged" class="mm-text-xs text-ink/55">
+    <p v-if="endpointChanged" class="mm-text-xs text-muted">
       The endpoint has changed. The saved key will not be reused; enter a key for this endpoint if needed.
     </p>
     <button
       type="button"
-      class="focus-ring min-h-11 rounded-lg border border-line/25 mm-px-3 mm-py-2 mm-text-sm text-ink"
+      class="focus-ring mm-button-secondary mm-px-3 mm-py-2 mm-text-sm"
       @click="aiApiKey = null"
     >
       Remove API key
@@ -66,7 +66,7 @@ const keyInput = computed({
     <datalist :id="modelsId">
       <option v-for="model in models" :key="model" :value="model" />
     </datalist>
-    <span :id="modelHelpId" class="block mm-text-xs text-ink/55">
+    <span :id="modelHelpId" class="block mm-text-xs text-muted">
       Enter any model ID. {{ modelsLoaded ? "Reported models are optional suggestions." : "Load models for optional suggestions." }}
     </span>
   </div>

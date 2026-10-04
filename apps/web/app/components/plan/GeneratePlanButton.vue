@@ -29,10 +29,12 @@ watch(open, async (isOpen) => {
     dialog.value?.showModal();
     return;
   }
+  dialog.value?.close();
   document.body.style.overflow = previousBodyOverflow;
 });
 
 onBeforeUnmount(() => {
+  dialog.value?.close();
   document.body.style.overflow = previousBodyOverflow;
 });
 
@@ -82,18 +84,18 @@ async function generate() {
         ref="dialog"
         aria-labelledby="generate-plan-heading"
         aria-describedby="generate-plan-description"
-        class="m-auto w-[calc(100%-2rem)] mm-max-w-md overflow-hidden rounded-3xl border border-line/20 bg-surface p-0 text-ink shadow-2xl backdrop:bg-ink/65"
+        class="mm-dialog-compact m-auto"
         @cancel.prevent="closeDialog"
         @click="closeFromBackdrop"
         @keydown.esc.prevent="closeDialog"
       >
-        <section class="mm-p-6 sm:p-7">
+        <section class="mm-p-5 sm:p-6">
           <div class="flex items-start justify-between mm-gap-4">
             <div>
               <h2 id="generate-plan-heading" class="mm-text-xl font-bold">{{ replaceExisting ? "Regenerate plan" : "Generate plan" }}</h2>
-              <p id="generate-plan-description" class="mm-mt-1 mm-text-sm text-ink/65">Choose how many meals the AI should plan across the week.</p>
+              <p id="generate-plan-description" class="mm-mt-1 mm-text-sm text-steel">Choose how many meals the AI should plan across the week.</p>
             </div>
-            <button type="button" :disabled="busy" aria-label="Close generation dialog" class="focus-ring rounded-xl mm-p-2 text-ink/60 transition-colors hover:bg-field hover:text-ink" @click="closeDialog">
+            <button type="button" :disabled="busy" aria-label="Close generation dialog" class="focus-ring mm-icon-button mm-button-secondary" @click="closeDialog">
               <X :size="18" aria-hidden="true" />
             </button>
           </div>
@@ -102,11 +104,11 @@ async function generate() {
               <span class="mm-text-sm font-medium">Number of meals</span>
               <input v-model.number="mealCount" type="number" min="1" required autofocus class="focus-ring mm-field w-full mm-px-3 mm-py-2" />
             </label>
-            <p v-if="replaceExisting" class="mm-text-sm text-tomato">
+            <p v-if="replaceExisting" class="mm-text-sm text-warning">
               Every meal, edit, skipped day, and shopping-list item in this draft will be replaced. The draft stays in place if generation fails.
             </p>
-            <p v-if="error" role="alert" class="mm-text-sm text-tomato">{{ error }}</p>
-            <div class="flex justify-end mm-gap-2">
+            <p v-if="error" role="alert" class="mm-status-error">{{ error }}</p>
+            <div class="flex flex-wrap justify-end mm-gap-2">
               <button type="button" :disabled="busy" class="focus-ring mm-button-secondary mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="closeDialog">Cancel</button>
               <button type="submit" :disabled="busy" class="focus-ring mm-button-primary mm-px-4 mm-py-2 mm-text-sm font-bold">
                 {{ busy ? (replaceExisting ? "Regenerating" : "Generating") : replaceExisting ? "Regenerate plan" : "Generate plan" }}

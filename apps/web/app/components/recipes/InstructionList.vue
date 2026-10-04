@@ -12,28 +12,28 @@ const stepCount = computed(() => cooklangSteps.value.length || fallbackSteps.val
 
 <template>
   <section data-testid="recipe-instructions" class="min-w-0">
-    <header class="mb-5 flex items-end justify-between gap-4 border-b border-line/20 pb-4">
+    <header class="mb-5 flex items-end justify-between gap-4 border-b border-line pb-4">
       <div class="flex min-w-0 items-center gap-3">
-        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tomato/10 text-tomato">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-field text-steel">
           <CookingPot :size="20" aria-hidden="true" />
         </span>
         <div class="min-w-0">
-          <p class="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-ink/45">Step by step</p>
-          <h2 class="mt-0.5 text-2xl font-semibold tracking-tight">Instructions</h2>
+          <p class="text-xs font-bold uppercase tracking-tight text-muted">Step by step</p>
+          <h2 class="mt-0.5 text-xl font-semibold tracking-tight">Instructions</h2>
         </div>
       </div>
-      <span class="shrink-0 text-sm font-semibold tabular-nums text-ink/45">{{ stepCount }} steps</span>
+      <span class="shrink-0 text-sm font-semibold tabular-nums text-muted">{{ stepCount }} steps</span>
     </header>
     <ol class="list-none space-y-4 p-0">
       <li
         v-for="step in cooklangSteps"
         :key="`${recipe.id}-step-${step.number}`"
-        class="grid min-w-0 grid-cols-[2.75rem_minmax(0,1fr)] gap-4 rounded-2xl border border-line/20 bg-surface p-5 shadow-sm shadow-ink/[0.03] sm:grid-cols-[3rem_minmax(0,1fr)] sm:gap-5 sm:p-6"
+        class="mm-card mm-step min-w-0 mm-p-4 sm:p-5"
       >
         <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-strong text-sm font-bold tabular-nums text-strong-foreground" aria-hidden="true">
           {{ String(step.number).padStart(2, "0") }}
         </span>
-        <p class="min-w-0 break-words text-[0.98rem] leading-7 text-ink/75 sm:text-base sm:leading-8">
+        <p class="min-w-0 break-words text-base leading-relaxed text-steel">
           <RecipesRecipeToken
             v-for="(token, index) in step.tokens"
             :key="`${recipe.id}-step-${step.number}-token-${index}`"
@@ -44,12 +44,12 @@ const stepCount = computed(() => cooklangSteps.value.length || fallbackSteps.val
       <li
         v-for="(step, index) in fallbackSteps"
         :key="`${recipe.id}-fallback-${index}`"
-        class="grid min-w-0 grid-cols-[2.75rem_minmax(0,1fr)] gap-4 rounded-2xl border border-line/20 bg-surface p-5 shadow-sm shadow-ink/[0.03] sm:grid-cols-[3rem_minmax(0,1fr)] sm:gap-5 sm:p-6"
+        class="mm-card mm-step min-w-0 mm-p-4 sm:p-5"
       >
         <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-strong text-sm font-bold tabular-nums text-strong-foreground" aria-hidden="true">
           {{ String(index + 1).padStart(2, "0") }}
         </span>
-        <p class="min-w-0 break-words text-[0.98rem] leading-7 text-ink/75 sm:text-base sm:leading-8">{{ step }}</p>
+        <p class="min-w-0 break-words text-base leading-relaxed text-steel">{{ step }}</p>
       </li>
     </ol>
   </section>

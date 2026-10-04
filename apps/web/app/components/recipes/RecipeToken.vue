@@ -6,7 +6,7 @@ const props = defineProps<{ token: CooklangTokenDto }>();
 const className = computed(() => {
   if (props.token.type === "ingredient") return "font-medium text-moss";
   if (props.token.type === "cookware") return "font-medium text-ink";
-  return "font-medium text-tomato";
+  return "font-medium text-steel";
 });
 </script>
 

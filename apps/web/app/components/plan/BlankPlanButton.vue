@@ -27,6 +27,6 @@ async function createBlank() {
     <button type="button" :disabled="busy" class="focus-ring mm-button-secondary inline-flex items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-bold" @click="createBlank">
       <Plus :size="16" aria-hidden="true" /> {{ busy ? "Creating" : "Start blank plan" }}
     </button>
-    <p v-if="error" role="alert" class="mm-text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" role="alert" class="mm-status-error">{{ error }}</p>
   </div>
 </template>

@@ -17,7 +17,7 @@ watch(() => props.imageUrl, () => { failed.value = false; });
       loading="lazy"
       @error="failed = true"
     >
-    <div v-else class="flex h-full items-center justify-center text-moss/70" role="img" :aria-label="`No photo available for ${title}`">
+    <div v-else class="flex h-full items-center justify-center text-muted" role="img" :aria-label="`No photo available for ${title}`">
       <ChefHat :size="42" stroke-width="1.5" aria-hidden="true" />
     </div>
   </div>

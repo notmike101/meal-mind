@@ -128,7 +128,8 @@
       },
       "related": [
         "card",
-        "page-heading"
+        "page-heading",
+        "section-panel"
       ],
       "api": {
         "props": {},
@@ -209,17 +210,23 @@
       ],
       "selectors": [
         "dialog",
-        "dialog::backdrop"
+        "dialog::backdrop",
+        ".mm-dialog-compact",
+        ".mm-dialog-recipe",
+        ".mm-dialog-frame"
       ],
       "tokens": [
         "color.surface",
         "color.ink",
         "color.backdrop",
         "shared.opacity.backdrop",
-        "shared.radius.3xl",
+        "shared.radius.xl",
         "shared.duration.dialog",
         "shared.easing.enter",
-        "shadow.elevated"
+        "shadow.elevated",
+        "shared.spacing.8",
+        "shared.width.md",
+        "shared.width.dialog"
       ],
       "states": {
         "default": "Native modal with neutral black scrim and constrained viewport height.",
@@ -238,20 +245,25 @@
       }
     },
     "page-heading": {
-      "description": "Existing shared route heading; styling cutover belongs to Task2.",
+      "description": "Compact route h1 with opaque contextual label and supporting copy; shares mm-page-title with recipe details.",
       "sources": [
-        "app/components/PageHeading.vue"
+        "app/components/PageHeading.vue",
+        "app/assets/css/main.css"
       ],
       "selectors": [],
       "tokens": [
         "shared.fontSize.3xl",
-        "shared.fontFamily.display",
+        "shared.fontWeight.semibold",
+        "shared.lineHeight.tight",
+        "shared.letterSpacing.tight",
+        "shared.spacing.2",
         "color.ink",
-        "color.steel",
-        "color.moss"
+        "color.steel"
       ],
       "states": {},
-      "related": [],
+      "related": [
+        "recipe-details"
+      ],
       "api": {
         "props": {
           "eyebrow": "string (required): short contextual label.",
@@ -263,7 +275,7 @@
       }
     },
     "app-header": {
-      "description": "Current three-link rail/top navigation; no public props, slots or emits.",
+      "description": "Visible mobile three-link navigation and sticky desktop rail; route-derived active state.",
       "sources": [
         "app/components/AppHeader.vue"
       ],
@@ -272,11 +284,16 @@
         "color.rail",
         "color.rail-foreground",
         "color.rail-muted",
-        "shared.width.rail"
+        "color.rail-hover",
+        "color.rail-active",
+        "color.strong",
+        "color.strong-foreground",
+        "shared.height.control"
       ],
       "states": {},
       "related": [
-        "navigation"
+        "navigation",
+        "app-shell"
       ],
       "api": {
         "props": {},
@@ -287,7 +304,8 @@
     "recipe-card": {
       "description": "Recipe-summary link; modified clicks retain native navigation.",
       "sources": [
-        "app/components/recipes/RecipeCard.vue"
+        "app/components/recipes/RecipeCard.vue",
+        "app/assets/css/main.css"
       ],
       "selectors": [],
       "tokens": [
@@ -299,7 +317,9 @@
       "states": {},
       "related": [
         "card",
-        "recipe-detail-modal"
+        "recipe-detail-modal",
+        "recipe-meta",
+        "recipe-photo"
       ],
       "api": {
         "props": {
@@ -314,17 +334,25 @@
     "recipe-details": {
       "description": "Shared route/dialog detail body.",
       "sources": [
-        "app/components/recipes/RecipeDetails.vue"
+        "app/components/recipes/RecipeDetails.vue",
+        "app/assets/css/main.css"
       ],
       "selectors": [],
       "tokens": [
         "color.ink",
         "color.steel",
-        "shared.fontSize.3xl"
+        "shared.fontSize.3xl",
+        "shared.spacing.6",
+        "shared.radius.xl",
+        "shadow.panel"
       ],
       "states": {},
       "related": [
-        "panel"
+        "page-heading",
+        "recipe-layout",
+        "servings-stepper",
+        "ingredient-list",
+        "instruction-list"
       ],
       "api": {
         "props": {
@@ -332,7 +360,7 @@
           "servings": "number (required): current portion count.",
           "disabled": "boolean (optional, default false): disables portion controls.",
           "headingId": "string (optional, default undefined): h1 id for dialog labelling.",
-          "embedded": "boolean (optional, default false): modal embedding treatment."
+          "embedded": "boolean (optional, default false): omits outer panel shadow when embedded in modal."
         },
         "slots": [],
         "events": {
@@ -348,13 +376,16 @@
       "selectors": [],
       "tokens": [
         "shared.width.dialog",
-        "color.canvas",
+        "shared.spacing.8",
+        "color.surface",
         "color.ink"
       ],
       "states": {},
       "related": [
         "dialog",
-        "recipe-details"
+        "recipe-details",
+        "icon-button",
+        "status-error"
       ],
       "api": {
         "props": {
@@ -374,14 +405,17 @@
       "tokens": [
         "shared.width.md",
         "color.strong",
-        "color.tomato"
+        "color.tomato",
+        "color.warning"
       ],
       "states": {},
       "related": [
         "button-primary",
         "button-secondary",
         "dialog",
-        "field"
+        "field",
+        "icon-button",
+        "status-error"
       ],
       "api": {
         "props": {
@@ -428,13 +462,17 @@
     "servings-stepper": {
       "description": "Existing constrained portion stepper, no default slot.",
       "sources": [
-        "app/components/plan/ServingsStepper.vue"
+        "app/components/plan/ServingsStepper.vue",
+        "app/assets/css/main.css"
       ],
       "selectors": [],
       "tokens": [
         "shared.height.control",
         "color.ink",
-        "color.muted"
+        "color.muted",
+        "shared.spacing.12",
+        "shared.radius.md",
+        "color.control"
       ],
       "states": {},
       "related": [
@@ -449,6 +487,900 @@
         "events": {
           "update": "[servings: number]: requested portion value."
         }
+      }
+    },
+    "app-shell": {
+      "description": "Single responsive rail/content shell used by default and wide layouts; focusable main-content target and skip link.",
+      "sources": [
+        "app/components/AppShell.vue",
+        "app/layouts/default.vue",
+        "app/layouts/wide.vue",
+        "app/assets/css/main.css"
+      ],
+      "selectors": [],
+      "tokens": [
+        "shared.width.rail",
+        "shared.width.shell",
+        "shared.spacing.4",
+        "shared.spacing.6",
+        "shared.height.control",
+        "color.canvas",
+        "color.strong",
+        "color.strong-foreground"
+      ],
+      "states": {},
+      "related": [
+        "app-header",
+        "page-heading"
+      ],
+      "api": {
+        "props": {},
+        "slots": [
+          "default: route content rendered inside the bounded main-content landmark."
+        ],
+        "events": {}
+      }
+    },
+    "section-panel": {
+      "description": "Reused semantic section with generated heading id, optional help and wrapping actions; no field wrappers.",
+      "sources": [
+        "app/components/SectionPanel.vue",
+        "app/assets/css/main.css"
+      ],
+      "selectors": [],
+      "tokens": [
+        "shared.spacing.4",
+        "shared.spacing.5",
+        "shared.spacing.6",
+        "shared.fontSize.xl",
+        "color.ink",
+        "color.steel",
+        "color.surface",
+        "color.line",
+        "shared.radius.xl",
+        "shadow.panel"
+      ],
+      "states": {},
+      "related": [
+        "panel",
+        "today-meals",
+        "shopping-list",
+        "settings-form",
+        "selection-workspace"
+      ],
+      "api": {
+        "props": {
+          "title": "string (required): visible h2 and accessible section name.",
+          "help": "string (optional): opaque supporting copy."
+        },
+        "slots": [
+          "default: section body.",
+          "actions: optional wrapping controls/status beside the heading."
+        ],
+        "events": {}
+      }
+    },
+    "shell-layout": {
+      "description": "Tokenized desktop rail, single responsive gutter and bounded content width.",
+      "sources": [
+        "app/assets/css/main.css"
+      ],
+      "selectors": [
+        ".mm-app-shell",
+        ".mm-shell-main",
+        ".mm-shell-container",
+        ".mm-skip-link",
+        ".mm-page"
+      ],
+      "tokens": [
+        "shared.width.rail",
+        "shared.width.shell",
+        "shared.spacing.4",
+        "shared.spacing.6",
+        "color.canvas",
+        "color.strong",
+        "color.strong-foreground"
+      ],
+      "states": {},
+      "related": [
+        "app-shell"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
+      }
+    },
+    "section-layout": {
+      "description": "Shared section padding, wrapping heading/actions and compact route-title geometry.",
+      "sources": [
+        "app/assets/css/main.css"
+      ],
+      "selectors": [
+        ".mm-section",
+        ".mm-section-header",
+        ".mm-page-title"
+      ],
+      "tokens": [
+        "shared.spacing.4",
+        "shared.spacing.5",
+        "shared.spacing.6",
+        "shared.fontSize.3xl",
+        "shared.fontWeight.semibold",
+        "shared.lineHeight.tight",
+        "shared.letterSpacing.tight"
+      ],
+      "states": {},
+      "related": [
+        "section-panel",
+        "page-heading"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
+      }
+    },
+    "icon-button": {
+      "description": "Native icon-only button sizing; combine with mm-button-secondary and an accessible name.",
+      "sources": [
+        "app/assets/css/main.css"
+      ],
+      "selectors": [
+        ".mm-icon-button"
+      ],
+      "tokens": [
+        "shared.height.control"
+      ],
+      "states": {},
+      "related": [
+        "button-secondary"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
+      }
+    },
+    "button-danger": {
+      "description": "Secondary destructive action variant, retaining disabled and focus treatment.",
+      "sources": [
+        "app/assets/css/main.css"
+      ],
+      "selectors": [
+        ".mm-button-secondary.mm-button-danger:not(:disabled)"
+      ],
+      "tokens": [
+        "color.tomato"
+      ],
+      "states": {},
+      "related": [
+        "button-secondary",
+        "status-error"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
+      }
+    },
+    "status-error": {
+      "description": "Opaque error message on neutral surface; caller owns role=alert and lifecycle.",
+      "sources": [
+        "app/assets/css/main.css"
+      ],
+      "selectors": [
+        ".mm-status-error"
+      ],
+      "tokens": [
+        "color.tomato",
+        "color.surface",
+        "shared.spacing.3",
+        "shared.spacing.4",
+        "shared.radius.md",
+        "shared.fontSize.sm"
+      ],
+      "states": {},
+      "related": [
+        "field",
+        "button-danger"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
+      }
+    },
+    "recipe-layout": {
+      "description": "Responsive readable image/header, ingredient/instruction columns, instruction step and servings-control geometry.",
+      "sources": [
+        "app/assets/css/main.css"
+      ],
+      "selectors": [
+        ".mm-recipe-header",
+        ".mm-recipe-body",
+        ".mm-step",
+        ".mm-servings-controls"
+      ],
+      "tokens": [
+        "shared.spacing.4",
+        "shared.spacing.6",
+        "shared.spacing.12",
+        "shared.height.control"
+      ],
+      "states": {},
+      "related": [
+        "recipe-details",
+        "ingredient-list",
+        "instruction-list",
+        "servings-stepper"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
+      }
+    },
+    "schedule-layout": {
+      "description": "Responsive non-scrolling editable day groups with a tokenized minimum day width.",
+      "sources": [
+        "app/assets/css/main.css"
+      ],
+      "selectors": [
+        ".mm-schedule-grid"
+      ],
+      "tokens": [
+        "shared.width.day",
+        "shared.spacing.3"
+      ],
+      "states": {},
+      "related": [
+        "schedule-strip"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
+      }
+    },
+    "locked-week": {
+      "description": "All seven selected-week dates in responsive grouped panels; explicit skipped and empty states.",
+      "sources": [
+        "app/components/plan/LockedWeek.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.muted",
+        "shared.spacing.4"
+      ],
+      "states": {},
+      "related": [
+        "panel",
+        "recipe-photo"
+      ],
+      "api": {
+        "props": {
+          "plan": "MealPlanDto (required)",
+          "recipes": "RecipeSummaryDto[] (required)"
+        },
+        "slots": [],
+        "events": {
+          "openDetails": "[recipeId: string, servings: number, trigger: HTMLElement]"
+        }
+      }
+    },
+    "plan-summary": {
+      "description": "Selected-week status before actions and adherence.",
+      "sources": [
+        "app/components/plan/PlanSummary.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.steel",
+        "color.success",
+        "shared.spacing.4"
+      ],
+      "states": {},
+      "related": [
+        "panel"
+      ],
+      "api": {
+        "props": {
+          "plan": "MealPlanDto (required)",
+          "locked": "boolean (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "schedule-strip": {
+      "description": "Editable weekly schedule with select, add, skip and restore controls.",
+      "sources": [
+        "app/components/plan/ScheduleStrip.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.moss",
+        "color.strong-foreground",
+        "color.control",
+        "shared.height.control"
+      ],
+      "states": {},
+      "related": [
+        "schedule-layout",
+        "icon-button"
+      ],
+      "api": {
+        "props": {
+          "plan": "MealPlanDto (required)",
+          "activeMealId": "string (required)",
+          "addingDate": "string | null (required)",
+          "busy": "boolean (optional)"
+        },
+        "slots": [],
+        "events": {
+          "select": "[mealId: string]",
+          "add": "[date: string]",
+          "toggleDay": "[date: string, skipped: boolean]"
+        }
+      }
+    },
+    "selection-workspace": {
+      "description": "Existing add/edit/swap/filter/servings flow with shared labeled editor sections.",
+      "sources": [
+        "app/components/plan/SelectionWorkspace.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.muted",
+        "color.strong-foreground",
+        "shared.spacing.4"
+      ],
+      "states": {},
+      "related": [
+        "schedule-strip",
+        "section-panel",
+        "recipe-selection-card",
+        "servings-stepper",
+        "button-danger",
+        "status-error"
+      ],
+      "api": {
+        "props": {
+          "plan": "MealPlanDto (required)",
+          "recipes": "RecipeSummaryDto[] (required)",
+          "defaultServings": "number (required)"
+        },
+        "slots": [],
+        "events": {
+          "openDetails": "[recipeId: string, servings: number, trigger: HTMLElement]"
+        }
+      }
+    },
+    "today-meals": {
+      "description": "Current-week adherence; warnings for remaining meals, success for handled meals.",
+      "sources": [
+        "app/components/plan/TodayMeals.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.success",
+        "color.warning",
+        "color.muted"
+      ],
+      "states": {},
+      "related": [
+        "section-panel",
+        "button-primary",
+        "button-secondary",
+        "status-error"
+      ],
+      "api": {
+        "props": {
+          "meals": "MealDto[] (required)"
+        },
+        "slots": [],
+        "events": {
+          "openDetails": "[recipeId: string, servings: number, trigger: HTMLElement]"
+        }
+      }
+    },
+    "recipe-selection-card": {
+      "description": "Recipe detail links and wrapping recipe-choice action; explicit selected badge.",
+      "sources": [
+        "app/components/plan/RecipeSelectionCard.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.moss",
+        "color.strong-foreground",
+        "color.ink",
+        "color.steel"
+      ],
+      "states": {},
+      "related": [
+        "card",
+        "recipe-photo",
+        "button-primary"
+      ],
+      "api": {
+        "props": {
+          "recipe": "RecipeSummaryDto (required)",
+          "selected": "boolean (required)",
+          "usedCount": "number (required)",
+          "actionLabel": "string (required)",
+          "disabled": "boolean (required)"
+        },
+        "slots": [],
+        "events": {
+          "choose": "[]",
+          "openDetails": "[recipeId: string, trigger: HTMLElement]"
+        }
+      }
+    },
+    "recipe-photo": {
+      "description": "Image with existing failed-image fallback and accessible photo label.",
+      "sources": [
+        "app/components/plan/RecipePhoto.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.field",
+        "color.muted"
+      ],
+      "states": {},
+      "related": [],
+      "api": {
+        "props": {
+          "imageUrl": "string | null (required)",
+          "title": "string (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "blank-plan-button": {
+      "description": "Existing selected-week manual creation action.",
+      "sources": [
+        "app/components/plan/BlankPlanButton.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.tomato"
+      ],
+      "states": {},
+      "related": [
+        "button-secondary",
+        "status-error"
+      ],
+      "api": {
+        "props": {
+          "weekStart": "string (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "commit-plan-button": {
+      "description": "Existing draft commit action; store owns workflow.",
+      "sources": [
+        "app/components/plan/CommitPlanButton.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.tomato"
+      ],
+      "states": {},
+      "related": [
+        "button-primary",
+        "status-error"
+      ],
+      "api": {
+        "props": {
+          "planId": "string (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "recipe-meta": {
+      "description": "Wrapping opaque time, meal-slot and tag metadata.",
+      "sources": [
+        "app/components/recipes/RecipeMeta.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.steel",
+        "color.field",
+        "color.line"
+      ],
+      "states": {},
+      "related": [],
+      "api": {
+        "props": {
+          "suggestedSlots": "string[] (required)",
+          "totalTime": "number (required)",
+          "tags": "string[] (required)",
+          "showTags": "boolean (optional, default true)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "ingredient-list": {
+      "description": "Readable ingredient section with meaningful heading and count.",
+      "sources": [
+        "app/components/recipes/IngredientList.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.steel",
+        "color.muted",
+        "shared.spacing.4"
+      ],
+      "states": {},
+      "related": [
+        "panel"
+      ],
+      "api": {
+        "props": {
+          "ingredients": "string[] (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "instruction-list": {
+      "description": "CookLang or fallback steps using shared step geometry.",
+      "sources": [
+        "app/components/recipes/InstructionList.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.steel",
+        "color.strong",
+        "color.strong-foreground"
+      ],
+      "states": {},
+      "related": [
+        "recipe-layout",
+        "card",
+        "recipe-token"
+      ],
+      "api": {
+        "props": {
+          "recipe": "RecipeDto (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "recipe-token": {
+      "description": "Existing CookLang inline token rendering; timers use neutral emphasis, not an error role.",
+      "sources": [
+        "app/components/recipes/RecipeToken.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.moss",
+        "color.ink",
+        "color.steel"
+      ],
+      "states": {},
+      "related": [],
+      "api": {
+        "props": {
+          "token": "CooklangTokenDto (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "invalid-recipe-notice": {
+      "description": "Invalid-file messages remain visible and wrap.",
+      "sources": [
+        "app/components/recipes/InvalidRecipeNotice.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.tomato",
+        "color.steel"
+      ],
+      "states": {},
+      "related": [
+        "status-error"
+      ],
+      "api": {
+        "props": {
+          "invalidRecipes": "InvalidRecipeDto[] (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "shopping-list": {
+      "description": "Progress, category groups and existing shopping actions.",
+      "sources": [
+        "app/components/shopping/ShoppingList.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.success",
+        "color.steel"
+      ],
+      "states": {},
+      "related": [
+        "section-panel",
+        "shopping-category",
+        "status-error"
+      ],
+      "api": {
+        "props": {
+          "items": "ShoppingItemDto[] (required)",
+          "canRegenerate": "boolean (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "shopping-category": {
+      "description": "Meaningful category heading/count and shopping-item group.",
+      "sources": [
+        "app/components/shopping/ShoppingCategory.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.line",
+        "color.steel",
+        "color.field"
+      ],
+      "states": {},
+      "related": [
+        "panel",
+        "shopping-item"
+      ],
+      "api": {
+        "props": {
+          "category": "string (required)",
+          "items": "ShoppingItemDto[] (required)",
+          "busyItemId": "string | null (required)"
+        },
+        "slots": [],
+        "events": {
+          "update": "[itemId: string, checked: boolean]"
+        }
+      }
+    },
+    "shopping-item": {
+      "description": "Native labeled checkbox with readable checked metadata.",
+      "sources": [
+        "app/components/shopping/ShoppingItem.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.muted",
+        "color.control",
+        "color.moss",
+        "shared.height.control"
+      ],
+      "states": {},
+      "related": [
+        "field"
+      ],
+      "api": {
+        "props": {
+          "item": "ShoppingItemDto (required)",
+          "busy": "boolean (required)"
+        },
+        "slots": [],
+        "events": {
+          "update": "[itemId: string, checked: boolean]"
+        }
+      }
+    },
+    "settings-form": {
+      "description": "Flat connection/defaults, preferences, automation and pantry sections; existing saves/auth semantics unchanged.",
+      "sources": [
+        "app/components/settings/SettingsForm.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.steel",
+        "shared.spacing.4",
+        "shared.spacing.6"
+      ],
+      "states": {},
+      "related": [
+        "section-panel",
+        "connection-fields",
+        "serving-fields",
+        "planning-fields",
+        "automation-field",
+        "pantry-field",
+        "form-actions"
+      ],
+      "api": {
+        "props": {
+          "settings": "PublicSettingsDto (required)",
+          "pantryStaples": "PantryStapleDto[] (required)"
+        },
+        "slots": [],
+        "events": {}
+      }
+    },
+    "connection-fields": {
+      "description": "Existing endpoint, credential, model and timezone fields; keys stay private.",
+      "sources": [
+        "app/components/settings/ConnectionFields.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.muted"
+      ],
+      "states": {},
+      "related": [
+        "field",
+        "button-secondary"
+      ],
+      "api": {
+        "props": {
+          "aiBaseUrl": "v-model:string (required)",
+          "aiModel": "v-model:string (required)",
+          "aiApiKey": "v-model:string | null | undefined (optional)",
+          "timezone": "v-model:string (required)",
+          "models": "string[] (required)",
+          "authConfigured": "boolean (required)",
+          "modelsLoaded": "boolean (required)",
+          "endpointChanged": "boolean (optional)"
+        },
+        "slots": [],
+        "events": {
+          "update:aiBaseUrl": "[value: string]",
+          "update:aiModel": "[value: string]",
+          "update:aiApiKey": "[value: string | null | undefined]",
+          "update:timezone": "[value: string]"
+        }
+      }
+    },
+    "serving-fields": {
+      "description": "Responsive native portion/default-meal-count fields.",
+      "sources": [
+        "app/components/settings/ServingFields.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "shared.spacing.4"
+      ],
+      "states": {},
+      "related": [
+        "field"
+      ],
+      "api": {
+        "props": {
+          "servings": "v-model:number (required)",
+          "weeklyMealCount": "v-model:number (required)"
+        },
+        "slots": [],
+        "events": {
+          "update:servings": "[value: number]",
+          "update:weeklyMealCount": "[value: number]"
+        }
+      }
+    },
+    "planning-fields": {
+      "description": "Existing labeled preference and variety textareas.",
+      "sources": [
+        "app/components/settings/PlanningFields.vue"
+      ],
+      "selectors": [],
+      "tokens": [],
+      "states": {},
+      "related": [
+        "field"
+      ],
+      "api": {
+        "props": {
+          "preferences": "v-model:string (required)",
+          "varietyRules": "v-model:string (required)"
+        },
+        "slots": [],
+        "events": {
+          "update:preferences": "[value: string]",
+          "update:varietyRules": "[value: string]"
+        }
+      }
+    },
+    "automation-field": {
+      "description": "Native full-label checkbox with success/enabled and neutral/manual copy.",
+      "sources": [
+        "app/components/settings/AutomationField.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.success",
+        "color.muted",
+        "color.control",
+        "shared.height.control"
+      ],
+      "states": {},
+      "related": [
+        "field"
+      ],
+      "api": {
+        "props": {
+          "modelValue": "v-model:boolean (required)"
+        },
+        "slots": [],
+        "events": {
+          "update:modelValue": "[value: boolean]"
+        }
+      }
+    },
+    "pantry-field": {
+      "description": "Existing labeled pantry textarea.",
+      "sources": [
+        "app/components/settings/PantryField.vue"
+      ],
+      "selectors": [],
+      "tokens": [],
+      "states": {},
+      "related": [
+        "field"
+      ],
+      "api": {
+        "props": {
+          "modelValue": "v-model:string (required)"
+        },
+        "slots": [],
+        "events": {
+          "update:modelValue": "[value: string]"
+        }
+      }
+    },
+    "form-actions": {
+      "description": "Existing Save and Load models controls.",
+      "sources": [
+        "app/components/settings/FormActions.vue"
+      ],
+      "selectors": [],
+      "tokens": [],
+      "states": {},
+      "related": [
+        "button-primary",
+        "button-secondary"
+      ],
+      "api": {
+        "props": {
+          "busy": "boolean (required)",
+          "canSave": "boolean (required)"
+        },
+        "slots": [],
+        "events": {
+          "save": "[]",
+          "testAi": "[]"
+        }
+      }
+    },
+    "theme-toggle": {
+      "description": "Existing System/Light/Dark preferences with 44px controls and opaque selected foreground.",
+      "sources": [
+        "app/components/settings/ThemeToggle.vue"
+      ],
+      "selectors": [],
+      "tokens": [
+        "color.strong",
+        "color.strong-foreground",
+        "color.steel",
+        "shared.height.control"
+      ],
+      "states": {},
+      "related": [
+        "button-primary"
+      ],
+      "api": {
+        "props": {},
+        "slots": [],
+        "events": {}
       }
     }
   }

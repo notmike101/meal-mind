@@ -4,7 +4,7 @@ const weeklyMealCount = defineModel<number>("weeklyMealCount", { required: true 
 </script>
 
 <template>
-  <div class="grid grid-cols-2 mm-gap-3">
+  <div class="grid mm-gap-4 sm:grid-cols-2">
     <label class="mm-space-y-2">
       <span class="mm-text-sm font-medium">Default meal servings</span>
       <input v-model.number="servings" type="number" min="1" max="12" class="focus-ring mm-field w-full mm-px-3 mm-py-2 text-ink" />

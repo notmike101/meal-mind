@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { MealDto } from "@mealmind/contracts";
-import { Check, CircleCheckBig, Utensils, X } from "@lucide/vue";
+import { Check, CircleCheckBig, X } from "@lucide/vue";
 import { computed, ref } from "vue";
 import { errorMessage } from "~/composables/use-api";
 import { usePlanningStore } from "~/stores/planning";
@@ -30,62 +30,43 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
 </script>
 
 <template>
-  <section class="overflow-hidden rounded-2xl border border-line/25 bg-surface shadow-sm">
-    <div class="flex flex-col gap-4 border-b border-line/20 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <div class="flex items-center gap-4">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-moss/10 text-moss">
-          <Utensils :size="20" aria-hidden="true" />
-        </span>
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Today</p>
-          <h2 class="mt-1 text-xl font-semibold tracking-tight text-ink">Today's meals</h2>
-        </div>
-      </div>
-      <span v-if="plannedMeals.length" class="inline-flex w-fit items-center rounded-full bg-tomato/10 px-3 py-1.5 text-sm font-semibold text-tomato">
+  <SectionPanel title="Today's meals">
+    <template #actions>
+      <span v-if="plannedMeals.length" class="rounded-full bg-field mm-px-3 mm-py-2 mm-text-sm font-semibold text-warning">
         {{ plannedMeals.length }} meal{{ plannedMeals.length === 1 ? "" : "s" }} still planned
       </span>
-      <span v-else class="inline-flex w-fit items-center gap-2 rounded-full bg-moss/10 px-3 py-1.5 text-sm font-semibold text-moss">
+      <span v-else class="inline-flex items-center mm-gap-2 rounded-full bg-field mm-px-3 mm-py-2 mm-text-sm font-semibold text-success">
         <CircleCheckBig :size="16" aria-hidden="true" /> All handled
       </span>
-    </div>
-    <div v-if="meals.length" class="grid gap-4 p-4 sm:p-5 xl:grid-cols-2">
-      <article v-for="meal in meals" :key="meal.id" class="flex min-h-52 flex-col rounded-xl border border-line/20 bg-canvas/50 p-5 transition-colors hover:border-line/40">
-        <div class="flex items-center justify-between gap-3">
-          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">{{ meal.slot || "Meal" }}</p>
-          <span class="rounded-full bg-field px-2.5 py-1 text-xs font-medium capitalize text-ink/60">{{ meal.status }}</span>
+    </template>
+    <div v-if="meals.length" class="grid mm-gap-4 xl:grid-cols-2">
+      <article v-for="meal in meals" :key="meal.id" class="flex min-w-0 flex-col rounded-lg border border-line bg-canvas mm-p-4">
+        <div class="flex flex-wrap items-center justify-between mm-gap-2">
+          <p class="mm-text-xs font-semibold uppercase tracking-wide text-steel">{{ meal.slot || "Meal" }}</p>
+          <span class="rounded-full bg-field mm-px-2.5 mm-py-1 mm-text-xs font-medium capitalize" :class="meal.status === 'done' ? 'text-success' : meal.status === 'planned' ? 'text-warning' : 'text-muted'">{{ meal.status }}</span>
         </div>
-        <h3 class="mt-3 text-xl font-semibold leading-snug tracking-[-0.02em]">
+        <h3 class="mm-mt-3 break-words mm-text-xl font-semibold leading-snug">
           <a
             :href="`/recipes/${encodeURIComponent(meal.recipeId)}`"
-            class="focus-ring rounded-lg text-ink decoration-moss/50 decoration-2 underline-offset-4 hover:underline"
+            class="focus-ring rounded-md text-ink decoration-moss decoration-2 underline-offset-4 hover:underline"
             @click.exact.left.prevent="openRecipe($event, meal)"
           >{{ meal.recipeTitleSnapshot }}</a>
         </h3>
-        <p class="mt-2 text-sm text-ink/55">{{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}</p>
-        <div class="mt-auto flex flex-wrap gap-3 pt-6">
-          <button
-            type="button"
-            :disabled="busyMealId === meal.id"
-            class="focus-ring mm-button-primary inline-flex min-h-11 items-center gap-2 px-3.5 py-2 text-sm font-semibold"
-            @click="update(meal.id, 'done')"
-          >
+        <p class="mm-mt-2 mm-text-sm text-steel">{{ meal.servings }} serving{{ meal.servings === 1 ? "" : "s" }}</p>
+        <div class="mt-auto flex flex-wrap mm-gap-3 mm-pt-4">
+          <button type="button" :disabled="busyMealId === meal.id" class="focus-ring mm-button-primary inline-flex items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="update(meal.id, 'done')">
             <Check :size="15" aria-hidden="true" /> Done
           </button>
-          <button
-            type="button"
-            :disabled="busyMealId === meal.id"
-            class="focus-ring mm-button-secondary inline-flex min-h-11 items-center gap-2 px-3.5 py-2 text-sm font-semibold"
-            @click="update(meal.id, 'skipped')"
-          >
+          <button type="button" :disabled="busyMealId === meal.id" class="focus-ring mm-button-secondary inline-flex items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="update(meal.id, 'skipped')">
             <X :size="15" aria-hidden="true" /> Skipped
           </button>
         </div>
       </article>
     </div>
-    <div v-else class="flex items-center gap-3 p-6 text-sm text-ink/60 sm:p-8">
-      <CircleCheckBig :size="20" class="shrink-0 text-moss" aria-hidden="true" />
+    <div v-else class="flex items-center mm-gap-3 mm-text-sm text-steel">
+      <CircleCheckBig :size="20" class="shrink-0 text-success" aria-hidden="true" />
       <p>No meals are scheduled for today. Your day is clear.</p>
     </div>
-    <p v-if="error" role="alert" class="mx-5 mb-5 rounded-xl bg-tomato/10 px-4 py-3 text-sm font-medium text-tomato">{{ error }}</p>
-  </section>
+    <p v-if="error" role="alert" class="mm-status-error mm-mt-4">{{ error }}</p>
+  </SectionPanel>
 </template>

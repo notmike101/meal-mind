@@ -2,6 +2,7 @@ import type { MealPlanDto, RecipeSummaryDto } from "@mealmind/contracts";
 import { createTestingPinia } from "@pinia/testing";
 import { flushPromises, mount } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
+import SectionPanel from "~/components/SectionPanel.vue";
 import { usePlanningStore } from "~/stores/planning";
 import SelectionWorkspace from "./SelectionWorkspace.vue";
 
@@ -67,7 +68,7 @@ const stubs = {
 function render() {
   return mount(SelectionWorkspace, {
     props: { plan, recipes, defaultServings: 2 },
-    global: { plugins: [createTestingPinia({ createSpy: vi.fn })], stubs },
+    global: { plugins: [createTestingPinia({ createSpy: vi.fn })], components: { SectionPanel }, stubs },
   });
 }
 

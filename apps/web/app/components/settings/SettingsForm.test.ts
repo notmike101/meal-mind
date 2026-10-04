@@ -2,6 +2,7 @@ import type { PublicSettingsDto } from "@mealmind/contracts";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import { createPinia } from "pinia";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import SectionPanel from "~/components/SectionPanel.vue";
 import AutomationField from "./AutomationField.vue";
 import ConnectionFields from "./ConnectionFields.vue";
 import FormActions from "./FormActions.vue";
@@ -38,6 +39,7 @@ function render(models = [{ id: "reported-model" }]) {
     global: {
       plugins: [createPinia()],
       components: {
+        SectionPanel,
         SettingsAutomationField: AutomationField,
         SettingsConnectionFields: ConnectionFields,
         SettingsFormActions: FormActions,

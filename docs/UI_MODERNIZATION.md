@@ -97,4 +97,16 @@ The WCAG relative-luminance calculation checked82 intended foreground/background
 | Focus on canvas/surface/field/rail/rail-hover/rail-active |5.114:1|6.644:1|
 | Control boundary on canvas/surface/field |3.582:1|5.160:1|
 
+The web production build passed after correcting token-name validation for existing numeric scale keys and strict TypeScript indexing. In the actual mock browser, dark settings rendered canvas `rgb(23, 22, 20)`, text `rgb(250, 248, 245)`, field `rgb(44, 41, 37)` and apricot accent `253 186 116`. Temporarily changing the source dark canvas to `#181715` and restarting Nuxt changed the rendered body background to `rgb(24, 23, 21)`. The source was restored and its original CSS regenerated; the throwaway smoke script was removed. This proves build-time source consumption, not complete page/layout acceptance.
+
 Before rebuilding, the existing home-server `/recipes` production navigation loaded404,305 encoded JavaScript bytes and39,306 CSS bytes (unique assets), with DOMContentLoaded207.4ms and load257.6ms on one workstation navigation. Timing is a single observation, not a benchmark; compare the same route after rebuild and report variability honestly.
+
+## Cutover verification
+
+The complete local gate passed: zero-warning ESLint, 179 unit tests, 41 web component tests, all workspace production builds, and 11 mocked Playwright workflows. The browser console assertion covers saved light/dark preferences across hard reloads, subsequent routes, and live system-theme changes without hydration errors.
+
+Actual browser inspection covered locked/editable plans, shopping, recipes, settings, and recipe details at 390, 768, and 1440 pixels in both themes (36 route/width/theme combinations). The rendered-text audit found no contrast or document-overflow failures; minimum measured text contrast was 5.041:1. This is sampled rendered content, not a blanket accessibility certification.
+
+Mobile stress used real client-store recipe/plan data with long unbroken names, tags and notes. Library cards, editor headings, tag filters and metadata wrapped without visible clipping or document overflow. The temporary client state was discarded by navigation; no live data or recipe files were changed.
+
+Keyboard inspection verified the first Tab exposes the skip link and Enter focuses `main-content`. Both native dialogs retain body-scroll locking and restore opener focus after dismissal. Missing native `close()` calls before conditional removal caused focus to fall to the body; lifecycle ordering now closes the top layer before removal. Playwright covers recipe close, generation Cancel and generation Escape focus restoration.

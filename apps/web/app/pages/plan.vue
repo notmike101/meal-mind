@@ -137,7 +137,7 @@ async function generateShoppingList() {
     :data-plan-id="plan?.id ?? ''"
     :data-week-start="selectedWeekStart"
   >
-    <section class="flex flex-col mm-gap-6 xl:flex-row xl:items-end xl:justify-between">
+    <section class="flex flex-col mm-gap-4 xl:flex-row xl:items-end xl:justify-between">
       <PageHeading eyebrow="Weekly workspace" :title="weekTitle" :description="weekDescription" />
       <div class="flex flex-wrap items-center mm-gap-2" aria-label="Week navigation">
         <NuxtLink :to="previousLocation" aria-label="Previous week" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold">
@@ -152,12 +152,12 @@ async function generateShoppingList() {
       </div>
     </section>
 
-    <nav class="flex border-b border-line/30" aria-label="Weekly workspace views">
+    <nav class="flex border-b border-line" aria-label="Weekly workspace views">
       <NuxtLink
         :to="planLocation"
         data-testid="plan-tab"
         :aria-current="selectedView === 'plan' ? 'page' : undefined"
-        :class="selectedView === 'plan' ? 'border-moss text-moss' : 'border-transparent text-ink/60 hover:text-ink'"
+        :class="selectedView === 'plan' ? 'border-moss text-moss' : 'border-transparent text-steel hover:text-ink'"
         class="focus-ring inline-flex min-h-11 items-center mm-gap-2 border-b-2 px-4 py-3 mm-text-sm font-bold"
       >
         <ListChecks :size="17" aria-hidden="true" /> Plan
@@ -166,22 +166,24 @@ async function generateShoppingList() {
         :to="shoppingLocation"
         data-testid="shopping-tab"
         :aria-current="selectedView === 'shopping' ? 'page' : undefined"
-        :class="selectedView === 'shopping' ? 'border-moss text-moss' : 'border-transparent text-ink/60 hover:text-ink'"
+        :class="selectedView === 'shopping' ? 'border-moss text-moss' : 'border-transparent text-steel hover:text-ink'"
         class="focus-ring inline-flex min-h-11 items-center mm-gap-2 border-b-2 px-4 py-3 mm-text-sm font-bold"
       >
         <ShoppingBasket :size="17" aria-hidden="true" /> Shopping
       </NuxtLink>
     </nav>
 
-    <div v-if="planning.selectionLoading" class="mm-panel py-16 text-center text-ink/60" role="status">Loading week…</div>
-    <div v-else-if="planning.selectionError" class="rounded-xl bg-tomato/10 mm-p-4 mm-text-sm font-medium text-tomato" role="alert">
+    <div v-if="planning.selectionLoading" class="mm-panel mm-p-8 text-center text-steel" role="status">Loading week…</div>
+    <div v-else-if="planning.selectionError" class="mm-status-error" role="alert">
       {{ planning.selectionError }}
     </div>
 
     <template v-else-if="selectedView === 'plan'">
-      <div v-if="(recipes.catalog?.invalidRecipes.length ?? 0) > 0" class="rounded-xl border border-tomato/25 bg-tomato/10 mm-p-4 mm-text-sm font-medium text-tomato">
+      <div v-if="(recipes.catalog?.invalidRecipes.length ?? 0) > 0" class="mm-status-error">
         {{ recipes.catalog?.invalidRecipes.length }} invalid recipe file{{ recipes.catalog?.invalidRecipes.length === 1 ? "" : "s" }} excluded from planning.
       </div>
+
+      <PlanSummary v-if="plan" :plan="plan" :locked="locked" />
 
       <section v-if="!plan && (canGenerateWeek || canCreateBlankWeek)" class="flex flex-wrap mm-gap-2" aria-label="Create a plan">
         <PlanGeneratePlanButton v-if="canGenerateWeek" :week-start="selectedWeekStart" :default-meal-count="defaultMealCount" />
@@ -200,30 +202,29 @@ async function generateShoppingList() {
       <PlanTodayMeals v-if="showToday" :meals="todayMeals" @open-details="openRecipe" />
 
       <section v-if="plan" data-testid="plan-content" class="mm-space-y-6">
-        <PlanSummary :plan="plan" :locked="locked" />
         <PlanLockedWeek v-if="locked" data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
         <PlanSelectionWorkspace v-else data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" @open-details="openRecipe" />
       </section>
-      <section v-else class="mm-panel border-dashed py-16 text-center">
+      <section v-else class="mm-panel border-dashed mm-p-8 text-center">
         <h2 class="mm-display mm-text-2xl font-bold">No plan for this week</h2>
-        <p v-if="canGenerateWeek" class="mm-mt-2 text-ink/70">Generate a plan or start with a blank week.</p>
-        <p v-else-if="canCreateBlankWeek" class="mm-mt-2 text-ink/70">Start with a blank week to plan the current week manually.</p>
-        <p v-else class="mm-mt-2 text-ink/70">Past empty weeks are kept read-only.</p>
+        <p v-if="canGenerateWeek" class="mm-mt-2 text-steel">Generate a plan or start with a blank week.</p>
+        <p v-else-if="canCreateBlankWeek" class="mm-mt-2 text-steel">Start with a blank week to plan the current week manually.</p>
+        <p v-else class="mm-mt-2 text-steel">Past empty weeks are kept read-only.</p>
       </section>
     </template>
 
     <template v-else>
-      <div v-if="shopping.loading" class="mm-panel py-16 text-center text-ink/60" role="status">Loading shopping list…</div>
-      <div v-else-if="shopping.error" class="rounded-xl bg-tomato/10 mm-p-4 mm-text-sm font-medium text-tomato" role="alert">{{ shopping.error }}</div>
+      <div v-if="shopping.loading" class="mm-panel mm-p-8 text-center text-steel" role="status">Loading shopping list…</div>
+      <div v-else-if="shopping.error" class="rounded-xl bg-surface mm-p-4 mm-text-sm font-medium text-tomato" role="alert">{{ shopping.error }}</div>
       <ShoppingList
         v-else-if="plan && shopping.shoppingList"
         :items="shopping.shoppingList.items"
         :can-regenerate="!locked"
       />
-      <section v-else-if="plan" class="mm-panel border-dashed py-16 text-center">
+      <section v-else-if="plan" class="mm-panel border-dashed mm-p-8 text-center">
         <ShoppingBasket :size="28" class="mx-auto text-moss" aria-hidden="true" />
         <h2 class="mm-mt-3 mm-display mm-text-2xl font-bold">No shopping list yet</h2>
-        <p class="mx-auto mm-mt-2 max-w-lg text-ink/70">
+        <p class="mx-auto mm-mt-2 max-w-lg text-steel">
           {{ plan.meals.length ? "Generate the grocery list for this exact weekly plan." : "Add meals to this plan before generating its grocery list." }}
         </p>
         <button
@@ -238,9 +239,9 @@ async function generateShoppingList() {
         </button>
         <p v-if="shoppingError" role="alert" class="mx-auto mm-mt-3 max-w-lg mm-text-sm text-tomato">{{ shoppingError }}</p>
       </section>
-      <section v-else class="mm-panel border-dashed py-16 text-center">
+      <section v-else class="mm-panel border-dashed mm-p-8 text-center">
         <h2 class="mm-display mm-text-2xl font-bold">No plan for this week</h2>
-        <p class="mm-mt-2 text-ink/70">Create the week in the Plan tab before building a shopping list.</p>
+        <p class="mm-mt-2 text-steel">Create the week in the Plan tab before building a shopping list.</p>
         <NuxtLink :to="planLocation" class="focus-ring mm-button-secondary mm-mt-5 inline-flex min-h-11 items-center mm-px-4 mm-py-2 mm-text-sm font-bold">Open Plan</NuxtLink>
       </section>
     </template>
