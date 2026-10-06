@@ -15,7 +15,6 @@ describe("LockedWeek", () => {
   it("renders an unlabeled read-only meal snapshot", () => {
     const wrapper = mount(LockedWeek, {
       props: { plan, recipes: [] },
-      global: { stubs: { PlanRecipePhoto: true, NuxtLink: true } },
     });
     expect(wrapper.text()).toContain("Archived Meal");
     expect(wrapper.text()).toContain("Recipe no longer in library");

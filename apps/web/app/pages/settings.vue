@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { callOnce } from "#app";
-import { Palette } from "@lucide/vue";
 import { useSettingsStore } from "~/stores/settings";
 
 const settings = useSettingsStore();
@@ -8,22 +7,17 @@ await callOnce("settings-data", () => settings.fetchSettings(), { mode: "navigat
 </script>
 
 <template>
-  <div class="space-y-8">
-    <section>
-      <PageHeading eyebrow="Settings" title="Local planner settings" description="Tune your planning experience, AI connection, portions, and pantry defaults." />
-    </section>
-    <section class="flex flex-col gap-5 rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
-      <div class="flex items-center gap-4">
-        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-field text-moss">
-          <Palette :size="20" aria-hidden="true" />
-        </span>
-        <div>
-          <h2 class="text-lg font-semibold text-ink">Appearance</h2>
-          <p class="mt-1 text-sm text-ink/60">Match your workspace or choose a fixed theme.</p>
-        </div>
+  <div class="mm-space-y-6">
+    <header class="flex flex-wrap items-end justify-between mm-gap-4">
+      <div class="min-w-0">
+        <h1 class="mm-page-title">Local planner settings</h1>
+        <p class="mm-mt-2 mm-text-sm text-steel">Configure your provider and household planning defaults.</p>
       </div>
-      <SettingsThemeToggle />
-    </section>
+      <div class="min-w-0 w-full sm:w-auto mm-space-y-2">
+        <p id="appearance-heading" class="mm-text-sm font-semibold">Appearance</p>
+        <div aria-labelledby="appearance-heading"><SettingsThemeToggle /></div>
+      </div>
+    </header>
     <SettingsForm
       v-if="settings.data"
       :settings="settings.data.settings"

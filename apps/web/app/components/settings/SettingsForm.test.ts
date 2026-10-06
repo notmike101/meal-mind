@@ -2,6 +2,7 @@ import type { PublicSettingsDto } from "@mealmind/contracts";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import { createPinia } from "pinia";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import SectionPanel from "~/components/SectionPanel.vue";
 import AutomationField from "./AutomationField.vue";
 import ConnectionFields from "./ConnectionFields.vue";
 import FormActions from "./FormActions.vue";
@@ -38,6 +39,7 @@ function render(models = [{ id: "reported-model" }]) {
     global: {
       plugins: [createPinia()],
       components: {
+        SectionPanel,
         SettingsAutomationField: AutomationField,
         SettingsConnectionFields: ConnectionFields,
         SettingsFormActions: FormActions,
@@ -56,7 +58,7 @@ function modelInput(wrapper: VueWrapper<InstanceType<typeof SettingsForm>>) {
 }
 
 async function clickAction(wrapper: VueWrapper<InstanceType<typeof SettingsForm>>, name: RegExp) {
-  const button = wrapper.findComponent(FormActions).findAll("button").find((button) => name.test(button.text()))!;
+  const button = wrapper.findAll("button").find((button) => name.test(button.text()))!;
   await button.trigger("click");
   await flushPromises();
 }
@@ -254,7 +256,7 @@ describe("SettingsForm provider configuration", () => {
     const { wrapper, fetchMock } = render();
     const { promise, resolve } = Promise.withResolvers<unknown>();
     fetchMock.mockImplementationOnce(() => promise);
-    const loadButton = wrapper.findComponent(FormActions).findAll("button").find((button) => /load models/i.test(button.text()))!;
+    const loadButton = wrapper.findAll("button").find((button) => /load models/i.test(button.text()))!;
     await loadButton.trigger("click");
     await wrapper.get("input[type='password']").setValue("new-key");
     resolve({ ok: true, data: { models: [{ id: "old-key-model" }], authConfigured: true } });

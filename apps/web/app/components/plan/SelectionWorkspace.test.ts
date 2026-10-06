@@ -2,8 +2,10 @@ import type { MealPlanDto, RecipeSummaryDto } from "@mealmind/contracts";
 import { createTestingPinia } from "@pinia/testing";
 import { flushPromises, mount } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
+import SectionPanel from "~/components/SectionPanel.vue";
 import { usePlanningStore } from "~/stores/planning";
 import SelectionWorkspace from "./SelectionWorkspace.vue";
+import ScheduleStrip from "./ScheduleStrip.vue";
 
 const plan: MealPlanDto = {
   id: "plan-1",
@@ -48,7 +50,7 @@ function recipe(id: string, title: string, tags: string[]): RecipeSummaryDto {
 const recipes = [recipe("dinner-a", "Dinner A", ["quick"]), recipe("dinner-b", "Dinner B", ["vegetarian"])];
 const stubs = {
   PlanScheduleStrip: {
-    props: ["plan", "activeMealId", "addingDate"],
+    props: ["plan", "activeMealId", "addingDate", "selectedDate"],
     emits: ["select", "add"],
     template: `<div><button data-meal="meal-2" @click="$emit('select', 'meal-2')">Dinner</button><button data-add @click="$emit('add', '2026-07-07')">Add</button></div>`,
   },
@@ -64,10 +66,10 @@ const stubs = {
   },
 };
 
-function render() {
+function render(withSchedule = false) {
   return mount(SelectionWorkspace, {
     props: { plan, recipes, defaultServings: 2 },
-    global: { plugins: [createTestingPinia({ createSpy: vi.fn })], stubs },
+    global: { plugins: [createTestingPinia({ createSpy: vi.fn })], components: { SectionPanel, PlanScheduleStrip: ScheduleStrip }, stubs: { ...stubs, ...(withSchedule ? { PlanScheduleStrip: false } : {}) } },
   });
 }
 
@@ -97,5 +99,23 @@ describe("SelectionWorkspace", () => {
     await wrapper.get("[data-servings]").trigger("click");
     await flushPromises();
     expect(planning.updateMeal).toHaveBeenCalledWith("plan-1", "meal-2", { servings: 3 });
+  });
+
+  it("switches to a day's meal or add form, and keeps a skipped day restorable", async () => {
+    const wrapper = render(true);
+    await wrapper.setProps({ plan: { ...plan, skippedDates: ["2026-07-08"] } });
+    await wrapper.findComponent(ScheduleStrip).get("nav").findAll("button")[1]!.trigger("click");
+    await wrapper.get('input[list="meal-slot-suggestions"]').setValue("Lunch");
+    await wrapper.get('[data-recipe="dinner-b"] button').trigger("click");
+    await flushPromises();
+    expect(usePlanningStore().addMeal).toHaveBeenCalledWith("plan-1", expect.objectContaining({ date: "2026-07-07", slot: "Lunch" }));
+    await wrapper.findComponent(ScheduleStrip).get("nav").findAll("button")[0]!.trigger("click");
+    expect((wrapper.get("select").element as HTMLSelectElement).value).toBe("2026-07-06");
+    const dinner = wrapper.findComponent(ScheduleStrip).findAll("button").find((button) => button.text().includes("Dinner A"))!;
+    await dinner.trigger("click");
+    expect(wrapper.get('[data-testid="meal-editor"] h2').text()).toBe("Dinner A");
+    await wrapper.findComponent(ScheduleStrip).get("nav").findAll("button")[2]!.trigger("click");
+    expect(wrapper.find('input[list="meal-slot-suggestions"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain("Restore");
   });
 });

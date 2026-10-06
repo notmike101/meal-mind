@@ -114,6 +114,7 @@ test("imports a recipe through a deterministic queued job and refreshes the cata
 
   await page.goto("/recipes");
   await expect(page.locator("html")).toHaveAttribute("data-mealmind-ready", "/recipes");
+  await page.getByRole("button", { name: "Import recipe", exact: true }).click();
   const input = page.getByLabel("Recipe URL", { exact: true });
   await input.fill(" https://example.test/recipes/fixture-import ");
   await page.getByRole("button", { name: "Import", exact: true }).click();
@@ -123,7 +124,7 @@ test("imports a recipe through a deterministic queued job and refreshes the cata
   await expect(page.getByRole("heading", { name: importedRecipe.title, exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "View recipe" }).click();
-  await expect(page).toHaveURL("/recipes");
+  await expect(page).toHaveURL(`/recipes/${importedRecipe.id}`);
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("heading", { name: importedRecipe.title, exact: true })).toBeVisible();

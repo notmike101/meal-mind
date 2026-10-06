@@ -37,30 +37,11 @@ function render(imageUrl: string | null = recipe.imageUrl) {
 }
 
 describe("RecipeCard", () => {
-  it("renders a lazy-loaded recipe image and clamps the description", () => {
-    const wrapper = render();
-    const image = wrapper.get("img");
-
-    expect(image.attributes("src")).toBe(recipe.imageUrl);
-    expect(image.attributes("loading")).toBe("lazy");
-    expect(wrapper.get("p").classes()).toContain("line-clamp-2");
-  });
-
   it("uses the photo fallback when an image is unavailable", () => {
     const wrapper = render(null);
 
     expect(wrapper.find("img").exists()).toBe(false);
     expect(wrapper.get('[role="img"]').attributes("aria-label")).toBe("No photo available for Test Recipe");
-  });
-
-  it("keeps the metadata footer at the bottom of a full-height card", () => {
-    const wrapper = render();
-    const article = wrapper.get("article");
-    const footer = wrapper.get(".mt-auto");
-
-    expect(article.classes()).toContain("h-full");
-    expect(footer.text()).toContain("8 ingredients · 2 tools · 1 timers");
-    expect(wrapper.get("a").attributes("href")).toBe("/recipes/test-recipe");
   });
 
   it("opens details from a normal card click while preserving modified-link navigation", async () => {

@@ -37,7 +37,7 @@ async function updateServings(nextServings: number) {
   <div v-if="recipe" class="mm-space-y-6">
     <NuxtLink
       to="/recipes"
-      class="focus-ring inline-flex items-center mm-gap-2 rounded-md mm-px-2 mm-py-1 mm-text-sm font-semibold text-moss hover:bg-moss/10"
+      class="focus-ring inline-flex min-h-control items-center mm-gap-2 rounded-md mm-px-2 mm-py-1 mm-text-sm font-semibold text-moss hover:bg-field"
     >
       <ArrowLeft :size="16" aria-hidden="true" /> Recipes
     </NuxtLink>
@@ -47,6 +47,6 @@ async function updateServings(nextServings: number) {
       :disabled="loading"
       @update-servings="updateServings"
     />
-    <p v-if="error" role="alert" class="mm-text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" role="alert" class="mm-status-error">{{ error }}</p>
   </div>
 </template>

@@ -34,6 +34,6 @@ async function commit() {
       <Lock v-else :size="16" aria-hidden="true" />
       {{ busy ? "Committing" : "Commit plan" }}
     </button>
-    <p v-if="error" class="mm-text-sm text-tomato">{{ error }}</p>
+    <p v-if="error" class="mm-status-error">{{ error }}</p>
   </div>
 </template>

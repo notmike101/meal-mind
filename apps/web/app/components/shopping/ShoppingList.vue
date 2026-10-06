@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ShoppingItemDto } from "@mealmind/contracts";
-import { RefreshCw, ShoppingBasket } from "@lucide/vue";
+import { RefreshCw } from "@lucide/vue";
 import { computed, ref } from "vue";
 import { errorMessage } from "~/composables/use-api";
 import { useShoppingStore } from "~/stores/shopping";
@@ -44,59 +44,28 @@ async function regenerate() {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <section class="rounded-2xl border border-line/25 bg-surface p-5 shadow-sm sm:p-6">
-      <div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-        <div class="flex items-center gap-4">
-          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-moss/10 text-moss">
-            <ShoppingBasket :size="20" aria-hidden="true" />
-          </span>
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-moss">Your list</p>
-            <h2 class="mt-1 text-xl font-semibold tracking-tight text-ink">Shopping progress</h2>
-            <p class="mt-1 text-sm text-ink/55">
-              {{ remainingCount }} item{{ remainingCount === 1 ? "" : "s" }} left · {{ checkedCount }} complete
-            </p>
-          </div>
+  <div class="mm-space-y-6">
+    <header class="mm-space-y-3 border-b border-line mm-pb-4">
+      <div class="flex flex-wrap items-center justify-between mm-gap-4">
+        <div>
+          <h2 class="mm-text-xl font-semibold">Shopping checklist</h2>
+          <p class="mm-mt-1 mm-text-sm text-steel" aria-live="polite">{{ remainingCount }} item{{ remainingCount === 1 ? '' : 's' }} left · {{ checkedCount }} complete · {{ progress }}%</p>
         </div>
-        <div class="flex items-center justify-between gap-5 md:justify-end">
-          <span class="text-4xl font-semibold leading-none tracking-[-0.04em] tabular-nums text-ink">{{ progress }}%</span>
-          <button
-            v-if="canRegenerate"
-            type="button"
-            :disabled="busy === 'regenerate'"
-            class="focus-ring mm-button-secondary inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold"
-            @click="regenerate"
-          >
-            <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
-          </button>
-        </div>
+        <button v-if="canRegenerate" type="button" :disabled="busy === 'regenerate'" class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="regenerate">
+          <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
+        </button>
       </div>
-      <div
-        class="mt-6 h-2 overflow-hidden rounded-full bg-field"
-        role="progressbar"
-        aria-label="Shopping completion"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-valuenow="progress"
-      >
-        <div class="h-full rounded-full bg-moss transition-[width] duration-500" :style="{ width: `${progress}%` }" />
+      <div class="h-2 overflow-hidden rounded-full bg-field" role="progressbar" aria-label="Shopping completion" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progress">
+        <div class="h-full rounded-full bg-success transition-[width]" :style="{ width: `${progress}%` }" />
       </div>
-    </section>
-    <div v-if="items.length" class="grid items-start gap-5 xl:grid-cols-2">
-      <ShoppingCategory
-        v-for="([category, categoryItems]) in grouped"
-        :key="category"
-        :category="category"
-        :items="categoryItems"
-        :busy-item-id="busy"
-        @update="updateItem"
-      />
+    </header>
+    <div v-if="items.length" class="grid items-start mm-gap-4 xl:grid-cols-2">
+      <ShoppingCategory v-for="([category, categoryItems]) in grouped" :key="category" :category="category" :items="categoryItems" :busy-item-id="busy" @update="updateItem" />
     </div>
-    <div v-else class="rounded-2xl border border-dashed border-line/35 bg-surface px-6 py-16 text-center text-ink/60">
+    <div v-else class="mm-panel border-dashed mm-p-8 text-center text-steel">
       <p class="font-medium text-ink">Your shopping list is empty</p>
-      <p class="mt-1 text-sm">Generate the list from an editable meal plan to get started.</p>
+      <p class="mm-mt-1 mm-text-sm">Generate the list from an editable meal plan to get started.</p>
     </div>
-    <p v-if="error" role="alert" class="rounded-xl bg-tomato/10 px-4 py-3 text-sm font-medium text-tomato">{{ error }}</p>
+    <p v-if="error" role="alert" class="mm-status-error">{{ error }}</p>
   </div>
 </template>

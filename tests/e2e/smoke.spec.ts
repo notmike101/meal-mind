@@ -132,7 +132,6 @@ test("theme preference remains responsive and client-local", async ({ page }) =>
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/settings");
   await waitForReady(page);
-  await expect(page.getByRole("heading", { name: "Appearance" })).toBeVisible();
   await page.getByRole("button", { name: "Use light theme" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.reload();
