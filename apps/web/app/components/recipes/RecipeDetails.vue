@@ -30,7 +30,7 @@ watch(() => props.recipe.imageUrl, () => {
       class="mm-recipe-header overflow-hidden rounded-xl border border-line bg-surface"
       :class="embedded ? '' : 'shadow-panel'"
     >
-      <div class="relative aspect-[16/10] min-w-0 overflow-hidden bg-field lg:aspect-auto lg:min-h-full">
+      <div class="mm-recipe-image relative min-w-0 overflow-hidden bg-field">
         <img
           v-if="recipe.imageUrl && !imageFailed"
           :src="recipe.imageUrl"
@@ -43,11 +43,8 @@ watch(() => props.recipe.imageUrl, () => {
           <ChefHat :size="64" stroke-width="1.25" />
         </div>
       </div>
-      <div class="flex min-w-0 flex-col justify-center mm-p-5 sm:p-6">
-        <p class="text-xs font-bold uppercase tracking-tight text-moss">From your collection</p>
-        <h1 :id="headingId" class="mm-page-title mm-mt-2">
-          {{ recipe.title }}
-        </h1>
+      <div class="mm-recipe-identity flex min-w-0 flex-col justify-center mm-p-5 sm:p-6">
+        <h1 :id="headingId" class="mm-page-title">{{ recipe.title }}</h1>
         <p v-if="recipe.description" class="mm-mt-3 max-w-2xl break-words mm-text-base leading-relaxed text-steel">
           {{ recipe.description }}
         </p>

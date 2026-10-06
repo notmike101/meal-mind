@@ -50,19 +50,9 @@ function viewRecipe(event: globalThis.MouseEvent, recipeId: string) {
 </script>
 
 <template>
-  <section class="mm-panel min-w-0 mm-section" aria-labelledby="recipe-import-heading">
-    <div class="flex items-start gap-3">
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-field text-moss">
-        <Download :size="21" aria-hidden="true" />
-      </span>
-      <div class="min-w-0">
-        <p class="text-xs font-bold uppercase tracking-tight text-moss">CookLang importer</p>
-        <h2 id="recipe-import-heading" class="mt-1 text-xl font-semibold tracking-tight text-ink">Import recipe</h2>
-        <p class="mt-2 text-sm leading-6 text-steel">Add a public recipe page. MealMind will validate and save the CookLang document for planning.</p>
-      </div>
-    </div>
-
-    <form class="mt-5 space-y-3" @submit.prevent="submit">
+  <section class="min-w-0 mm-pt-4" aria-label="Recipe import">
+    <p class="text-sm leading-6 text-steel">Add a public recipe page. MealMind will validate and save the CookLang document for planning.</p>
+    <form class="mt-4 space-y-3" @submit.prevent="submit">
       <label for="recipe-import-url" class="block text-sm font-semibold text-ink">Recipe URL</label>
       <div class="flex flex-col gap-2 sm:flex-row">
         <input
@@ -73,6 +63,7 @@ function viewRecipe(event: globalThis.MouseEvent, recipeId: string) {
           autocomplete="url"
           required
           maxlength="2048"
+          aria-describedby="recipe-import-help"
           class="focus-ring mm-field min-h-11 min-w-0 flex-1 px-3.5 py-2.5 text-sm text-ink"
           placeholder="https://example.com/recipe"
           :disabled="busy"

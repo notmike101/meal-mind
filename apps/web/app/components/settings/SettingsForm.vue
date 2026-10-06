@@ -21,6 +21,7 @@ const form = reactive({
   pantryStaples: props.pantryStaples.map((staple) => staple.name).join("\n"),
 });
 const status = ref<string | null>(null);
+const modelStatus = ref<string | null>(null);
 const busy = ref(false);
 const models = ref<string[]>([]);
 const catalogUrl = ref<string | null>(null);
@@ -45,6 +46,7 @@ const canSave = computed(() => Boolean(form.aiBaseUrl.trim() && form.aiModel.tri
 watch([() => endpoint(form.aiBaseUrl), () => form.aiApiKey], () => {
   catalogUrl.value = null;
   models.value = [];
+  modelStatus.value = null;
 }, { flush: "sync" });
 
 function payload(): SettingsUpdateRequest {
@@ -85,7 +87,7 @@ async function runSave() {
 
 async function testAi() {
   busy.value = true;
-  status.value = null;
+  modelStatus.value = "Loading models…";
   catalogUrl.value = null;
   models.value = [];
   const aiBaseUrl = form.aiBaseUrl;
@@ -96,9 +98,9 @@ async function testAi() {
     models.value = response.models.map((model) => model.id);
     catalogUrl.value = endpoint(aiBaseUrl);
     const count = models.value.length;
-    status.value = `AI endpoint reachable. ${count} model${count === 1 ? "" : "s"} reported. You can also enter a model ID manually.`;
+    modelStatus.value = `AI endpoint reachable. ${count} model${count === 1 ? "" : "s"} reported. You can also enter a model ID manually.`;
   } catch (caught) {
-    status.value = `${errorMessage(caught, "AI test failed.")} You can still enter a model ID manually.`;
+    modelStatus.value = `${errorMessage(caught, "AI test failed.")} You can still enter a model ID manually.`;
   } finally {
     busy.value = false;
   }
@@ -106,45 +108,54 @@ async function testAi() {
 </script>
 
 <template>
-  <div class="mm-space-y-6">
-    <SectionPanel title="Connection & defaults" help="Configure an OpenAI-compatible endpoint and your everyday planning defaults.">
-      <div class="grid mm-gap-6 lg:grid-cols-2">
-        <div class="grid min-w-0 content-start mm-gap-4">
-          <h3 class="mm-text-sm font-semibold text-ink">AI connection</h3>
-          <SettingsConnectionFields
-            v-model:ai-base-url="form.aiBaseUrl"
-            v-model:ai-model="form.aiModel"
-            v-model:ai-api-key="form.aiApiKey"
-            v-model:timezone="form.timezone"
-            :models="models"
-            :auth-configured="authConfigured"
-            :endpoint-changed="endpointChanged"
-            :models-loaded="modelsLoaded"
-          />
-        </div>
-        <div class="min-w-0 mm-space-y-4">
-          <h3 class="mm-text-sm font-semibold text-ink">Planning defaults</h3>
-          <SettingsServingFields
-            v-model:servings="form.defaultMealServings"
-            v-model:weekly-meal-count="form.defaultWeeklyMealCount"
-          />
-        </div>
+  <div class="mm-settings-form">
+    <section class="min-w-0 mm-space-y-4" aria-labelledby="provider-heading">
+      <header class="border-b border-line mm-pb-4">
+        <h2 id="provider-heading" class="mm-text-xl font-semibold">Provider connection</h2>
+        <p class="mm-mt-2 mm-text-sm text-steel">Use an OpenAI-compatible endpoint for planning and recipe imports.</p>
+      </header>
+      <SettingsConnectionFields
+        v-model:ai-base-url="form.aiBaseUrl"
+        v-model:ai-model="form.aiModel"
+        v-model:ai-api-key="form.aiApiKey"
+        :models="models"
+        :auth-configured="authConfigured"
+        :endpoint-changed="endpointChanged"
+        :models-loaded="modelsLoaded"
+        :busy="busy"
+        :status="modelStatus"
+        @test-ai="testAi"
+      />
+    </section>
+    <section class="min-w-0 mm-space-y-6" aria-labelledby="household-heading">
+      <header class="border-b border-line mm-pb-4">
+        <h2 id="household-heading" class="mm-text-xl font-semibold">Household planning</h2>
+        <p class="mm-mt-2 mm-text-sm text-steel">Set portions, preferences, and what you already keep on hand.</p>
+      </header>
+      <div class="grid min-w-0 mm-gap-4">
+        <label class="block mm-space-y-2">
+          <span class="mm-text-sm font-medium">Timezone</span>
+          <input v-model="form.timezone" class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink" />
+        </label>
+        <SettingsServingFields v-model:servings="form.defaultMealServings" v-model:weekly-meal-count="form.defaultWeeklyMealCount" />
       </div>
-    </SectionPanel>
-    <SectionPanel title="Meal preferences" help="Give the planner useful context about taste, variety, and your household.">
       <div class="mm-space-y-4">
+        <h3 class="mm-text-base font-semibold">Meal preferences & variety</h3>
         <SettingsPlanningFields v-model:preferences="form.planningPreferences" v-model:variety-rules="form.planningVarietyRules" />
       </div>
-    </SectionPanel>
-    <SectionPanel title="Automation" help="Let MealMind prepare the next plan in the background.">
-      <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
-    </SectionPanel>
-    <SectionPanel title="Pantry staples" help="Keep ingredients you already stock off the shopping list.">
-      <SettingsPantryField v-model="form.pantryStaples" />
-    </SectionPanel>
-    <div class="mm-panel mm-section">
-      <SettingsFormActions :busy="busy" :can-save="canSave" @save="runSave" @test-ai="testAi" />
-      <p v-if="status" aria-live="polite" class="mm-mt-4 break-words rounded-md bg-field mm-p-4 mm-text-sm text-steel">{{ status }}</p>
+      <div class="mm-space-y-3">
+        <h3 class="mm-text-base font-semibold">Automation</h3>
+        <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
+      </div>
+      <div class="mm-space-y-3">
+        <h3 class="mm-text-base font-semibold">Pantry staples</h3>
+        <p class="mm-text-sm text-steel">Keep ingredients you already stock off the shopping list.</p>
+        <SettingsPantryField v-model="form.pantryStaples" />
+      </div>
+    </section>
+    <div class="mm-settings-actions">
+      <SettingsFormActions :busy="busy" :can-save="canSave" @save="runSave" />
+      <p class="min-w-0 break-words mm-text-sm text-steel" role="status">{{ status ?? (busy ? "Working…" : "Save applies to provider and household settings.") }}</p>
     </div>
   </div>
 </template>

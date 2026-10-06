@@ -6,17 +6,19 @@ import { errorMessage } from "~/composables/use-api";
 import { usePlanningStore } from "~/stores/planning";
 import { formatDisplayDate, getDatesInWeek } from "~/utils/dates";
 
-const props = defineProps<{ plan: MealPlanDto; recipes: RecipeSummaryDto[]; defaultServings: number }>();
+const props = defineProps<{ plan: MealPlanDto; recipes: RecipeSummaryDto[]; defaultServings: number; pending?: boolean }>();
 const emit = defineEmits<{ openDetails: [recipeId: string, servings: number, trigger: globalThis.HTMLElement] }>();
 const planning = usePlanningStore();
 const dates = computed(() => getDatesInWeek(props.plan.weekStart));
 const availableMeals = computed(() => props.plan.meals.filter((meal) => !props.plan.skippedDates.includes(meal.date)));
 const firstAvailableDate = () => dates.value.find((date) => !props.plan.skippedDates.includes(date)) ?? props.plan.weekStart;
 const activeMealId = ref(availableMeals.value[0]?.id ?? "");
-const addingDate = ref<string | null>(availableMeals.value.length === 0 ? firstAvailableDate() : null);
+const addingDate = ref<string | null>(availableMeals.value.length === 0 && !props.plan.skippedDates.includes(firstAvailableDate()) ? firstAvailableDate() : null);
+const selectedDate = ref(availableMeals.value[0]?.date ?? firstAvailableDate());
 const search = ref("");
 const activeTag = ref<string | null>(null);
 const busy = ref(false);
+const mutationBusy = computed(() => busy.value || Boolean(props.pending));
 const error = ref<string | null>(null);
 const addSlot = ref("");
 const addServings = ref(props.defaultServings);
@@ -35,19 +37,21 @@ const filteredRecipes = computed(() => {
   });
 });
 
-watch(() => props.plan.meals, (meals) => {
-  if (activeMealId.value && !meals.some((meal) => meal.id === activeMealId.value)) {
-    activeMealId.value = availableMeals.value[0]?.id ?? "";
+watch([() => props.plan.weekStart, availableMeals, () => props.plan.skippedDates], ([weekStart], [previousWeek]) => {
+  if (weekStart !== previousWeek) {
+    selectDate(availableMeals.value[0]?.date ?? firstAvailableDate());
+    return;
   }
-});
-watch(() => props.plan.skippedDates, () => {
-  if (!availableMeals.value.some((meal) => meal.id === activeMealId.value)) {
-    activeMealId.value = availableMeals.value[0]?.id ?? "";
+  if (activeMeal.value) {
+    selectedDate.value = activeMeal.value.date;
+    return;
   }
-  if (addingDate.value && props.plan.skippedDates.includes(addingDate.value)) addingDate.value = null;
+  if (addingDate.value && !props.plan.skippedDates.includes(addingDate.value)) return;
+  selectDate(selectedDate.value);
 });
 watch(activeMeal, (meal) => {
   if (!meal) return;
+  selectedDate.value = meal.date;
   editDate.value = meal.date;
   editSlot.value = meal.slot ?? "";
 }, { immediate: true });
@@ -66,6 +70,9 @@ function resetCatalog() {
 }
 
 function selectMeal(mealId: string) {
+  const meal = availableMeals.value.find((item) => item.id === mealId);
+  if (!meal) return;
+  selectedDate.value = meal.date;
   activeMealId.value = mealId;
   addingDate.value = null;
   resetCatalog();
@@ -73,6 +80,7 @@ function selectMeal(mealId: string) {
 
 function beginAdd(date: string) {
   if (props.plan.skippedDates.includes(date)) return;
+  selectedDate.value = date;
   addingDate.value = date;
   activeMealId.value = "";
   addSlot.value = "";
@@ -80,8 +88,22 @@ function beginAdd(date: string) {
   resetCatalog();
 }
 
+function selectDate(date: string) {
+  if (selectedDate.value === date && (activeMeal.value?.date === date || (addingDate.value === date && !props.plan.skippedDates.includes(date)))) return;
+  selectedDate.value = date;
+  const meal = availableMeals.value.find((item) => item.date === date);
+  if (meal) selectMeal(meal.id);
+  else if (!props.plan.skippedDates.includes(date)) beginAdd(date);
+  else {
+    activeMealId.value = "";
+    addingDate.value = null;
+    resetCatalog();
+  }
+}
+
 async function toggleDay(date: string, skipped: boolean) {
-  if (busy.value) return;
+  if (mutationBusy.value) return;
+  selectDate(date);
   await runChange(
     () => planning.setDaySkipped(props.plan.id, date, skipped),
     `Could not ${skipped ? "skip" : "restore"} that day.`,
@@ -89,6 +111,7 @@ async function toggleDay(date: string, skipped: boolean) {
 }
 
 async function runChange(change: () => Promise<void>, fallback: string) {
+  if (mutationBusy.value) return;
   busy.value = true;
   error.value = null;
   try {
@@ -101,7 +124,7 @@ async function runChange(change: () => Promise<void>, fallback: string) {
 }
 
 async function chooseRecipe(recipeId: string) {
-  if (busy.value) return;
+  if (mutationBusy.value) return;
   if (addingDate.value) {
     const date = addingDate.value;
     await runChange(async () => {
@@ -125,7 +148,7 @@ async function chooseRecipe(recipeId: string) {
 }
 
 async function chooseWithAi() {
-  if (!activeMeal.value || busy.value) return;
+  if (!activeMeal.value || mutationBusy.value) return;
   await runChange(
     () => planning.swap(props.plan.id, activeMeal.value!.id, "ai"),
     "Could not generate another suggestion.",
@@ -133,7 +156,7 @@ async function chooseWithAi() {
 }
 
 async function updateServings(servings: number) {
-  if (!activeMeal.value || busy.value) return;
+  if (!activeMeal.value || mutationBusy.value) return;
   await runChange(
     () => planning.updateMeal(props.plan.id, activeMeal.value!.id, { servings }),
     "Could not update servings.",
@@ -141,7 +164,7 @@ async function updateServings(servings: number) {
 }
 
 async function saveDetails() {
-  if (!activeMeal.value || busy.value) return;
+  if (!activeMeal.value || mutationBusy.value) return;
   await runChange(
     () => planning.updateMeal(props.plan.id, activeMeal.value!.id, { date: editDate.value, slot: editSlot.value }),
     "Could not update meal details.",
@@ -150,7 +173,7 @@ async function saveDetails() {
 
 async function removeActiveMeal() {
   const meal = activeMeal.value;
-  if (!meal || busy.value || !window.confirm(`Remove ${meal.recipeTitleSnapshot} from this plan?`)) return;
+  if (!meal || mutationBusy.value || !window.confirm(`Remove ${meal.recipeTitleSnapshot} from this plan?`)) return;
   await runChange(
     () => planning.removeMeal(props.plan.id, meal.id),
     "Could not remove that meal.",
@@ -167,105 +190,109 @@ function openRecipeDetails(recipeId: string, trigger: globalThis.HTMLElement) {
 </script>
 
 <template>
-  <div class="mm-space-y-6">
+  <div class="mm-plan-workspace">
     <PlanScheduleStrip
       :plan="plan"
       :active-meal-id="activeMealId"
       :adding-date="addingDate"
-      :busy="busy"
+      :selected-date="selectedDate"
+      :busy="mutationBusy"
+      @select-date="selectDate"
       @select="selectMeal"
       @add="beginAdd"
       @toggle-day="toggleDay"
     />
+    <div class="min-w-0 mm-space-y-4">
+      <p v-if="pending" role="status" class="mm-text-sm text-steel">Refreshing week…</p>
 
-    <SectionPanel v-if="addingDate" title="Choose a recipe" :help="`Adding to ${formatDisplayDate(addingDate)}`">
-      <div class="mm-mt-4 grid mm-gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-        <label class="mm-space-y-2">
-          <span class="mm-text-sm font-medium">Meal slot <span class="font-normal text-muted">(optional)</span></span>
-          <input v-model="addSlot" list="meal-slot-suggestions" maxlength="50" placeholder="Breakfast, Dinner, Post-workout…" class="focus-ring mm-field w-full mm-px-3 mm-py-2" />
-        </label>
-        <PlanServingsStepper :servings="addServings" :disabled="busy" @update="addServings = $event" />
-      </div>
-    </SectionPanel>
+      <SectionPanel v-if="addingDate" data-testid="meal-editor" title="Choose a recipe" :help="`Adding to ${formatDisplayDate(addingDate)}`">
+        <div class="mm-mt-4 grid mm-gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <label class="mm-space-y-2">
+            <span class="mm-text-sm font-medium">Meal slot <span class="font-normal text-muted">(optional)</span></span>
+            <input v-model="addSlot" :disabled="mutationBusy" list="meal-slot-suggestions" maxlength="50" placeholder="Breakfast, Dinner, Post-workout…" class="focus-ring mm-field w-full mm-px-3 mm-py-2" />
+          </label>
+          <PlanServingsStepper :servings="addServings" :disabled="mutationBusy" @update="addServings = $event" />
+        </div>
+      </SectionPanel>
 
-    <SectionPanel v-else-if="activeMeal" :title="activeMeal.recipeTitleSnapshot" :help="`Editing ${mealLabel(activeMeal)}`">
-      <div class="flex flex-col mm-gap-4">
-        <div class="min-w-0 flex-1">
-          <p v-if="activeMeal.notes" class="mm-mt-1 line-clamp-2 mm-text-sm text-steel">{{ activeMeal.notes }}</p>
-          <p v-if="!currentRecipe" class="mm-mt-2 inline-flex items-center mm-gap-2 mm-text-sm text-tomato">
-            <TriangleAlert :size="16" aria-hidden="true" /> This recipe is no longer in the library. Choose a replacement below.
-          </p>
-          <div class="mm-mt-4 grid mm-gap-3 sm:grid-cols-2">
-            <label class="mm-space-y-2">
-              <span class="mm-text-sm font-medium">Date</span>
-              <select v-model="editDate" class="focus-ring mm-field w-full mm-px-3 mm-py-2">
-                <option v-for="date in dates" :key="date" :value="date">{{ formatDisplayDate(date) }}</option>
-              </select>
-            </label>
-            <label class="mm-space-y-2">
-              <span class="mm-text-sm font-medium">Meal slot <span class="font-normal text-muted">(optional)</span></span>
-              <input v-model="editSlot" list="meal-slot-suggestions" maxlength="50" placeholder="No slot" class="focus-ring mm-field w-full mm-px-3 mm-py-2" />
-            </label>
+      <SectionPanel v-else-if="activeMeal" data-testid="meal-editor" :title="activeMeal.recipeTitleSnapshot" :help="`Editing ${mealLabel(activeMeal)}`">
+        <div class="flex flex-col mm-gap-4">
+          <div class="min-w-0 flex-1">
+            <p v-if="activeMeal.notes" class="mm-mt-1 line-clamp-2 mm-text-sm text-steel">{{ activeMeal.notes }}</p>
+            <p v-if="!currentRecipe" class="mm-mt-2 inline-flex items-center mm-gap-2 mm-text-sm text-tomato">
+              <TriangleAlert :size="16" aria-hidden="true" /> This recipe is no longer in the library. Choose a replacement below.
+            </p>
+            <div class="mm-mt-4 grid mm-gap-3 sm:grid-cols-2">
+              <label class="mm-space-y-2">
+                <span class="mm-text-sm font-medium">Date</span>
+                <select v-model="editDate" :disabled="mutationBusy" class="focus-ring mm-field w-full mm-px-3 mm-py-2">
+                  <option v-for="date in dates" :key="date" :value="date">{{ formatDisplayDate(date) }}</option>
+                </select>
+              </label>
+              <label class="mm-space-y-2">
+                <span class="mm-text-sm font-medium">Meal slot <span class="font-normal text-muted">(optional)</span></span>
+                <input v-model="editSlot" :disabled="mutationBusy" list="meal-slot-suggestions" maxlength="50" placeholder="No slot" class="focus-ring mm-field w-full mm-px-3 mm-py-2" />
+              </label>
+            </div>
+          </div>
+          <div class="flex flex-col mm-gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <PlanServingsStepper :servings="activeMeal.servings" :disabled="mutationBusy" @update="updateServings" />
+            <button type="button" :disabled="mutationBusy" class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="saveDetails">
+              <Save :size="16" aria-hidden="true" /> Save details
+            </button>
+            <button type="button" :disabled="mutationBusy || recipes.length === 0" class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="chooseWithAi">
+              <RefreshCw :size="16" :class="busy ? 'animate-spin' : ''" aria-hidden="true" /> AI pick
+            </button>
+            <button type="button" :disabled="mutationBusy" class="focus-ring mm-button-secondary mm-button-danger inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="removeActiveMeal">
+              <Trash2 :size="16" aria-hidden="true" /> Remove
+            </button>
           </div>
         </div>
-        <div class="flex flex-col mm-gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <PlanServingsStepper :servings="activeMeal.servings" :disabled="busy" @update="updateServings" />
-          <button type="button" :disabled="busy" class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="saveDetails">
-            <Save :size="16" aria-hidden="true" /> Save details
-          </button>
-          <button type="button" :disabled="busy || recipes.length === 0" class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="chooseWithAi">
-            <RefreshCw :size="16" :class="busy ? 'animate-spin' : ''" aria-hidden="true" /> AI pick
-          </button>
-          <button type="button" :disabled="busy" class="focus-ring mm-button-secondary mm-button-danger inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="removeActiveMeal">
-            <Trash2 :size="16" aria-hidden="true" /> Remove
-          </button>
+      </SectionPanel>
+
+      <section v-else data-testid="meal-editor" class="mm-panel border-dashed mm-p-6 text-center text-steel">
+        {{ plan.skippedDates.includes(selectedDate) ? "This day is skipped. Restore it in the schedule to add meals." : "Choose “Add meal” to start planning this day." }}
+      </section>
+
+      <p v-if="error" role="alert" class="mm-status-error">{{ error }}</p>
+
+      <section v-if="addingDate || activeMeal" class="mm-pt-2" aria-labelledby="recipe-catalog-heading">
+        <div class="flex flex-col mm-gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 id="recipe-catalog-heading" class="mm-mt-1 mm-text-xl font-semibold tracking-tight">{{ addingDate ? "Choose a meal" : "Change recipe" }}</h2>
+          </div>
+          <label class="relative block w-full lg:max-w-md">
+            <span class="sr-only">Search recipes</span>
+            <Search class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" :size="19" aria-hidden="true" />
+            <input v-model="search" type="search" placeholder="Search recipes" class="focus-ring mm-field w-full mm-py-3 pl-10 pr-4 mm-text-sm" />
+          </label>
         </div>
-      </div>
-    </SectionPanel>
-
-    <section v-else class="mm-panel border-dashed mm-p-6 text-center text-steel">
-      Choose “Add meal” under any day to start planning.
-    </section>
-
-    <p v-if="error" role="alert" class="mm-status-error">{{ error }}</p>
-
-    <section v-if="addingDate || activeMeal" class="mm-pt-2" aria-labelledby="recipe-catalog-heading">
-      <div class="flex flex-col mm-gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p class="mm-text-xs font-bold text-moss">Recipe catalog</p>
-          <h2 id="recipe-catalog-heading" class="mm-mt-1 mm-text-xl font-semibold tracking-tight">{{ addingDate ? "Choose a meal" : "Change recipe" }}</h2>
+        <div v-if="availableTags.length" class="mm-mt-4 flex flex-wrap mm-gap-2 mm-pb-2" aria-label="Recipe tags">
+          <button type="button" :aria-pressed="activeTag === null" class="focus-ring min-h-control min-w-0 max-w-full break-words rounded-md border border-control mm-px-4 mm-py-2 mm-text-sm font-semibold transition-colors" :class="activeTag === null ? 'border-moss bg-moss text-strong-foreground' : 'bg-surface text-ink hover:border-moss hover:bg-field'" @click="activeTag = null">All</button>
+          <button v-for="tag in availableTags" :key="tag" type="button" :aria-pressed="activeTag === tag" class="focus-ring min-h-control min-w-0 max-w-full break-words rounded-md border border-control mm-px-4 mm-py-2 mm-text-sm font-semibold transition-colors" :class="activeTag === tag ? 'border-moss bg-moss text-strong-foreground' : 'bg-surface text-ink hover:border-moss hover:bg-field'" @click="activeTag = tag">{{ tag }}</button>
         </div>
-        <label class="relative block w-full lg:max-w-md">
-          <span class="sr-only">Search recipes</span>
-          <Search class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" :size="19" aria-hidden="true" />
-          <input v-model="search" type="search" placeholder="Search recipes" class="focus-ring mm-field w-full mm-py-3 pl-10 pr-4 mm-text-sm" />
-        </label>
-      </div>
-      <div v-if="availableTags.length" class="mm-mt-4 flex flex-wrap mm-gap-2 mm-pb-2" aria-label="Recipe tags">
-        <button type="button" :aria-pressed="activeTag === null" class="focus-ring min-h-control min-w-0 max-w-full break-words rounded-md border border-control mm-px-4 mm-py-2 mm-text-sm font-semibold transition-colors" :class="activeTag === null ? 'border-moss bg-moss text-strong-foreground' : 'bg-surface text-ink hover:border-moss hover:bg-field'" @click="activeTag = null">All</button>
-        <button v-for="tag in availableTags" :key="tag" type="button" :aria-pressed="activeTag === tag" class="focus-ring min-h-control min-w-0 max-w-full break-words rounded-md border border-control mm-px-4 mm-py-2 mm-text-sm font-semibold transition-colors" :class="activeTag === tag ? 'border-moss bg-moss text-strong-foreground' : 'bg-surface text-ink hover:border-moss hover:bg-field'" @click="activeTag = tag">{{ tag }}</button>
-      </div>
-      <div v-if="filteredRecipes.length" class="mm-mt-4 grid mm-gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <PlanRecipeSelectionCard
-          v-for="recipe in filteredRecipes"
-          :key="recipe.id"
-          :recipe="recipe"
-          :selected="!addingDate && recipe.id === activeMeal?.recipeId"
-          :used-count="usedCount(recipe.id)"
-          :action-label="addingDate ? `Add to ${formatDisplayDate(addingDate)}` : 'Choose recipe'"
-          :disabled="busy"
-          @choose="chooseRecipe(recipe.id)"
-          @open-details="openRecipeDetails"
-        />
-      </div>
-      <div v-else class="mm-panel mm-mt-5 border-dashed mm-p-8 text-center text-steel">No recipes match the current search and tag filters.</div>
-    </section>
+        <div v-if="filteredRecipes.length" class="mm-mt-4 grid mm-gap-4 sm:grid-cols-2">
+          <PlanRecipeSelectionCard
+            v-for="recipe in filteredRecipes"
+            :key="recipe.id"
+            :recipe="recipe"
+            :selected="!addingDate && recipe.id === activeMeal?.recipeId"
+            :used-count="usedCount(recipe.id)"
+            :action-label="addingDate ? `Add to ${formatDisplayDate(addingDate)}` : 'Choose recipe'"
+            :disabled="mutationBusy"
+            @choose="chooseRecipe(recipe.id)"
+            @open-details="openRecipeDetails"
+          />
+        </div>
+        <div v-else class="mm-panel mm-mt-5 border-dashed mm-p-8 text-center text-steel">No recipes match the current search and tag filters.</div>
+      </section>
 
-    <datalist id="meal-slot-suggestions">
-      <option value="Breakfast" />
-      <option value="Lunch" />
-      <option value="Dinner" />
-      <option value="Snack" />
-    </datalist>
+      <datalist id="meal-slot-suggestions">
+        <option value="Breakfast" />
+        <option value="Lunch" />
+        <option value="Dinner" />
+        <option value="Snack" />
+      </datalist>
+    </div>
   </div>
 </template>

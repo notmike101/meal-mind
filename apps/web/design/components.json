@@ -429,9 +429,11 @@
       }
     },
     "import-recipe-form": {
-      "description": "Existing URL importer with externally owned job state.",
+      "description": "Mounted URL importer in the library's secondary native disclosure; page owns request, active job and polling state.",
       "sources": [
-        "app/components/recipes/ImportRecipeForm.vue"
+        "app/components/recipes/ImportRecipeForm.vue",
+        "app/pages/recipes/index.vue",
+        "app/assets/css/main.css"
       ],
       "selectors": [],
       "tokens": [
@@ -439,9 +441,12 @@
         "color.tomato",
         "color.success"
       ],
-      "states": {},
+      "states": {
+        "closed": "Desktop collection uses full width and three columns; the same mounted disclosure and accessible summary do not reserve an empty sidebar.",
+        "active": "Native disclosure stays open while submitting or polling; search and viewport changes do not unmount job feedback.",
+        "terminal": "Success/failure feedback remains open until the user closes the disclosure."
+      },
       "related": [
-        "panel",
         "field",
         "button-primary"
       ],
@@ -544,8 +549,6 @@
       "related": [
         "panel",
         "today-meals",
-        "shopping-list",
-        "settings-form",
         "selection-workspace"
       ],
       "api": {
@@ -698,6 +701,8 @@
       ],
       "selectors": [
         ".mm-recipe-header",
+        ".mm-recipe-identity",
+        ".mm-recipe-image",
         ".mm-recipe-body",
         ".mm-step",
         ".mm-servings-controls"
@@ -708,7 +713,10 @@
         "shared.spacing.12",
         "shared.height.control"
       ],
-      "states": {},
+      "states": {
+        "narrow": "Identity and portions precede a capped image; ingredients and instructions stack.",
+        "desktop": "Identity/image and ingredients/instructions use paired columns."
+      },
       "related": [
         "recipe-details",
         "ingredient-list",
@@ -722,18 +730,25 @@
       }
     },
     "schedule-layout": {
-      "description": "Responsive non-scrolling editable day groups with a tokenized minimum day width.",
+      "description": "Desktop day overview and mobile selected-day schedule with internal day navigation; one editor instance across widths.",
       "sources": [
         "app/assets/css/main.css"
       ],
       "selectors": [
-        ".mm-schedule-grid"
+        ".mm-schedule-grid",
+        ".mm-plan-workspace",
+        ".mm-day-selector",
+        ".mm-schedule-day",
+        ".mm-schedule-day-selected"
       ],
       "tokens": [
         "shared.width.day",
         "shared.spacing.3"
       ],
-      "states": {},
+      "states": {
+        "narrow": "An internally scrolling day selector exposes one day's complete schedule adjacent to the existing editor.",
+        "desktop": "All seven day groups remain visible beside the same contextual editor."
+      },
       "related": [
         "schedule-strip"
       ],
@@ -744,7 +759,7 @@
       }
     },
     "locked-week": {
-      "description": "All seven selected-week dates in responsive grouped panels; explicit skipped and empty states.",
+      "description": "Compact read-only seven-day overview, beside Today's meals for the current week; explicit skipped, empty and missing-recipe states.",
       "sources": [
         "app/components/plan/LockedWeek.vue"
       ],
@@ -755,8 +770,7 @@
       ],
       "states": {},
       "related": [
-        "panel",
-        "recipe-photo"
+        "recipe-details"
       ],
       "api": {
         "props": {
@@ -767,30 +781,6 @@
         "events": {
           "openDetails": "[recipeId: string, servings: number, trigger: HTMLElement]"
         }
-      }
-    },
-    "plan-summary": {
-      "description": "Selected-week status before actions and adherence.",
-      "sources": [
-        "app/components/plan/PlanSummary.vue"
-      ],
-      "selectors": [],
-      "tokens": [
-        "color.steel",
-        "color.success",
-        "shared.spacing.4"
-      ],
-      "states": {},
-      "related": [
-        "panel"
-      ],
-      "api": {
-        "props": {
-          "plan": "MealPlanDto (required)",
-          "locked": "boolean (required)"
-        },
-        "slots": [],
-        "events": {}
       }
     },
     "schedule-strip": {
@@ -815,18 +805,20 @@
           "plan": "MealPlanDto (required)",
           "activeMealId": "string (required)",
           "addingDate": "string | null (required)",
+          "selectedDate": "string (required)",
           "busy": "boolean (optional)"
         },
         "slots": [],
         "events": {
           "select": "[mealId: string]",
           "add": "[date: string]",
+          "selectDate": "[date: string]",
           "toggleDay": "[date: string, skipped: boolean]"
         }
       }
     },
     "selection-workspace": {
-      "description": "Existing add/edit/swap/filter/servings flow with shared labeled editor sections.",
+      "description": "Parent-owned selected day and meal with adjacent contextual editing, recipe selection and existing mutations.",
       "sources": [
         "app/components/plan/SelectionWorkspace.vue"
       ],
@@ -836,7 +828,9 @@
         "color.strong-foreground",
         "shared.spacing.4"
       ],
-      "states": {},
+      "states": {
+        "pending": "Same-week external refresh keeps the selected day/editor mounted, announces refreshing, and blocks all plan mutations."
+      },
       "related": [
         "schedule-strip",
         "section-panel",
@@ -849,7 +843,8 @@
         "props": {
           "plan": "MealPlanDto (required)",
           "recipes": "RecipeSummaryDto[] (required)",
-          "defaultServings": "number (required)"
+          "defaultServings": "number (required)",
+          "pending": "boolean (optional): selected-week refresh is in progress"
         },
         "slots": [],
         "events": {
@@ -1099,7 +1094,7 @@
       }
     },
     "shopping-list": {
-      "description": "Progress, category groups and existing shopping actions.",
+      "description": "Category checklist with compact counts, accessible completion progress and allowed regeneration in its toolbar.",
       "sources": [
         "app/components/shopping/ShoppingList.vue"
       ],
@@ -1110,7 +1105,6 @@
       ],
       "states": {},
       "related": [
-        "section-panel",
         "shopping-category",
         "status-error"
       ],
@@ -1179,9 +1173,10 @@
       }
     },
     "settings-form": {
-      "description": "Flat connection/defaults, preferences, automation and pantry sections; existing saves/auth semantics unchanged.",
+      "description": "Provider beside household planning with one sticky in-flow Save operation; existing saves/auth semantics unchanged.",
       "sources": [
-        "app/components/settings/SettingsForm.vue"
+        "app/components/settings/SettingsForm.vue",
+        "app/assets/css/main.css"
       ],
       "selectors": [],
       "tokens": [
@@ -1189,9 +1184,10 @@
         "shared.spacing.4",
         "shared.spacing.6"
       ],
-      "states": {},
+      "states": {
+        "save": "One in-flow sticky action area applies provider and household settings; short viewports keep it in normal flow to avoid keyboard obstruction."
+      },
       "related": [
-        "section-panel",
         "connection-fields",
         "serving-fields",
         "planning-fields",
@@ -1209,7 +1205,7 @@
       }
     },
     "connection-fields": {
-      "description": "Existing endpoint, credential, model and timezone fields; keys stay private.",
+      "description": "Endpoint, private credential and model fields with contextual Load models feedback; timezone belongs to the household form.",
       "sources": [
         "app/components/settings/ConnectionFields.vue"
       ],
@@ -1227,18 +1223,19 @@
           "aiBaseUrl": "v-model:string (required)",
           "aiModel": "v-model:string (required)",
           "aiApiKey": "v-model:string | null | undefined (optional)",
-          "timezone": "v-model:string (required)",
           "models": "string[] (required)",
           "authConfigured": "boolean (required)",
           "modelsLoaded": "boolean (required)",
-          "endpointChanged": "boolean (optional)"
+          "endpointChanged": "boolean (optional)",
+          "busy": "boolean (optional)",
+          "status": "string | null (optional)"
         },
         "slots": [],
         "events": {
           "update:aiBaseUrl": "[value: string]",
           "update:aiModel": "[value: string]",
           "update:aiApiKey": "[value: string | null | undefined]",
-          "update:timezone": "[value: string]"
+          "testAi": "[]"
         }
       }
     },
@@ -1338,7 +1335,7 @@
       }
     },
     "form-actions": {
-      "description": "Existing Save and Load models controls.",
+      "description": "Single Save control for the existing settings operation.",
       "sources": [
         "app/components/settings/FormActions.vue"
       ],
@@ -1346,8 +1343,7 @@
       "tokens": [],
       "states": {},
       "related": [
-        "button-primary",
-        "button-secondary"
+        "button-primary"
       ],
       "api": {
         "props": {
@@ -1356,8 +1352,7 @@
         },
         "slots": [],
         "events": {
-          "save": "[]",
-          "testAi": "[]"
+          "save": "[]"
         }
       }
     },

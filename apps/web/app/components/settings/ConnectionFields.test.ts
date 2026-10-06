@@ -8,7 +8,6 @@ describe("SettingsConnectionFields", () => {
       props: {
         aiBaseUrl: "https://provider.example/v1",
         aiModel: "private-model",
-        timezone: "America/Chicago",
         models: ["model-a", "model-b"],
         authConfigured: true,
         modelsLoaded,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { definePageMeta, navigateTo, useRoute } from "#imports";
-import { CalendarDays, ChevronLeft, ChevronRight, ListChecks, RefreshCw, ShoppingBasket } from "@lucide/vue";
+import { CalendarDays, ChevronLeft, ChevronRight, ListChecks, Lock, RefreshCw, ShoppingBasket, Unlock } from "@lucide/vue";
 import { createError } from "h3";
 import { computed, ref, watch } from "vue";
 import { errorMessage } from "~/composables/use-api";
@@ -64,10 +64,7 @@ const todayMeals = computed(() => {
 });
 const showToday = computed(() => isCurrentWeek.value && plan.value?.status !== "draft" && Boolean(plan.value));
 const weekTitle = computed(() => `${formatDisplayDate(selectedWeekStart.value)} – ${formatDisplayDate(weekEnd.value)}`);
-const weekDescription = computed(() => {
-  if (isCurrentWeek.value) return `This week · Planning in ${timezone.value}`;
-  return selectedWeekStart.value < currentWeekStart.value ? "A saved week from your plan history." : "An upcoming planning week.";
-});
+const weekDescription = computed(() => `${isCurrentWeek.value ? "This week" : selectedWeekStart.value < currentWeekStart.value ? "Past week" : "Upcoming week"} · Planning in ${timezone.value}`);
 const previousLocation = computed(() => workspaceLocation(addDays(selectedWeekStart.value, -7), selectedView.value));
 const nextLocation = computed(() => workspaceLocation(addDays(selectedWeekStart.value, 7), selectedView.value));
 const currentLocation = computed(() => workspaceLocation(currentWeekStart.value, selectedView.value));
@@ -137,43 +134,55 @@ async function generateShoppingList() {
     :data-plan-id="plan?.id ?? ''"
     :data-week-start="selectedWeekStart"
   >
-    <section class="flex flex-col mm-gap-4 xl:flex-row xl:items-end xl:justify-between">
-      <PageHeading eyebrow="Weekly workspace" :title="weekTitle" :description="weekDescription" />
-      <div class="flex flex-wrap items-center mm-gap-2" aria-label="Week navigation">
-        <NuxtLink :to="previousLocation" aria-label="Previous week" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold">
-          <ChevronLeft :size="17" aria-hidden="true" /> Previous
-        </NuxtLink>
-        <NuxtLink :to="currentLocation" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold">
-          <CalendarDays :size="17" aria-hidden="true" /> This week
-        </NuxtLink>
-        <NuxtLink :to="nextLocation" aria-label="Next week" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold">
-          Next <ChevronRight :size="17" aria-hidden="true" />
-        </NuxtLink>
+    <header class="mm-week-toolbar mm-space-y-4 border-b border-line mm-pb-4">
+      <div class="flex flex-wrap items-start justify-between mm-gap-4">
+        <div class="min-w-0">
+          <h1 class="mm-page-title">{{ weekTitle }}</h1>
+          <p class="mm-mt-2 mm-text-sm text-steel">{{ weekDescription }}</p>
+          <p v-if="plan && !planning.selectionLoading" class="mm-mt-2 flex flex-wrap items-center mm-gap-2 break-words mm-text-sm text-steel">
+            <span class="inline-flex items-center mm-gap-1 font-semibold" :class="locked ? 'text-steel' : 'text-success'">
+              <Lock v-if="locked" :size="15" aria-hidden="true" />
+              <Unlock v-else :size="15" aria-hidden="true" />
+              {{ locked ? "Locked" : "Editable" }}
+            </span>
+            <span>{{ plan.status }} · {{ plan.creationSource === "ai" ? `generated${plan.aiModel ? ` with ${plan.aiModel}` : ""}` : "created manually" }}</span>
+          </p>
+        </div>
+        <nav class="flex flex-wrap items-center mm-gap-2" aria-label="Week navigation">
+          <NuxtLink :to="previousLocation" aria-label="Previous week" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-3 mm-py-2 mm-text-sm font-semibold">
+            <ChevronLeft :size="17" aria-hidden="true" /> Previous
+          </NuxtLink>
+          <NuxtLink :to="currentLocation" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-3 mm-py-2 mm-text-sm font-semibold">
+            <CalendarDays :size="17" aria-hidden="true" /> This week
+          </NuxtLink>
+          <NuxtLink :to="nextLocation" aria-label="Next week" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-3 mm-py-2 mm-text-sm font-semibold">
+            Next <ChevronRight :size="17" aria-hidden="true" />
+          </NuxtLink>
+        </nav>
       </div>
-    </section>
+      <div class="flex flex-wrap items-center justify-between mm-gap-3">
+        <nav class="flex min-w-0" aria-label="Weekly workspace views">
+          <NuxtLink :to="planLocation" data-testid="plan-tab" :aria-current="selectedView === 'plan' ? 'page' : undefined" :class="selectedView === 'plan' ? 'border-moss text-moss' : 'border-transparent text-steel hover:text-ink'" class="focus-ring inline-flex min-h-11 items-center mm-gap-2 border-b-2 px-4 py-3 mm-text-sm font-bold">
+            <ListChecks :size="17" aria-hidden="true" /> Plan
+          </NuxtLink>
+          <NuxtLink :to="shoppingLocation" data-testid="shopping-tab" :aria-current="selectedView === 'shopping' ? 'page' : undefined" :class="selectedView === 'shopping' ? 'border-moss text-moss' : 'border-transparent text-steel hover:text-ink'" class="focus-ring inline-flex min-h-11 items-center mm-gap-2 border-b-2 px-4 py-3 mm-text-sm font-bold">
+            <ShoppingBasket :size="17" aria-hidden="true" /> Shopping
+          </NuxtLink>
+        </nav>
+        <template v-if="selectedView === 'plan' && !planning.selectionLoading && !planning.selectionError">
+          <div v-if="!plan && (canGenerateWeek || canCreateBlankWeek)" class="flex flex-wrap mm-gap-2" aria-label="Create a plan">
+            <PlanGeneratePlanButton v-if="canGenerateWeek" :week-start="selectedWeekStart" :default-meal-count="defaultMealCount" />
+            <PlanBlankPlanButton v-if="canCreateBlankWeek" :week-start="selectedWeekStart" />
+          </div>
+          <div v-else-if="plan?.status === 'draft'" class="flex flex-wrap mm-gap-2" aria-label="Plan actions">
+            <PlanCommitPlanButton :plan-id="plan.id" />
+            <PlanGeneratePlanButton v-if="canRegenerateWeek" :week-start="selectedWeekStart" :default-meal-count="defaultMealCount" replace-existing />
+          </div>
+        </template>
+      </div>
+    </header>
 
-    <nav class="flex border-b border-line" aria-label="Weekly workspace views">
-      <NuxtLink
-        :to="planLocation"
-        data-testid="plan-tab"
-        :aria-current="selectedView === 'plan' ? 'page' : undefined"
-        :class="selectedView === 'plan' ? 'border-moss text-moss' : 'border-transparent text-steel hover:text-ink'"
-        class="focus-ring inline-flex min-h-11 items-center mm-gap-2 border-b-2 px-4 py-3 mm-text-sm font-bold"
-      >
-        <ListChecks :size="17" aria-hidden="true" /> Plan
-      </NuxtLink>
-      <NuxtLink
-        :to="shoppingLocation"
-        data-testid="shopping-tab"
-        :aria-current="selectedView === 'shopping' ? 'page' : undefined"
-        :class="selectedView === 'shopping' ? 'border-moss text-moss' : 'border-transparent text-steel hover:text-ink'"
-        class="focus-ring inline-flex min-h-11 items-center mm-gap-2 border-b-2 px-4 py-3 mm-text-sm font-bold"
-      >
-        <ShoppingBasket :size="17" aria-hidden="true" /> Shopping
-      </NuxtLink>
-    </nav>
-
-    <div v-if="planning.selectionLoading" class="mm-panel mm-p-8 text-center text-steel" role="status">Loading week…</div>
+    <div v-if="planning.selectionLoading && plan?.weekStart !== selectedWeekStart" class="mm-panel mm-p-8 text-center text-steel" role="status">Loading week…</div>
     <div v-else-if="planning.selectionError" class="mm-status-error" role="alert">
       {{ planning.selectionError }}
     </div>
@@ -183,27 +192,11 @@ async function generateShoppingList() {
         {{ recipes.catalog?.invalidRecipes.length }} invalid recipe file{{ recipes.catalog?.invalidRecipes.length === 1 ? "" : "s" }} excluded from planning.
       </div>
 
-      <PlanSummary v-if="plan" :plan="plan" :locked="locked" />
 
-      <section v-if="!plan && (canGenerateWeek || canCreateBlankWeek)" class="flex flex-wrap mm-gap-2" aria-label="Create a plan">
-        <PlanGeneratePlanButton v-if="canGenerateWeek" :week-start="selectedWeekStart" :default-meal-count="defaultMealCount" />
-        <PlanBlankPlanButton v-if="canCreateBlankWeek" :week-start="selectedWeekStart" />
-      </section>
-      <section v-else-if="plan?.status === 'draft'" class="flex flex-wrap mm-gap-2" aria-label="Plan actions">
-        <PlanCommitPlanButton :plan-id="plan.id" />
-        <PlanGeneratePlanButton
-          v-if="canRegenerateWeek"
-          :week-start="selectedWeekStart"
-          :default-meal-count="defaultMealCount"
-          replace-existing
-        />
-      </section>
-
-      <PlanTodayMeals v-if="showToday" :meals="todayMeals" @open-details="openRecipe" />
-
-      <section v-if="plan" data-testid="plan-content" class="mm-space-y-6">
-        <PlanLockedWeek v-if="locked" data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
-        <PlanSelectionWorkspace v-else data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" @open-details="openRecipe" />
+      <section v-if="plan" data-testid="plan-content" :class="showToday ? 'mm-committed-workspace' : ''">
+        <PlanTodayMeals v-if="showToday" class="mm-today-context" :meals="todayMeals" @open-details="openRecipe" />
+        <PlanLockedWeek v-if="locked" class="mm-week-overview" data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
+        <PlanSelectionWorkspace v-else data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" :pending="planning.selectionLoading" @open-details="openRecipe" />
       </section>
       <section v-else class="mm-panel border-dashed mm-p-8 text-center">
         <h2 class="mm-display mm-text-2xl font-bold">No plan for this week</h2>

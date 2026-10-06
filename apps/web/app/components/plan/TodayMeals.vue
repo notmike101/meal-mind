@@ -39,8 +39,8 @@ function openRecipe(event: globalThis.MouseEvent, meal: MealDto) {
         <CircleCheckBig :size="16" aria-hidden="true" /> All handled
       </span>
     </template>
-    <div v-if="meals.length" class="grid mm-gap-4 xl:grid-cols-2">
-      <article v-for="meal in meals" :key="meal.id" class="flex min-w-0 flex-col rounded-lg border border-line bg-canvas mm-p-4">
+    <div v-if="meals.length" class="mm-space-y-4">
+      <article v-for="meal in meals" :key="meal.id" class="flex min-w-0 flex-col border-b border-line mm-pb-4">
         <div class="flex flex-wrap items-center justify-between mm-gap-2">
           <p class="mm-text-xs font-semibold uppercase tracking-wide text-steel">{{ meal.slot || "Meal" }}</p>
           <span class="rounded-full bg-field mm-px-2.5 mm-py-1 mm-text-xs font-medium capitalize" :class="meal.status === 'done' ? 'text-success' : meal.status === 'planned' ? 'text-warning' : 'text-muted'">{{ meal.status }}</span>

@@ -2,6 +2,8 @@
 
 Scope: parent #48; Stitch integration #58; color #59/#62; layout #60; consistency #61/#63. The user approved **neutral stone with a warm accent**, followed by the written design in `docs/superpowers/specs/2026-10-03-ui-modernization-design.md`. The implementation plan is `docs/superpowers/plans/2026-10-03-ui-modernization.md`.
 
+The human subsequently requested changes to PR #64's information architecture: the tokenized implementation preserved too much of the old vertical grouping. The approved structural revision is specified in `docs/superpowers/specs/2026-10-05-task-first-ui-design.md`; execution is tracked in `docs/superpowers/plans/2026-10-05-task-first-ui.md`. Specification approval is not PR or merge approval.
+
 ## Five product references
 
 These references inform principles, not a pixel-for-pixel clone. Public product documentation/screenshots are not claims of authenticated dashboard access. Values below are source examples, not a guarantee of every product's current app theme.
@@ -110,3 +112,15 @@ Actual browser inspection covered locked/editable plans, shopping, recipes, sett
 Mobile stress used real client-store recipe/plan data with long unbroken names, tags and notes. Library cards, editor headings, tag filters and metadata wrapped without visible clipping or document overflow. The temporary client state was discarded by navigation; no live data or recipe files were changed.
 
 Keyboard inspection verified the first Tab exposes the skip link and Enter focuses `main-content`. Both native dialogs retain body-scroll locking and restore opener focus after dismissal. Missing native `close()` calls before conditional removal caused focus to fall to the body; lifecycle ordering now closes the top layer before removal. Playwright covers recipe close, generation Cancel and generation Escape focus restoration.
+
+## Task-first structural revision
+
+- The weekly toolbar owns week/navigation, plan state/source, view links, and valid lifecycle actions; the duplicate PlanSummary panel is removed.
+- Editable plans use a schedule beside a contextual meal editor and recipe chooser on desktop. Mobile day navigation exposes one day's complete meal list beside the same mounted editor, preserving unsaved inputs across viewport changes.
+- Current committed plans place Today's meals beside the weekly overview on desktop and before it on mobile. Other weeks omit that contextual area.
+- Recipe browsing leads with search and results. Import uses one mounted native disclosure, opened from a compact toolbar trigger, in a secondary desktop area and after results on mobile. Active jobs and completed feedback remain visible until deliberate closure.
+- Recipe detail prioritizes identity/portions and ingredients/instructions; mobile photography is capped and decorative eyebrows are removed.
+- Shopping puts counts, accessible progress, and permitted regeneration in a checklist toolbar rather than a separate progress panel.
+- Settings groups provider connection beside household planning, with contextual model discovery, compact appearance controls, and one persistently reachable Save/status area. Credential semantics and the single save operation remain unchanged.
+
+The revision changes presentation and local selection only; URL navigation, Pinia workflows, same-origin proxies, API contracts, recipe-dialog history/focus, validation, and user data remain authoritative. Final verification and screenshots belong to the revised PR head, not the earlier modernization head.

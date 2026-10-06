@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { callOnce } from "#app";
 import { Search } from "@lucide/vue";
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import type { RecipeImportJobDto } from "@mealmind/contracts";
 import { errorMessage } from "~/composables/use-api";
 import { useRecipeModal } from "~/composables/use-recipe-modal";
@@ -13,10 +13,13 @@ await callOnce("recipe-library", () => Promise.all([recipes.fetchCatalog(), reci
 const query = ref("");
 const importJob = ref<RecipeImportJobDto | null>(null);
 const importRequestError = ref<string | null>(null);
+const importSubmitting = ref(false);
+const importOpen = ref(false);
+const importDisclosure = ref<globalThis.HTMLDetailsElement | null>(null);
 let importPollTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
 const terminalStatuses = new Set(["succeeded", "failed"]);
-const importBusy = computed(() => Boolean(importJob.value && !terminalStatuses.has(importJob.value.status)));
+const importBusy = computed(() => importSubmitting.value || Boolean(importJob.value && !terminalStatuses.has(importJob.value.status)));
 const filteredRecipes = computed(() => {
   const normalized = query.value.trim().toLocaleLowerCase();
   const catalog = recipes.catalog?.recipes ?? [];
@@ -55,6 +58,8 @@ async function pollImport() {
 }
 
 async function startImport(url: string) {
+  importOpen.value = true;
+  importSubmitting.value = true;
   importRequestError.value = null;
   try {
     importJob.value = await recipes.startRecipeImport(url);
@@ -62,6 +67,8 @@ async function startImport(url: string) {
     scheduleImportPoll();
   } catch (error) {
     importRequestError.value = errorMessage(error, "Recipe import could not be started.");
+  } finally {
+    importSubmitting.value = false;
   }
 }
 
@@ -70,10 +77,24 @@ function viewImportedRecipe(event: globalThis.MouseEvent, recipeId: string) {
   void recipeModal.openRecipe(recipeId, 2, trigger);
 }
 
+function toggleImport(event: globalThis.Event) {
+  const disclosure = event.currentTarget as globalThis.HTMLDetailsElement;
+  if (importBusy.value && !disclosure.open) disclosure.open = true;
+  importOpen.value = disclosure.open;
+}
+
+async function revealImport() {
+  importOpen.value = true;
+  await nextTick();
+  importDisclosure.value?.scrollIntoView({ block: "nearest" });
+  importDisclosure.value?.querySelector("summary")?.focus();
+}
+
 onMounted(() => {
   const active = recipes.imports.find((job) => !terminalStatuses.has(job.status));
   if (active) {
     importJob.value = active;
+    importOpen.value = true;
     scheduleImportPoll();
   }
 });
@@ -83,50 +104,50 @@ onBeforeUnmount(stopImportPolling);
 
 <template>
   <div class="mm-space-y-6">
-    <section class="mm-space-y-3">
-      <PageHeading eyebrow="Recipes" title="CookLang recipe library" description="Browse your trusted local collection and find the right meal in seconds." />
+    <header class="mm-space-y-3">
+      <h1 class="mm-page-title">CookLang recipe library</h1>
       <p class="mm-text-sm text-steel">{{ recipes.catalog?.recipes.length ?? 0 }} recipes ready to cook</p>
+    </header>
+    <section class="mm-library-toolbar" aria-label="Recipe collection controls">
+      <div class="min-w-0">
+        <label class="relative block">
+          <span class="sr-only">Search recipes</span>
+          <Search class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" :size="19" aria-hidden="true" />
+          <input v-model="query" type="search" class="focus-ring mm-field w-full py-3 pl-11 pr-4 mm-text-base text-ink" placeholder="Search by recipe name, description, or tag…" />
+        </label>
+        <p class="mm-mt-2 mm-text-sm text-steel" aria-live="polite">Showing {{ filteredRecipes.length }} of {{ recipes.catalog?.recipes.length ?? 0 }} recipes</p>
+      </div>
+      <button type="button" aria-controls="recipe-import-disclosure" :aria-expanded="importOpen" class="focus-ring mm-button-secondary inline-flex min-h-control items-center justify-center mm-px-4 mm-py-3 mm-text-sm font-semibold" @click="revealImport">Import recipe</button>
     </section>
-    <RecipesImportRecipeForm
-      :busy="importBusy"
-      :job="importJob"
-      :recent-jobs="recipes.imports"
-      :request-error="importRequestError"
-      @submit="startImport"
-      @view-recipe="viewImportedRecipe"
-    />
-    <RecipesInvalidRecipeNotice
-      v-if="recipes.catalog?.invalidRecipes.length"
-      :invalid-recipes="recipes.catalog.invalidRecipes"
-    />
-    <section class="mm-panel mm-p-4 sm:p-5" aria-label="Recipe filters">
-      <label class="relative block">
-        <span class="sr-only">Search recipes</span>
-        <Search class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" :size="19" aria-hidden="true" />
-        <input
-          v-model="query"
-          type="search"
-          class="focus-ring mm-field w-full py-3 pl-11 pr-4 mm-text-base text-ink"
-          placeholder="Search by recipe name, description, or tag…"
+    <RecipesInvalidRecipeNotice v-if="recipes.catalog?.invalidRecipes.length" :invalid-recipes="recipes.catalog.invalidRecipes" />
+    <div class="mm-library-workspace" :class="{ 'mm-library-workspace-open': importOpen }">
+      <div class="min-w-0">
+        <section class="mm-library-results grid mm-gap-4 sm:grid-cols-2" aria-label="Recipe results">
+          <RecipesRecipeCard
+            v-for="recipe in filteredRecipes"
+            :key="recipe.id"
+            :recipe="recipe"
+            @open-details="openRecipe"
+          />
+        </section>
+        <div
+          v-if="filteredRecipes.length === 0"
+          class="mm-panel border-dashed mm-p-8 text-center text-steel"
+        >
+          {{ query ? "No recipes match your search." : "No valid recipes found." }}
+        </div>
+      </div>
+      <details id="recipe-import-disclosure" ref="importDisclosure" class="mm-import-disclosure" :open="importOpen" @toggle="toggleImport">
+        <summary class="focus-ring mm-button-secondary min-h-control mm-px-4 mm-py-3 mm-text-sm font-semibold" @click="importBusy && $event.preventDefault()">Import recipe</summary>
+        <RecipesImportRecipeForm
+          :busy="importBusy"
+          :job="importJob"
+          :recent-jobs="recipes.imports"
+          :request-error="importRequestError"
+          @submit="startImport"
+          @view-recipe="viewImportedRecipe"
         />
-      </label>
-      <p class="mm-mt-3 mm-text-sm font-medium text-steel" aria-live="polite">
-        Showing {{ filteredRecipes.length }} of {{ recipes.catalog?.recipes.length ?? 0 }} recipes
-      </p>
-    </section>
-    <section class="grid mm-gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <RecipesRecipeCard
-        v-for="recipe in filteredRecipes"
-        :key="recipe.id"
-        :recipe="recipe"
-        @open-details="openRecipe"
-      />
-    </section>
-    <div
-      v-if="filteredRecipes.length === 0"
-      class="mm-panel border-dashed mm-p-8 text-center text-steel"
-    >
-      {{ query ? "No recipes match your search." : "No valid recipes found." }}
+      </details>
     </div>
   </div>
 </template>

@@ -12,8 +12,7 @@ defineProps<{ ingredients: string[] }>();
           <ListChecks :size="20" aria-hidden="true" />
         </span>
         <div class="min-w-0">
-          <p class="text-xs font-bold uppercase tracking-tight text-muted">Prep list</p>
-          <h2 class="mt-0.5 text-xl font-semibold tracking-tight">Ingredients</h2>
+          <h2 class="text-xl font-semibold tracking-tight">Ingredients</h2>
         </div>
       </div>
       <span class="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full bg-field px-2 text-xs font-bold tabular-nums text-steel">

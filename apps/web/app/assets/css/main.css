@@ -224,6 +224,46 @@ button:disabled { cursor: not-allowed; }
   grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--mm-max-w-day)), 1fr));
 }
 
+.mm-plan-workspace, .mm-committed-workspace, .mm-settings-form {
+  display: grid;
+  gap: var(--mm-space-6);
+  min-width: 0;
+  align-items: start;
+}
+.mm-day-selector {
+  display: flex;
+  gap: var(--mm-space-2);
+  max-width: 100%;
+  overflow-x: auto;
+  padding-block: var(--mm-space-1);
+}
+.mm-schedule-day { display: none; }
+.mm-schedule-day-selected { display: block; }
+.mm-library-workspace { display: grid; gap: var(--mm-space-6); align-items: start; min-width: 0; }
+.mm-library-toolbar { display: grid; gap: var(--mm-space-4); align-items: start; min-width: 0; }
+.mm-import-disclosure { min-width: 0; }
+.mm-import-disclosure > summary { cursor: pointer; width: fit-content; }
+.mm-settings-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mm-space-3) var(--mm-space-4);
+  min-width: 0;
+  padding: var(--mm-space-3) var(--mm-space-4);
+  padding-bottom: max(var(--mm-space-3), env(safe-area-inset-bottom));
+  border: var(--mm-border-DEFAULT) solid rgb(var(--line));
+  border-radius: var(--mm-radius-lg);
+  background: rgb(var(--surface));
+}
+.mm-settings-actions > [role="status"] { flex: 1 1 15rem; }
+@media (max-height: 500px) {
+  .mm-settings-actions { position: static; }
+}
+
 .mm-step {
   display: grid;
   grid-template-columns: var(--mm-h-control) minmax(0, 1fr);
@@ -232,6 +272,8 @@ button:disabled { cursor: not-allowed; }
 
 .mm-recipe-header, .mm-recipe-body { display: grid; min-width: 0; }
 .mm-recipe-body { gap: var(--mm-space-6); align-items: start; }
+.mm-recipe-identity { grid-row: 1; }
+.mm-recipe-image { height: clamp(10rem, 45vw, 18rem); }
 .mm-servings-controls { grid-template-columns: var(--mm-h-control) var(--mm-space-12) var(--mm-h-control); }
 
 .mm-dialog-compact {
@@ -269,6 +311,19 @@ button:disabled { cursor: not-allowed; }
 }
 @screen lg {
   .mm-recipe-header { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .mm-recipe-identity { grid-row: auto; }
+  .mm-recipe-image { height: 100%; min-height: 16rem; max-height: 24rem; }
+  .mm-plan-workspace { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .mm-day-selector { display: none; }
+  .mm-schedule-day { display: block; }
+  .mm-schedule-day-selected { border-color: rgb(var(--moss)); }
+  .mm-committed-workspace { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .mm-week-overview { grid-column: 1; grid-row: 1; }
+  .mm-today-context { grid-column: 2; grid-row: 1; }
+  .mm-settings-form { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+  .mm-library-toolbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .mm-library-workspace-open { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .mm-library-workspace:not(.mm-library-workspace-open) .mm-library-results { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .mm-recipe-body { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
 }
 

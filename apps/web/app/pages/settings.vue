@@ -8,10 +8,16 @@ await callOnce("settings-data", () => settings.fetchSettings(), { mode: "navigat
 
 <template>
   <div class="mm-space-y-6">
-    <PageHeading eyebrow="Settings" title="Local planner settings" description="Tune your planning experience, AI connection, portions, and pantry defaults." />
-    <SectionPanel title="Appearance" help="Match your workspace or choose a fixed theme.">
-      <SettingsThemeToggle />
-    </SectionPanel>
+    <header class="flex flex-wrap items-end justify-between mm-gap-4">
+      <div class="min-w-0">
+        <h1 class="mm-page-title">Local planner settings</h1>
+        <p class="mm-mt-2 mm-text-sm text-steel">Configure your provider and household planning defaults.</p>
+      </div>
+      <div class="min-w-0 w-full sm:w-auto mm-space-y-2">
+        <p id="appearance-heading" class="mm-text-sm font-semibold">Appearance</p>
+        <div aria-labelledby="appearance-heading"><SettingsThemeToggle /></div>
+      </div>
+    </header>
     <SettingsForm
       v-if="settings.data"
       :settings="settings.data.settings"

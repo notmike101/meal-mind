@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import type { RecipeImportJobDto } from "@mealmind/contracts";
 
 type FixtureInfo = {
   scenario: string;
@@ -60,7 +61,6 @@ test("redirects compatibility routes and keeps one plan across both tabs", async
   await expect(page).toHaveURL(new RegExp(`${workspaceUrl(fixture.weeks.current, "shopping").replace("?", "\\?")}$`));
   await waitForReady(page);
   await expect(workspace).toHaveAttribute("data-plan-id", planId!);
-  await expect(page.getByRole("heading", { name: "Shopping progress" })).toBeVisible();
 
   await goto(page, `/shopping?week=${fixture.weeks.next}`);
   await expect(page).toHaveURL(new RegExp(`${workspaceUrl(fixture.weeks.next, "shopping").replace("?", "\\?")}$`));
@@ -94,7 +94,6 @@ test("enforces empty-week rules and can create a blank plan with a meal", async 
   await expect(page.getByRole("button", { name: "Generate plan" })).toBeVisible();
   await page.getByRole("button", { name: "Start blank plan" }).click();
   await expect(page.getByTestId("plan-content")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Choose a recipe" })).toBeVisible();
   await page.getByRole("button", { name: /Add to/ }).first().click();
   await expect(page.getByRole("heading", { name: "Citrus Chicken Bowls" })).toBeVisible();
 });
@@ -135,6 +134,52 @@ test("generates, edits, swaps, skips, and commits a selected week", async ({ pag
   await expect(page.getByRole("button", { name: "Regenerate plan" })).toHaveCount(0);
 });
 
+test("retains the draft editor without permitting mutations during an external commit refresh", async ({ page, request }) => {
+  const fixture = await reset(request);
+  await goto(page, workspaceUrl(fixture.weeks.next, "plan"));
+  const slot = page.getByLabel("Meal slot", { exact: false });
+  await slot.fill("Unsaved dinner");
+  const refreshStarted = Promise.withResolvers<void>();
+  const releaseRefresh = Promise.withResolvers<void>();
+  await page.route(`**/api/plans/by-week/${fixture.weeks.next}`, async (route) => {
+    const response = await route.fetch();
+    refreshStarted.resolve();
+    await releaseRefresh.promise;
+    await route.fulfill({ response });
+  });
+  const unexpectedMutations: string[] = [];
+  page.on("request", (mutation) => {
+    const path = new URL(mutation.url()).pathname;
+    if (path.startsWith("/api/plans/") && ["POST", "PATCH", "DELETE"].includes(mutation.method()) && !path.endsWith("/commit")) {
+      unexpectedMutations.push(`${mutation.method()} ${path}`);
+    }
+  });
+  await page.getByRole("button", { name: "Commit plan", exact: true }).click();
+  await refreshStarted.promise;
+  try {
+    await expect(page.getByTestId("meal-editor")).toBeVisible();
+    await expect(slot).toHaveValue("Unsaved dinner");
+    await expect(page.getByRole("status").filter({ hasText: "Refreshing week" })).toBeVisible();
+    const controls = [
+      page.getByRole("button", { name: "Add meal", exact: true }).first(),
+      page.getByRole("button", { name: "Save details", exact: true }),
+      page.getByRole("button", { name: "AI pick", exact: true }),
+      page.getByRole("button", { name: "Remove", exact: true }),
+      page.getByRole("button", { name: "Choose recipe", exact: true }).first(),
+    ];
+    for (const control of controls) {
+      await expect(control).toBeDisabled();
+      await control.evaluate((element) => (element as HTMLButtonElement).click());
+    }
+    expect(unexpectedMutations).toEqual([]);
+    await expect(slot).toHaveValue("Unsaved dinner");
+  } finally {
+    releaseRefresh.resolve();
+  }
+  await expect(page.getByText("Locked", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save details", exact: true })).toHaveCount(0);
+});
+
 test("regenerates a future draft and removes all prior plan-owned state", async ({ page, request }) => {
   const fixture = await reset(request);
   await goto(page, workspaceUrl(fixture.weeks.next, "plan"));
@@ -148,10 +193,12 @@ test("regenerates a future draft and removes all prior plan-owned state", async 
   await expect(page.getByRole("button", { name: skipLabel!.replace("Skip", "Restore") })).toBeVisible();
 
   await page.getByTestId("shopping-tab").click();
+  await expect(page).toHaveURL(new RegExp(`${workspaceUrl(fixture.weeks.next, "shopping").replace("?", "\\?")}$`));
   await waitForReady(page);
   await page.getByRole("checkbox").first().check();
   await expect(page.getByRole("checkbox").first()).toBeChecked();
   await page.getByTestId("plan-tab").click();
+  await expect(page).toHaveURL(new RegExp(`${workspaceUrl(fixture.weeks.next, "plan").replace("?", "\\?")}$`));
   await waitForReady(page);
 
   await page.getByRole("button", { name: "Regenerate plan" }).click();
@@ -174,6 +221,7 @@ test("regenerates a future draft and removes all prior plan-owned state", async 
   expect(oldListPayload.data).toBeNull();
 
   await page.getByTestId("shopping-tab").click();
+  await expect(page).toHaveURL(new RegExp(`${workspaceUrl(fixture.weeks.next, "shopping").replace("?", "\\?")}$`));
   await waitForReady(page);
   await expect(page.getByRole("checkbox")).toHaveCount(3);
   for (const checkbox of await page.getByRole("checkbox").all()) await expect(checkbox).not.toBeChecked();
@@ -193,7 +241,6 @@ test("generates a missing locked list and persists checkbox completion by plan",
   await goto(page, workspaceUrl(missing.weeks.current, "shopping"));
   await expect(page.getByRole("heading", { name: "No shopping list yet" })).toBeVisible();
   await page.getByRole("button", { name: "Generate list" }).click();
-  await expect(page.getByRole("heading", { name: "Shopping progress" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Regenerate" })).toHaveCount(0);
 
   const fixture = await reset(request);
@@ -208,6 +255,88 @@ test("generates a missing locked list and persists checkbox completion by plan",
   await expect(page).toHaveURL(new RegExp(`${workspaceUrl(fixture.weeks.current, "shopping").replace("?", "\\?")}$`));
   await waitForReady(page);
   await expect(page.getByRole("checkbox").first()).toBeChecked();
+});
+
+test("keeps the selected mobile day beside its editor and preserves unsaved inputs on resize", async ({ page, request }) => {
+  const fixture = await reset(request);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await goto(page, workspaceUrl(fixture.weeks.next, "plan"));
+  const days = page.getByRole("navigation", { name: "Choose planning day" });
+  await days.getByRole("button").nth(2).click();
+  const selectedDay = page.getByTestId("selected-day");
+  await expect(selectedDay).toBeVisible();
+  await expect(page.getByTestId("meal-editor")).toBeVisible();
+  const date = await selectedDay.getAttribute("data-date");
+  await expect(page.getByRole("combobox", { name: "Date", exact: true })).toHaveValue(date!);
+  const slot = page.getByLabel("Meal slot", { exact: false });
+  await slot.fill("Unsaved dinner");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(slot).toHaveValue("Unsaved dinner");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(slot).toHaveValue("Unsaved dinner");
+  await expectNoHorizontalOverflow(page);
+  const dayBox = await selectedDay.boundingBox();
+  const editorBox = await page.getByTestId("meal-editor").boundingBox();
+  expect(editorBox!.y - (dayBox!.y + dayBox!.height)).toBeLessThan(80);
+  await selectedDay.getByRole("button", { name: /^Skip / }).click();
+  await expect(selectedDay.getByRole("button", { name: /^Restore / })).toBeVisible();
+  await selectedDay.getByRole("button", { name: /^Restore / }).click();
+  await selectedDay.getByRole("button", { name: "Add meal", exact: true }).click();
+  await expect(page.getByTestId("meal-editor").getByRole("heading")).toBeVisible();
+});
+
+test("keeps settings Save reachable while moving through the household form", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await goto(page, "/settings");
+  const save = page.getByRole("button", { name: "Save", exact: true });
+  await expect(save).toBeInViewport();
+  await page.getByLabel("Timezone", { exact: true }).scrollIntoViewIfNeeded();
+  await expect(save).toBeInViewport();
+  await page.getByLabel("Timezone", { exact: true }).fill("America/New_York");
+  await save.click();
+  await expect(page.getByRole("status").filter({ hasText: "Settings saved." })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
+test("keeps an active import and its result open when browsing or resizing the collection", async ({ page }) => {
+  let complete = false;
+  await page.route("**/api/recipes/imports**", async (route) => {
+    const url = new URL(route.request().url());
+    const isJob = url.pathname.startsWith("/api/recipes/imports/");
+    const isSubmission = url.pathname === "/api/recipes/imports" && route.request().method() === "POST";
+    if (!isJob && !isSubmission) return route.continue();
+    const response = await route.fetch();
+    const payload = await response.json() as { ok: true; data: RecipeImportJobDto };
+    await route.fulfill({
+      response,
+      json: complete ? payload : { ...payload, data: { ...payload.data, status: "converting", recipeId: null, recipeTitle: null, completedAt: null, deduplicated: false } },
+    });
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await goto(page, "/recipes");
+  const collection = page.getByRole("region", { name: "Recipe results" });
+  const closedWidth = (await collection.boundingBox())!.width;
+  await page.getByRole("button", { name: "Import recipe", exact: true }).click();
+  const disclosure = page.locator("#recipe-import-disclosure");
+  await expect(disclosure.locator("summary")).toBeFocused();
+  await expect.poll(async () => (await collection.boundingBox())!.width).toBeLessThan(closedWidth * 0.9);
+  await disclosure.getByLabel("Recipe URL", { exact: true }).fill("https://example.test/recipe");
+  await disclosure.getByRole("button", { name: "Import", exact: true }).click();
+  await expect(disclosure.getByRole("status")).toContainText("Converting to CookLang");
+  await disclosure.locator("summary").click();
+  await expect(disclosure).toHaveAttribute("open", "");
+  await page.getByRole("searchbox", { name: "Search recipes" }).fill("no matching recipe");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(disclosure.getByRole("status")).toBeVisible();
+  complete = true;
+  await expect(disclosure.getByRole("link", { name: "View recipe" })).toBeVisible();
+  await expect(disclosure).toHaveAttribute("open", "");
+  await disclosure.locator("summary").click();
+  await expect(disclosure).not.toHaveAttribute("open", "");
+  await page.getByRole("searchbox", { name: "Search recipes" }).fill("");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect.poll(async () => (await collection.boundingBox())!.width).toBeGreaterThan(closedWidth * 0.95);
+  await expectNoHorizontalOverflow(page);
 });
 
 test("preserves recipe-modal history and responsive theme behavior", async ({ page }) => {

@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { PlugZap } from "@lucide/vue";
 import { computed, useId } from "vue";
 
 const aiBaseUrl = defineModel<string>("aiBaseUrl", { required: true });
 const aiModel = defineModel<string>("aiModel", { required: true });
 const aiApiKey = defineModel<string | null>("aiApiKey");
-const timezone = defineModel<string>("timezone", { required: true });
 defineProps<{
   models: string[];
   authConfigured: boolean;
   modelsLoaded: boolean;
   endpointChanged?: boolean;
+  busy?: boolean;
+  status?: string | null;
 }>();
+const emit = defineEmits<{ testAi: [] }>();
 const modelsId = useId();
 const modelHelpId = useId();
 const keyInput = computed({
@@ -22,56 +25,58 @@ const keyInput = computed({
 </script>
 
 <template>
-  <label class="mm-space-y-2">
-    <span class="mm-text-sm font-medium">AI base URL</span>
-    <input v-model="aiBaseUrl" class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink" />
-  </label>
-  <div class="mm-space-y-2">
-    <label class="block mm-space-y-2">
-      <span class="mm-text-sm font-medium">API key (optional)</span>
-      <input
-        v-model="keyInput"
-        type="password"
-        autocomplete="new-password"
-        class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink"
-      />
+  <div class="grid min-w-0 mm-gap-4">
+    <label class="mm-space-y-2">
+      <span class="mm-text-sm font-medium">AI base URL</span>
+      <input v-model="aiBaseUrl" class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink" />
     </label>
-    <p aria-live="polite" class="mm-text-xs text-muted">
-      Authentication token:
-      {{ aiApiKey === null ? "not configured (removal pending)" : aiApiKey?.trim() ? "configured (replacement pending)" : authConfigured ? "configured" : "not configured (optional)" }}.
-      Leave blank to keep the current key for the same endpoint.
-      Keys are stored in plaintext in the local database.
-    </p>
-    <p v-if="endpointChanged" class="mm-text-xs text-muted">
-      The endpoint has changed. The saved key will not be reused; enter a key for this endpoint if needed.
-    </p>
-    <button
-      type="button"
-      class="focus-ring mm-button-secondary mm-px-3 mm-py-2 mm-text-sm"
-      @click="aiApiKey = null"
-    >
-      Remove API key
-    </button>
+    <div class="mm-space-y-2">
+      <label class="block mm-space-y-2">
+        <span class="mm-text-sm font-medium">API key (optional)</span>
+        <input
+          v-model="keyInput"
+          type="password"
+          autocomplete="new-password"
+          class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink"
+        />
+      </label>
+      <p aria-live="polite" class="mm-text-xs text-muted">
+        Authentication token:
+        {{ aiApiKey === null ? "not configured (removal pending)" : aiApiKey?.trim() ? "configured (replacement pending)" : authConfigured ? "configured" : "not configured (optional)" }}.
+        Leave blank to keep the current key for the same endpoint.
+        Keys are stored in plaintext in the local database.
+      </p>
+      <p v-if="endpointChanged" class="mm-text-xs text-muted">
+        The endpoint has changed. The saved key will not be reused; enter a key for this endpoint if needed.
+      </p>
+      <button
+        type="button"
+        class="focus-ring mm-button-secondary mm-px-3 mm-py-2 mm-text-sm"
+        @click="aiApiKey = null"
+      >
+        Remove API key
+      </button>
+    </div>
+    <div class="mm-space-y-2">
+      <label class="block mm-space-y-2">
+        <span class="mm-text-sm font-medium">AI model</span>
+        <input
+          v-model="aiModel"
+          :list="modelsId"
+          :aria-describedby="modelHelpId"
+          class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink"
+        />
+      </label>
+      <datalist :id="modelsId">
+        <option v-for="model in models" :key="model" :value="model" />
+      </datalist>
+      <span :id="modelHelpId" class="block mm-text-xs text-muted">
+        Enter any model ID. {{ modelsLoaded ? "Reported models are optional suggestions." : "Load models for optional suggestions." }}
+      </span>
+      <button type="button" :disabled="busy" class="focus-ring mm-button-secondary inline-flex items-center mm-gap-2 mm-px-3 mm-py-2 mm-text-sm font-semibold" @click="emit('testAi')">
+        <PlugZap :size="16" aria-hidden="true" /> Load models
+      </button>
+      <p v-if="status" class="break-words mm-text-sm text-steel" role="status">{{ status }}</p>
+    </div>
   </div>
-  <div class="mm-space-y-2">
-    <label class="block mm-space-y-2">
-      <span class="mm-text-sm font-medium">AI model</span>
-      <input
-        v-model="aiModel"
-        :list="modelsId"
-        :aria-describedby="modelHelpId"
-        class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink"
-      />
-    </label>
-    <datalist :id="modelsId">
-      <option v-for="model in models" :key="model" :value="model" />
-    </datalist>
-    <span :id="modelHelpId" class="block mm-text-xs text-muted">
-      Enter any model ID. {{ modelsLoaded ? "Reported models are optional suggestions." : "Load models for optional suggestions." }}
-    </span>
-  </div>
-  <label class="mm-space-y-2">
-    <span class="mm-text-sm font-medium">Timezone</span>
-    <input v-model="timezone" class="focus-ring mm-field min-h-11 w-full mm-px-3 mm-py-2 text-ink" />
-  </label>
 </template>

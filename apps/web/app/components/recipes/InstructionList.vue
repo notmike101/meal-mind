@@ -18,8 +18,7 @@ const stepCount = computed(() => cooklangSteps.value.length || fallbackSteps.val
           <CookingPot :size="20" aria-hidden="true" />
         </span>
         <div class="min-w-0">
-          <p class="text-xs font-bold uppercase tracking-tight text-muted">Step by step</p>
-          <h2 class="mt-0.5 text-xl font-semibold tracking-tight">Instructions</h2>
+          <h2 class="text-xl font-semibold tracking-tight">Instructions</h2>
         </div>
       </div>
       <span class="shrink-0 text-sm font-semibold tabular-nums text-muted">{{ stepCount }} steps</span>
@@ -28,7 +27,7 @@ const stepCount = computed(() => cooklangSteps.value.length || fallbackSteps.val
       <li
         v-for="step in cooklangSteps"
         :key="`${recipe.id}-step-${step.number}`"
-        class="mm-card mm-step min-w-0 mm-p-4 sm:p-5"
+        class="mm-step min-w-0 border-b border-line mm-py-4"
       >
         <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-strong text-sm font-bold tabular-nums text-strong-foreground" aria-hidden="true">
           {{ String(step.number).padStart(2, "0") }}
@@ -44,7 +43,7 @@ const stepCount = computed(() => cooklangSteps.value.length || fallbackSteps.val
       <li
         v-for="(step, index) in fallbackSteps"
         :key="`${recipe.id}-fallback-${index}`"
-        class="mm-card mm-step min-w-0 mm-p-4 sm:p-5"
+        class="mm-step min-w-0 border-b border-line mm-py-4"
       >
         <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-strong text-sm font-bold tabular-nums text-strong-foreground" aria-hidden="true">
           {{ String(index + 1).padStart(2, "0") }}

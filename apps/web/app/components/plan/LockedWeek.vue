@@ -19,9 +19,9 @@ function openDetails(event: globalThis.MouseEvent, meal: MealDto) {
 <template>
   <section class="mm-space-y-4" aria-labelledby="weekly-schedule-heading">
     <h2 id="weekly-schedule-heading" class="mm-text-xl font-semibold">Weekly schedule</h2>
-    <div class="grid items-start mm-gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <section v-for="date in dates" :key="date" class="mm-panel min-w-0 overflow-hidden">
-        <h3 class="border-b border-line bg-field mm-p-4 mm-text-base font-semibold">{{ formatDisplayDate(date) }}</h3>
+    <div class="grid items-start mm-gap-4 sm:grid-cols-2">
+      <section v-for="date in dates" :key="date" class="min-w-0 border-b border-line mm-pb-4">
+        <h3 class="bg-field rounded-md mm-p-3 mm-text-base font-semibold">{{ formatDisplayDate(date) }}</h3>
         <div v-if="plan.skippedDates.includes(date)" class="mm-p-4 mm-text-sm font-medium text-muted">
           Skipped
         </div>
@@ -38,12 +38,11 @@ function openDetails(event: globalThis.MouseEvent, meal: MealDto) {
               class="focus-ring group block min-w-0 transition-colors hover:bg-field"
               @click.exact.left.prevent="openDetails($event, meal)"
             >
-              <PlanRecipePhoto :image-url="recipeFor(meal.recipeId)?.imageUrl ?? null" :title="meal.recipeTitleSnapshot" />
-              <div class="flex flex-col mm-p-4">
+              <div class="flex min-w-0 flex-col mm-p-3">
                 <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
                 <h4 class="mm-display mm-mt-1 break-words mm-text-lg font-semibold leading-snug transition-colors group-hover:text-moss">{{ meal.recipeTitleSnapshot }}</h4>
                 <p v-if="meal.notes" class="mm-mt-2 line-clamp-2 mm-text-sm text-steel">{{ meal.notes }}</p>
-                <div class="mm-mt-4 flex flex-wrap mm-gap-4 mm-text-sm text-steel">
+                <div class="mm-mt-2 flex flex-wrap mm-gap-4 mm-text-sm text-steel">
                   <span class="inline-flex items-center mm-gap-1">
                     <Clock :size="15" aria-hidden="true" /> {{ recipeFor(meal.recipeId)?.totalTimeMinutes }} min
                   </span>
@@ -53,12 +52,11 @@ function openDetails(event: globalThis.MouseEvent, meal: MealDto) {
               </div>
             </a>
             <div v-else class="min-w-0">
-              <PlanRecipePhoto :image-url="null" :title="meal.recipeTitleSnapshot" />
-              <div class="flex flex-col mm-p-4">
+              <div class="flex min-w-0 flex-col mm-p-3">
                 <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
-                <h4 class="mm-mt-1 mm-text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h4>
+                <h4 class="mm-mt-1 break-words mm-text-lg font-semibold">{{ meal.recipeTitleSnapshot }}</h4>
                 <p v-if="meal.notes" class="mm-mt-2 line-clamp-2 mm-text-sm text-steel">{{ meal.notes }}</p>
-                <div class="mm-mt-4 flex flex-wrap mm-gap-4 mm-text-sm text-steel">
+                <div class="mm-mt-2 flex flex-wrap mm-gap-4 mm-text-sm text-steel">
                   <span class="inline-flex items-center mm-gap-1"><Users :size="15" aria-hidden="true" /> {{ meal.servings }} servings</span>
                 </div>
                 <p class="mt-auto mm-pt-3 mm-text-xs text-muted">Recipe no longer in library</p>

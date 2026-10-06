@@ -45,17 +45,20 @@ async function regenerate() {
 
 <template>
   <div class="mm-space-y-6">
-    <SectionPanel title="Shopping progress" :help="`${remainingCount} item${remainingCount === 1 ? '' : 's'} left · ${checkedCount} complete`">
-      <template #actions>
-        <span class="mm-text-2xl font-semibold tabular-nums text-ink">{{ progress }}%</span>
+    <header class="mm-space-y-3 border-b border-line mm-pb-4">
+      <div class="flex flex-wrap items-center justify-between mm-gap-4">
+        <div>
+          <h2 class="mm-text-xl font-semibold">Shopping checklist</h2>
+          <p class="mm-mt-1 mm-text-sm text-steel" aria-live="polite">{{ remainingCount }} item{{ remainingCount === 1 ? '' : 's' }} left · {{ checkedCount }} complete · {{ progress }}%</p>
+        </div>
         <button v-if="canRegenerate" type="button" :disabled="busy === 'regenerate'" class="focus-ring mm-button-secondary inline-flex items-center justify-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold" @click="regenerate">
           <RefreshCw :size="15" :class="busy === 'regenerate' ? 'animate-spin' : ''" aria-hidden="true" /> Regenerate
         </button>
-      </template>
+      </div>
       <div class="h-2 overflow-hidden rounded-full bg-field" role="progressbar" aria-label="Shopping completion" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progress">
         <div class="h-full rounded-full bg-success transition-[width]" :style="{ width: `${progress}%` }" />
       </div>
-    </SectionPanel>
+    </header>
     <div v-if="items.length" class="grid items-start mm-gap-4 xl:grid-cols-2">
       <ShoppingCategory v-for="([category, categoryItems]) in grouped" :key="category" :category="category" :items="categoryItems" :busy-item-id="busy" @update="updateItem" />
     </div>

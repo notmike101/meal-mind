@@ -157,34 +157,28 @@ Existing props/events retain their consumer names. CSS/native patterns have no V
 
 Both named layouts use `<AppShell><slot /></AppShell>`. AppShell owns the `main-content` landmark (`tabindex="-1"`), skip link, desktop rail placement, one gutter scale and the bounded `width.shell` content area. There is no `wide` prop or alternate numeric width: the existing wide layout name remains for the planner and route-backed dialog history, but delegates to the same useful workspace width. The rail uses `width.rail`; below `lg`, all three links remain visible in a top row. Gutters use `spacing.4` below `sm` and `spacing.6` above it.
 
-SectionPanel owns a real section, its generated `useId()` h2 association, neutral panel/padding, optional help, and wrapping heading-side actions. It does not create a form, wrap fields or own workflow state. Its actual consumers are Appearance and the four settings groups, shopping progress, today adherence, and the add/edit meal panels. Default/body and actions are its only slots; no events or variant props exist.
+SectionPanel owns a real section, its generated `useId()` h2 association, neutral panel/padding, optional help, and wrapping heading-side actions. It does not create a form, wrap fields or own workflow state. Its workspace consumers are today adherence and the contextual add/edit meal panels. Default/body and actions are its only slots; no events or variant props exist.
 
 ```text
 DESKTOP (lg+)
-[224px MealMind rail] [Page title / context        week links]
-[Plan              ] [Plan | Shopping                      ]
-[Recipes           ] [Selected-week status                  ]
-[Settings          ] [Primary actions                      ]
-[Local footer      ] [Today (current committed week only)   ]
-                     [Weekly schedule: all seven day groups]
-                     [Labeled editor + search/tags/cards    ]
+[MealMind rail] [One week toolbar: heading, navigation, state/source, views, actions]
+[Plan        ] [Editable: day overview | contextual editor and recipe chooser   ]
+[Recipes     ] [Committed: week overview | Today's meals (current week only)    ]
+[Settings    ]
 
-MOBILE / TABLET
-[MealMind]
-[Plan | Recipes | Settings]
-[Compact page heading / week links]
-[Plan | Shopping]
-[Status / wrapping actions]
-[Today]
-[Responsive day groups / labeled editor]
+MOBILE
+[Same week toolbar, wrapping controls]
+[Day selector -> selected day -> same editor and recipe chooser]
+[Committed: Today's meals -> read-only week overview]
 
-RECIPES: heading + count -> importer -> search/result count -> cards
-SETTINGS: heading -> Appearance -> Connection & defaults -> Meal preferences
-          -> Automation -> Pantry staples -> Save / Load models
-DETAIL: same title scale -> time/tags/servings -> ingredients + steps
+RECIPES: heading/count -> search + Import trigger -> full-width collection when closed
+         (open disclosure beside results on desktop, after results on mobile)
+         (same mounted disclosure; deliberate Import click opens/focuses its summary)
+SETTINGS: heading + compact Appearance -> provider | household -> sticky in-flow Save
+DETAIL: identity/portions before capped mobile image -> ingredients + instructions
 ```
 
-Locked weeks display all seven dates in one/two/three-column grouped panels, including explicit “No meals scheduled” and “Skipped” states. Editable day groups reflow using `width.day` rather than forcing horizontal scrolling. Selected-week status precedes creation/commit/regeneration actions and Today; loading, lock and week rules remain existing page/store decisions. Shopping retains its progress/category/item structure.
+Locked weeks display all seven dates in compact one/two-column groups, including explicit “No meals scheduled” and “Skipped” states. Editable desktop day groups use `width.day`; mobile shows only the selected day's schedule beside its contextual editor in document order, with internally scrolling day navigation. CSS changes presentation without mounting a second form. Load models and its feedback belong beside the provider model field; timezone belongs to household planning. Shopping retains category/item semantics with progress and regeneration in the checklist toolbar.
 
 ### Usage
 
@@ -194,17 +188,18 @@ Locked weeks display all seven dates in one/two/three-column grouped panels, inc
 
 <!-- Page content inside that layout. -->
 <PageHeading eyebrow="Recipe library" title="Recipes" description="Choose meals for your week." />
-<SectionPanel title="Shopping progress" :help="progressSummary">
-  <template #actions>
+<header class="mm-space-y-3 border-b border-line mm-pb-4">
+  <div class="flex flex-wrap items-center justify-between mm-gap-4">
+    <h2 class="mm-text-xl font-semibold">Shopping checklist</h2>
     <button type="button" class="focus-ring mm-button-secondary mm-px-4 mm-py-2" @click="regenerate">Regenerate</button>
-  </template>
+  </div>
   <div role="progressbar" aria-label="Shopping completion" :aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100" class="h-2 rounded-full bg-field">
     <div class="h-full rounded-full bg-success" :style="{ width: progress + '%' }" />
   </div>
-</SectionPanel>
+</header>
 ```
 
-The shell belongs in the layout, not in a page that already has one. The section example shows the actual shopping structure: progress data and regenerate handler belong to ShoppingList, not SectionPanel. Use existing form events/stores for real workflows.
+The shell belongs in the layout, not in a page that already has one. Checklist progress data and the regenerate handler belong to ShoppingList; use existing form events/stores for real workflows.
 
 ### Preserved leaf APIs
 
@@ -213,9 +208,8 @@ All props are required unless marked optional. None of these components exposes 
 | Component under `apps/web/app/components/` | Props / models | Events |
 | --- | --- | --- |
 | `plan/LockedWeek.vue` | `plan: MealPlanDto`, `recipes: RecipeSummaryDto[]` | `openDetails(recipeId, servings, trigger)` |
-| `plan/PlanSummary.vue` | `plan: MealPlanDto`, `locked: boolean` | None |
-| `plan/ScheduleStrip.vue` | `plan: MealPlanDto`, `activeMealId: string`, `addingDate: string \| null`, optional `busy?: boolean` | `select(mealId)`, `add(date)`, `toggleDay(date, skipped)` |
-| `plan/SelectionWorkspace.vue` | `plan: MealPlanDto`, `recipes: RecipeSummaryDto[]`, `defaultServings: number` | `openDetails(recipeId, servings, trigger)` |
+| `plan/ScheduleStrip.vue` | `plan: MealPlanDto`, `activeMealId: string`, `addingDate: string \| null`, `selectedDate: string`, optional `busy?: boolean` | `select(mealId)`, `add(date)`, `selectDate(date)`, `toggleDay(date, skipped)` |
+| `plan/SelectionWorkspace.vue` | `plan: MealPlanDto`, `recipes: RecipeSummaryDto[]`, `defaultServings: number`, optional `pending?: boolean` | `openDetails(recipeId, servings, trigger)` |
 | `plan/TodayMeals.vue` | `meals: MealDto[]` | `openDetails(recipeId, servings, trigger)` |
 | `plan/RecipeSelectionCard.vue` | `recipe: RecipeSummaryDto`, `selected: boolean`, `usedCount: number`, `actionLabel: string`, `disabled: boolean` | `choose()`, `openDetails(recipeId, trigger)` |
 | `plan/RecipePhoto.vue` | `imageUrl: string \| null`, `title: string` | None |
@@ -230,12 +224,12 @@ All props are required unless marked optional. None of these components exposes 
 | `shopping/ShoppingCategory.vue` | `category: string`, `items: ShoppingItemDto[]`, `busyItemId: string \| null` | `update(itemId, checked)` |
 | `shopping/ShoppingItem.vue` | `item: ShoppingItemDto`, `busy: boolean` | `update(itemId, checked)` |
 | `settings/SettingsForm.vue` | `settings: PublicSettingsDto`, `pantryStaples: PantryStapleDto[]` | None |
-| `settings/ConnectionFields.vue` | String models `aiBaseUrl`, `aiModel`, `timezone`; optional model `aiApiKey: string \| null \| undefined`; `models: string[]`, `authConfigured: boolean`, `modelsLoaded: boolean`, optional `endpointChanged?: boolean` | `update:aiBaseUrl`, `update:aiModel`, `update:aiApiKey`, `update:timezone` |
+| `settings/ConnectionFields.vue` | String models `aiBaseUrl`, `aiModel`; optional model `aiApiKey: string \| null \| undefined`; `models: string[]`, `authConfigured: boolean`, `modelsLoaded: boolean`, optional `endpointChanged?: boolean`, `busy?: boolean`, `status?: string \| null` | `update:aiBaseUrl`, `update:aiModel`, `update:aiApiKey`, `testAi()` |
 | `settings/ServingFields.vue` | Number models `servings`, `weeklyMealCount` | `update:servings`, `update:weeklyMealCount` |
 | `settings/PlanningFields.vue` | String models `preferences`, `varietyRules` | `update:preferences`, `update:varietyRules` |
 | `settings/AutomationField.vue` | Boolean default model `modelValue` | `update:modelValue` |
 | `settings/PantryField.vue` | String default model `modelValue` | `update:modelValue` |
-| `settings/FormActions.vue` | `busy: boolean`, `canSave: boolean` | `save()`, `testAi()` |
+| `settings/FormActions.vue` | `busy: boolean`, `canSave: boolean` | `save()` |
 | `settings/ThemeToggle.vue` | None; existing theme store | None |
 
 ## Metadata interface for agents

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { PlugZap, Save } from "@lucide/vue";
+import { Save } from "@lucide/vue";
 
 defineProps<{ busy: boolean; canSave: boolean }>();
-const emit = defineEmits<{ save: []; testAi: [] }>();
+const emit = defineEmits<{ save: [] }>();
 </script>
 
 <template>
@@ -14,14 +14,6 @@ const emit = defineEmits<{ save: []; testAi: [] }>();
       @click="emit('save')"
     >
       <Save :size="16" aria-hidden="true" /> Save
-    </button>
-    <button
-      type="button"
-      :disabled="busy"
-      class="focus-ring mm-button-secondary inline-flex items-center mm-gap-2 mm-px-4 mm-py-2 mm-text-sm font-semibold"
-      @click="emit('testAi')"
-    >
-      <PlugZap :size="16" aria-hidden="true" /> Load models
     </button>
   </div>
 </template>
