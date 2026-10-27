@@ -17,11 +17,11 @@ function openDetails(event: globalThis.MouseEvent, meal: MealDto) {
 </script>
 
 <template>
-  <section class="mm-space-y-4" aria-labelledby="weekly-schedule-heading">
+  <section class="mm-locked-week mm-space-y-4" aria-labelledby="weekly-schedule-heading">
     <h2 id="weekly-schedule-heading" class="mm-text-xl font-semibold">Weekly schedule</h2>
-    <div class="grid items-start mm-gap-4 sm:grid-cols-2">
-      <section v-for="date in dates" :key="date" class="min-w-0 border-b border-line mm-pb-4">
-        <h3 class="bg-field rounded-md mm-p-3 mm-text-base font-semibold">{{ formatDisplayDate(date) }}</h3>
+    <div class="mm-week-rows">
+      <section v-for="date in dates" :key="date" class="mm-week-row min-w-0 border-b border-line">
+        <h3 class="mm-week-date mm-text-sm font-semibold"><span class="block font-bold">{{ formatDisplayDate(date).split(", ")[0] }}</span><span class="block font-normal">{{ formatDisplayDate(date).split(", ")[1] }}</span></h3>
         <div v-if="plan.skippedDates.includes(date)" class="mm-p-4 mm-text-sm font-medium text-muted">
           Skipped
         </div>
@@ -35,9 +35,10 @@ function openDetails(event: globalThis.MouseEvent, meal: MealDto) {
             <a
               v-if="recipeFor(meal.recipeId)"
               :href="`/recipes/${meal.recipeId}`"
-              class="focus-ring group block min-w-0 transition-colors hover:bg-field"
+              class="mm-scheduled-recipe focus-ring group min-w-0 transition-colors hover:bg-field"
               @click.exact.left.prevent="openDetails($event, meal)"
             >
+              <PlanRecipePhoto class="mm-schedule-photo" :image-url="recipeFor(meal.recipeId)?.imageUrl ?? null" :title="meal.recipeTitleSnapshot" />
               <div class="flex min-w-0 flex-col mm-p-3">
                 <p class="mm-text-xs font-semibold uppercase tracking-wide text-moss">{{ meal.slot || "Meal" }}</p>
                 <h4 class="mm-display mm-mt-1 break-words mm-text-lg font-semibold leading-snug transition-colors group-hover:text-moss">{{ meal.recipeTitleSnapshot }}</h4>

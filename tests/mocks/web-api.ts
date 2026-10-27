@@ -90,7 +90,8 @@ function makeRecipe(input: {
     id: input.id,
     title: input.title,
     description: input.description,
-    imageUrl: null,
+    // Generated demo photography for the local mock catalog only.
+    imageUrl: `/images/demo/${input.id}.png`,
     sourceUrl: `https://example.test/recipes/${input.id}`,
     format: "cooklang",
     defaultServings: 2,
@@ -139,7 +140,7 @@ function makeMeal(planId: string, date: string, index: number, recipe: RecipeDto
     servings: 2,
     status,
     swapCount: 0,
-    notes: "Deterministic mock meal",
+    notes: null,
     sortOrder: index,
   };
 }
