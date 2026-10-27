@@ -319,7 +319,7 @@ test("keeps an active import and its result open when browsing or resizing the c
   await page.getByRole("button", { name: "Import recipe", exact: true }).click();
   const disclosure = page.locator("#recipe-import-disclosure");
   await expect(disclosure.locator("summary")).toBeFocused();
-  await expect.poll(async () => (await collection.boundingBox())!.width).toBeLessThan(closedWidth * 0.9);
+  await expect.poll(async () => (await collection.boundingBox())!.width).toBeGreaterThan(closedWidth * 0.95);
   await disclosure.getByLabel("Recipe URL", { exact: true }).fill("https://example.test/recipe");
   await disclosure.getByRole("button", { name: "Import", exact: true }).click();
   await expect(disclosure.getByRole("status")).toContainText("Converting to CookLang");
@@ -501,4 +501,16 @@ test("mock settings preserve omitted credentials only for the normalized saved e
   expect(await replaced.json()).toMatchObject({ ok: true, data: { settings: { aiAuthConfigured: true } } });
   const removed = await request.patch(settingsUrl, { data: { aiApiKey: "   " } });
   expect(await removed.json()).toMatchObject({ ok: true, data: { settings: { aiAuthConfigured: false } } });
+});
+
+
+test("filters the recipe collection with category chips", async ({ page }) => {
+  await goto(page, "/recipes");
+  const filters = page.getByRole("navigation", { name: "Filter recipes" });
+  await filters.getByRole("button", { name: "vegetarian", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Recipe results" }).locator("article")).toHaveCount(2);
+  await filters.getByRole("button", { name: "dinner", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Recipe results" }).locator("article")).toHaveCount(3);
+  await filters.getByRole("button", { name: "All recipes", exact: true }).click();
+  await expect(page.getByRole("searchbox", { name: "Search recipes" })).toHaveValue("");
 });

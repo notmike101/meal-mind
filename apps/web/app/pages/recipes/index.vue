@@ -11,10 +11,11 @@ const recipes = useRecipesStore();
 const recipeModal = useRecipeModal();
 await callOnce("recipe-library", () => Promise.all([recipes.fetchCatalog(), recipes.fetchRecentImports()]), { mode: "navigation" });
 const query = ref("");
+const collectionFilters = computed(() => [...new Set((recipes.catalog?.recipes ?? []).flatMap(recipe => [...recipe.suggestedSlots, ...recipe.tags]).map(tag => tag.toLocaleLowerCase()))].slice(0, 6));
 const importJob = ref<RecipeImportJobDto | null>(null);
 const importRequestError = ref<string | null>(null);
 const importSubmitting = ref(false);
-const importOpen = ref(false);
+const importOpen = ref(true);
 const importDisclosure = ref<globalThis.HTMLDetailsElement | null>(null);
 let importPollTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
@@ -24,7 +25,7 @@ const filteredRecipes = computed(() => {
   const normalized = query.value.trim().toLocaleLowerCase();
   const catalog = recipes.catalog?.recipes ?? [];
   if (!normalized) return catalog;
-  return catalog.filter((recipe) => [recipe.title, recipe.description, ...recipe.tags]
+  return catalog.filter((recipe) => [recipe.title, recipe.description, ...recipe.tags, ...recipe.suggestedSlots]
     .filter(Boolean)
     .some((value) => String(value).toLocaleLowerCase().includes(normalized)));
 });
@@ -103,8 +104,9 @@ onBeforeUnmount(stopImportPolling);
 </script>
 
 <template>
-  <div class="mm-space-y-6">
+  <div class="mm-recipes-page mm-space-y-6">
     <header class="mm-space-y-3">
+      <p class="mm-eyebrow">Your private recipe collection</p>
       <h1 class="mm-page-title">CookLang recipe library</h1>
       <p class="mm-text-sm text-steel">{{ recipes.catalog?.recipes.length ?? 0 }} recipes ready to cook</p>
     </header>
@@ -117,8 +119,16 @@ onBeforeUnmount(stopImportPolling);
         </label>
         <p class="mm-mt-2 mm-text-sm text-steel" aria-live="polite">Showing {{ filteredRecipes.length }} of {{ recipes.catalog?.recipes.length ?? 0 }} recipes</p>
       </div>
-      <button type="button" aria-controls="recipe-import-disclosure" :aria-expanded="importOpen" class="focus-ring mm-button-secondary inline-flex min-h-control items-center justify-center mm-px-4 mm-py-3 mm-text-sm font-semibold" @click="revealImport">Import recipe</button>
+      <button type="button" aria-controls="recipe-import-disclosure" :aria-expanded="importOpen" class="focus-ring mm-button-primary inline-flex min-h-control items-center justify-center mm-px-4 mm-py-3 mm-text-sm font-semibold" @click="revealImport">Import recipe</button>
     </section>
+    <nav class="mm-recipe-filters" aria-label="Filter recipes">
+      <button type="button" class="focus-ring" :aria-pressed="!query" @click="query = ''">All recipes</button>
+      <button v-for="filter in collectionFilters" :key="filter" type="button" class="focus-ring capitalize" :aria-pressed="query === filter" @click="query = filter">{{ filter }}</button>
+    </nav>
+    <header class="mm-collection-heading">
+      <p class="mm-eyebrow">The collection</p>
+      <h2>Made for real life.</h2>
+    </header>
     <RecipesInvalidRecipeNotice v-if="recipes.catalog?.invalidRecipes.length" :invalid-recipes="recipes.catalog.invalidRecipes" />
     <div class="mm-library-workspace" :class="{ 'mm-library-workspace-open': importOpen }">
       <div class="min-w-0">
@@ -137,8 +147,8 @@ onBeforeUnmount(stopImportPolling);
           {{ query ? "No recipes match your search." : "No valid recipes found." }}
         </div>
       </div>
-      <details id="recipe-import-disclosure" ref="importDisclosure" class="mm-import-disclosure" :open="importOpen" @toggle="toggleImport">
-        <summary class="focus-ring mm-button-secondary min-h-control mm-px-4 mm-py-3 mm-text-sm font-semibold" @click="importBusy && $event.preventDefault()">Import recipe</summary>
+      <details id="recipe-import-disclosure" ref="importDisclosure" class="mm-import-disclosure mm-import-banner" :open="importOpen" @toggle="toggleImport">
+        <summary class="focus-ring" @click="importBusy && $event.preventDefault()"><span class="mm-eyebrow">Import recipe</span><span class="mm-import-banner-title">Add something delicious.</span></summary>
         <RecipesImportRecipeForm
           :busy="importBusy"
           :job="importJob"
