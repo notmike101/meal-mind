@@ -137,16 +137,19 @@ async function generateShoppingList() {
     <header class="mm-week-toolbar mm-space-y-4 border-b border-line mm-pb-4">
       <div class="flex flex-wrap items-start justify-between mm-gap-4">
         <div class="min-w-0">
+          <p class="mm-eyebrow mm-mb-2">Weekly plan</p>
           <h1 class="mm-page-title">{{ weekTitle }}</h1>
-          <p class="mm-mt-2 mm-text-sm text-steel">{{ weekDescription }}</p>
-          <p v-if="plan && !planning.selectionLoading" class="mm-mt-2 flex flex-wrap items-center mm-gap-2 break-words mm-text-sm text-steel">
-            <span class="inline-flex items-center mm-gap-1 font-semibold" :class="locked ? 'text-steel' : 'text-success'">
-              <Lock v-if="locked" :size="15" aria-hidden="true" />
-              <Unlock v-else :size="15" aria-hidden="true" />
-              {{ locked ? "Locked" : "Editable" }}
-            </span>
-            <span>{{ plan.status }} · {{ plan.creationSource === "ai" ? `generated${plan.aiModel ? ` with ${plan.aiModel}` : ""}` : "created manually" }}</span>
-          </p>
+          <div class="mm-week-meta">
+            <p class="mm-mt-2 mm-text-sm text-steel">{{ weekDescription }}</p>
+            <p v-if="plan && !planning.selectionLoading" class="mm-mt-2 flex flex-wrap items-center mm-gap-2 break-words mm-text-sm text-steel">
+              <span class="inline-flex items-center mm-gap-1 font-semibold" :class="locked ? 'text-steel' : 'text-success'">
+                <Lock v-if="locked" :size="15" aria-hidden="true" />
+                <Unlock v-else :size="15" aria-hidden="true" />
+                {{ locked ? "Locked" : "Editable" }}
+              </span>
+              <span>{{ plan.status }} · {{ plan.creationSource === "ai" ? `generated${plan.aiModel ? ` with ${plan.aiModel}` : ""}` : "created manually" }}</span>
+            </p>
+          </div>
         </div>
         <nav class="flex flex-wrap items-center mm-gap-2" aria-label="Week navigation">
           <NuxtLink :to="previousLocation" aria-label="Previous week" class="focus-ring mm-button-secondary inline-flex min-h-11 items-center mm-gap-2 mm-px-3 mm-py-2 mm-text-sm font-semibold">
@@ -194,7 +197,7 @@ async function generateShoppingList() {
 
 
       <section v-if="plan" data-testid="plan-content" :class="showToday ? 'mm-committed-workspace' : ''">
-        <PlanTodayMeals v-if="showToday" class="mm-today-context" :meals="todayMeals" @open-details="openRecipe" />
+        <PlanTodayMeals v-if="showToday" class="mm-today-context" :meals="todayMeals" :recipes="recipeOptions" @open-details="openRecipe" />
         <PlanLockedWeek v-if="locked" class="mm-week-overview" data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" @open-details="openRecipe" />
         <PlanSelectionWorkspace v-else data-testid="plan-workspace" :plan="plan" :recipes="recipeOptions" :default-servings="defaultServings" :pending="planning.selectionLoading" @open-details="openRecipe" />
       </section>

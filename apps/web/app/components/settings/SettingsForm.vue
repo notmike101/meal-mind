@@ -109,9 +109,9 @@ async function testAi() {
 
 <template>
   <div class="mm-settings-form">
-    <section class="min-w-0 mm-space-y-4" aria-labelledby="provider-heading">
+    <section class="mm-settings-card mm-settings-provider min-w-0 mm-space-y-4" aria-labelledby="provider-heading">
       <header class="border-b border-line mm-pb-4">
-        <h2 id="provider-heading" class="mm-text-xl font-semibold">Provider connection</h2>
+        <h2 data-step="01" id="provider-heading" class="mm-text-xl font-semibold">Provider connection</h2>
         <p class="mm-mt-2 mm-text-sm text-steel">Use an OpenAI-compatible endpoint for planning and recipe imports.</p>
       </header>
       <SettingsConnectionFields
@@ -127,9 +127,9 @@ async function testAi() {
         @test-ai="testAi"
       />
     </section>
-    <section class="min-w-0 mm-space-y-6" aria-labelledby="household-heading">
+    <section class="mm-settings-card mm-settings-household min-w-0 mm-space-y-6" aria-labelledby="household-heading">
       <header class="border-b border-line mm-pb-4">
-        <h2 id="household-heading" class="mm-text-xl font-semibold">Household planning</h2>
+        <h2 data-step="02" id="household-heading" class="mm-text-xl font-semibold">Household planning</h2>
         <p class="mm-mt-2 mm-text-sm text-steel">Set portions, preferences, and what you already keep on hand.</p>
       </header>
       <div class="grid min-w-0 mm-gap-4">
@@ -139,19 +139,21 @@ async function testAi() {
         </label>
         <SettingsServingFields v-model:servings="form.defaultMealServings" v-model:weekly-meal-count="form.defaultWeeklyMealCount" />
       </div>
-      <div class="mm-space-y-4">
-        <h3 class="mm-text-base font-semibold">Meal preferences & variety</h3>
-        <SettingsPlanningFields v-model:preferences="form.planningPreferences" v-model:variety-rules="form.planningVarietyRules" />
-      </div>
-      <div class="mm-space-y-3">
-        <h3 class="mm-text-base font-semibold">Automation</h3>
-        <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
-      </div>
-      <div class="mm-space-y-3">
-        <h3 class="mm-text-base font-semibold">Pantry staples</h3>
-        <p class="mm-text-sm text-steel">Keep ingredients you already stock off the shopping list.</p>
-        <SettingsPantryField v-model="form.pantryStaples" />
-      </div>
+    </section>
+    <section class="mm-settings-card mm-settings-preferences mm-space-y-4" aria-labelledby="preferences-heading">
+      <header class="border-b border-line mm-pb-4"><h2 id="preferences-heading" data-step="03" class="mm-text-xl font-semibold">Meal preferences & variety</h2></header>
+      <SettingsPlanningFields v-model:preferences="form.planningPreferences" v-model:variety-rules="form.planningVarietyRules" />
+    </section>
+    <section class="mm-settings-card mm-settings-automation mm-space-y-4" aria-labelledby="automation-heading">
+      <header class="border-b border-line mm-pb-4"><h2 id="automation-heading" data-step="04" class="mm-text-xl font-semibold">Automation</h2></header>
+      <SettingsAutomationField v-model="form.autoGenerateNextWeek" />
+    </section>
+    <section class="mm-settings-card mm-settings-pantry mm-space-y-4" aria-labelledby="pantry-heading">
+      <header class="border-b border-line mm-pb-4">
+        <h2 id="pantry-heading" data-step="05" class="mm-text-xl font-semibold">Pantry staples</h2>
+        <p class="mm-mt-2 mm-text-sm text-steel">Keep ingredients you already stock off the shopping list.</p>
+      </header>
+      <SettingsPantryField v-model="form.pantryStaples" />
     </section>
     <div class="mm-settings-actions">
       <SettingsFormActions :busy="busy" :can-save="canSave" @save="runSave" />

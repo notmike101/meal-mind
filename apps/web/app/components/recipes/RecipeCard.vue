@@ -11,7 +11,7 @@ function openDetails(event: globalThis.MouseEvent, recipeId: string) {
 </script>
 
 <template>
-  <article class="mm-card mm-interactive group flex min-w-0 h-full flex-col overflow-hidden">
+  <article class="mm-recipe-card mm-card mm-interactive group flex min-w-0 h-full flex-col overflow-hidden">
     <a
       :href="`/recipes/${recipe.id}`"
       class="focus-ring flex h-full flex-1 flex-col rounded-xl"
@@ -24,6 +24,7 @@ function openDetails(event: globalThis.MouseEvent, recipeId: string) {
         </span>
       </div>
       <div class="flex flex-1 flex-col mm-p-5">
+        <p v-if="recipe.tags.length" class="mm-eyebrow mm-mb-2 text-moss">{{ recipe.tags[0] }}</p>
         <h2 class="mm-display break-words mm-text-xl font-semibold leading-snug tracking-tight text-ink transition-colors group-hover:text-moss">{{ recipe.title }}</h2>
         <p class="mm-mt-2 line-clamp-2 mm-text-sm mm-leading-5 text-steel">{{ recipe.description }}</p>
         <div class="mm-mt-4">
