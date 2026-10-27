@@ -59,9 +59,11 @@ useHead({
 </script>
 
 <template>
-  <NuxtLayout :name="displayedLayout">
-    <NuxtPage :route="displayedRoute" />
-  </NuxtLayout>
+  <AppShell>
+    <NuxtLayout :name="displayedLayout">
+      <NuxtPage :route="displayedRoute" />
+    </NuxtLayout>
+  </AppShell>
   <RecipesRecipeDetailModal
     v-if="recipeModal.activeRecipeId.value"
     :recipe-id="recipeModal.activeRecipeId.value"

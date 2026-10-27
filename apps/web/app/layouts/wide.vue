@@ -1,3 +1,3 @@
 <template>
-  <AppShell><slot /></AppShell>
+  <div><slot /></div>
 </template>
